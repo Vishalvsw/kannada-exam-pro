@@ -39,22 +39,22 @@ export default function QuizPage() {
     }
     setUser(userData);
     setStartTime(Date.now());
-    checkQuizLockStatus();
+    checkQuizLockStatus(userData);
   }, [router]);
 
-  const checkQuizLockStatus = async () => {
+  const checkQuizLockStatus = async (userData) => {
     try {
       setLoading(true);
       
-      // First check localStorage for existing results
-      const savedResults = localStorage.getItem(`quizResults_${user?.instagramId}`);
-      const savedVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
+      // Use user-specific keys
+      const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
+      const savedVersion = localStorage.getItem(`quizVersion_${userData?.instagramId}`);
       
       if (savedResults && savedVersion) {
         // User has already taken a quiz - show locked page immediately
         const parsed = JSON.parse(savedResults);
-        setUserAnswers(parsed.userAnswers);
-        setScore(parsed.score);
+        setUserAnswers(parsed.userAnswers || []);
+        setScore(parsed.score || 0);
         setQuestions(parsed.questions || []);
         setShowResults(true);
         setQuizLocked(true);
@@ -158,10 +158,10 @@ export default function QuizPage() {
     setTimerActive(false);
     setQuizLocked(true);
     
-    // LOCK THE QUIZ - Save results
+    // LOCK THE QUIZ - Save results with user-specific keys
     if (user) {
-      // Create version hash
-      const versionString = questions.map(q => `${q._id}-${q.answer}`).join(',');
+      // Create version hash from questions
+      const versionString = questions.map(q => `${q._id || q.id}-${q.answer}`).join(',');
       const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
       
       const finalUserAnswers = [...userAnswers];
@@ -178,6 +178,7 @@ export default function QuizPage() {
         }
       }
       
+      // Save with user-specific keys
       localStorage.setItem(`quizVersion_${user.instagramId}`, versionHash);
       localStorage.setItem(`quizResults_${user.instagramId}`, JSON.stringify({
         userAnswers: finalUserAnswers,
