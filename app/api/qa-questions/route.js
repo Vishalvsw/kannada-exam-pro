@@ -6,25 +6,14 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    // Get all Q&A questions from the same collection
+    // Get ALL Q&A questions
     const qaQuestions = await db.collection("qaquestions")
       .find({})
       .sort({ createdAt: -1 })
       .toArray();
     
-    // Format for frontend
-    const formattedQA = qaQuestions.map(qa => ({
-      _id: qa._id.toString(),
-      question: qa.question,
-      question_en: qa.question_en || '',
-      answer: qa.answer,
-      answer_en: qa.answer_en || '',
-      category: qa.category || 'General',
-      important: qa.important || false,
-      createdAt: qa.createdAt
-    }));
-    
-    return NextResponse.json(formattedQA);
+    console.log(`❓ Returning ${qaQuestions.length} Q&A to user`);
+    return NextResponse.json(qaQuestions);
   } catch (error) {
     console.error('QA Questions API Error:', error);
     return NextResponse.json([]);
