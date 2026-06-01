@@ -24,7 +24,7 @@ export default function QuizPage() {
   const [reviewFilter, setReviewFilter] = useState('all');
   const [quizLocked, setQuizLocked] = useState(false);
   const [currentQuizVersion, setCurrentQuizVersion] = useState('');
-  const [debugMessage, setDebugMessage] = useState('');
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -45,44 +45,41 @@ export default function QuizPage() {
   const fetchQuestionsAndCheck = async () => {
     try {
       setLoading(true);
-      setDebugMessage('Fetching questions...');
       const res = await fetch('/api/questions');
       const data = await res.json();
       
       if (data && data.length > 0) {
         setQuestions(data);
-        setAnswers(new Array(data.length).fill(null));
-        setUserAnswers(new Array(data.length).fill(null));
         
         // Create version hash
         const versionString = data.map(q => `${q._id}-${q.answer}`).join(',');
         const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
         setCurrentQuizVersion(versionHash);
-        setDebugMessage(`Version: ${versionHash.substring(0, 20)}...`);
         
-        // Check if user already took this quiz
+        // CRITICAL: Check if user already took this quiz
         const takenVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
         const savedResults = localStorage.getItem(`quizResults_${user?.instagramId}`);
         
-        setDebugMessage(`Saved version: ${takenVersion || 'none'}`);
-        
         if (takenVersion && takenVersion === versionHash && savedResults) {
-          // Quiz is LOCKED
-          setDebugMessage('QUIZ IS LOCKED! Showing saved results');
+          // Quiz is LOCKED - Show saved results immediately
           const parsed = JSON.parse(savedResults);
           setUserAnswers(parsed.userAnswers);
           setScore(parsed.score);
           setShowResults(true);
           setQuizLocked(true);
+          setAnswers(new Array(data.length).fill(null));
+          setUserAnswers(parsed.userAnswers);
         } else {
-          setDebugMessage('New quiz available! Take the quiz.');
+          // New quiz available
           setQuizLocked(false);
           setShowResults(false);
+          setAnswers(new Array(data.length).fill(null));
+          setUserAnswers(new Array(data.length).fill(null));
         }
       }
+      setInitialCheckDone(true);
     } catch (error) {
       console.error('Error:', error);
-      setDebugMessage(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -90,7 +87,7 @@ export default function QuizPage() {
 
   useEffect(() => {
     let timer;
-    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked) {
+    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !showResults) {
       timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
       handleSubmitAnswer();
@@ -152,7 +149,6 @@ export default function QuizPage() {
   };
 
   const calculateScore = () => {
-    setDebugMessage('Calculating final score...');
     let finalScore = 0;
     answers.forEach((answer, idx) => {
       if (answer && questions[idx] && answer === questions[idx].answer) {
@@ -160,7 +156,6 @@ export default function QuizPage() {
       }
     });
     
-    setDebugMessage(`Final Score: ${finalScore}/${questions.length}`);
     setScore(finalScore);
     setShowResults(true);
     setTimerActive(false);
@@ -188,12 +183,6 @@ export default function QuizPage() {
         score: finalScore,
         completedAt: Date.now()
       }));
-      
-      setDebugMessage(`✅ QUIZ LOCKED! Version saved: ${currentQuizVersion.substring(0, 20)}...`);
-      console.log('✅ QUIZ LOCKED! Version saved:', currentQuizVersion);
-      console.log('✅ Score saved:', finalScore);
-    } else {
-      setDebugMessage('❌ Failed to save - user or version missing');
     }
     
     saveQuizResult(finalScore);
@@ -250,7 +239,6 @@ export default function QuizPage() {
             <h2 className="text-2xl font-bold text-gray-800">Quiz Locked!</h2>
             <p className="text-gray-500 text-sm mt-1">You have already completed this quiz</p>
             <p className="text-xs text-orange-600 mt-1 font-semibold">⚠️ New quiz will be available only when admin adds new questions</p>
-            {debugMessage && <p className="text-xs text-green-600 mt-2">{debugMessage}</p>}
           </div>
           
           <div className="bg-white rounded-2xl shadow-lg p-5 mb-5">
@@ -398,7 +386,6 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full"></div>
-        {debugMessage && <p className="ml-2 text-xs text-gray-500">{debugMessage}</p>}
       </div>
     );
   }
@@ -437,12 +424,6 @@ export default function QuizPage() {
       </div>
 
       <div className="max-w-md mx-auto px-4 py-4">
-        {debugMessage && (
-          <div className="mb-4 p-2 bg-blue-50 text-blue-600 text-xs text-center rounded-lg">
-            🔍 {debugMessage}
-          </div>
-        )}
-        
         <div className="mb-4 p-2 bg-yellow-50 text-yellow-600 text-xs text-center rounded-lg">
           🔒 One attempt per question set • New quiz only when admin adds questions
         </div>
