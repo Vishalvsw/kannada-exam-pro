@@ -24,7 +24,7 @@ export default function QuizPage() {
   const [reviewFilter, setReviewFilter] = useState('all');
   const [quizLocked, setQuizLocked] = useState(false);
   const [currentQuizVersion, setCurrentQuizVersion] = useState('');
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [isLockedPage, setIsLockedPage] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -39,45 +39,42 @@ export default function QuizPage() {
     }
     setUser(userData);
     setStartTime(Date.now());
-    fetchQuestionsAndCheck();
+    checkQuizLockStatus();
   }, [router]);
 
-  const fetchQuestionsAndCheck = async () => {
+  const checkQuizLockStatus = async () => {
     try {
       setLoading(true);
+      
+      // First check localStorage for existing results
+      const savedResults = localStorage.getItem(`quizResults_${user?.instagramId}`);
+      const savedVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
+      
+      if (savedResults && savedVersion) {
+        // User has already taken a quiz - show locked page immediately
+        const parsed = JSON.parse(savedResults);
+        setUserAnswers(parsed.userAnswers);
+        setScore(parsed.score);
+        setQuestions(parsed.questions || []);
+        setShowResults(true);
+        setQuizLocked(true);
+        setIsLockedPage(true);
+        setLoading(false);
+        return;
+      }
+      
+      // No saved results - fetch questions for new quiz
       const res = await fetch('/api/questions');
       const data = await res.json();
       
       if (data && data.length > 0) {
         setQuestions(data);
-        
-        // Create version hash
-        const versionString = data.map(q => `${q._id}-${q.answer}`).join(',');
-        const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
-        setCurrentQuizVersion(versionHash);
-        
-        // CRITICAL: Check if user already took this quiz
-        const takenVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
-        const savedResults = localStorage.getItem(`quizResults_${user?.instagramId}`);
-        
-        if (takenVersion && takenVersion === versionHash && savedResults) {
-          // Quiz is LOCKED - Show saved results immediately
-          const parsed = JSON.parse(savedResults);
-          setUserAnswers(parsed.userAnswers);
-          setScore(parsed.score);
-          setShowResults(true);
-          setQuizLocked(true);
-          setAnswers(new Array(data.length).fill(null));
-          setUserAnswers(parsed.userAnswers);
-        } else {
-          // New quiz available
-          setQuizLocked(false);
-          setShowResults(false);
-          setAnswers(new Array(data.length).fill(null));
-          setUserAnswers(new Array(data.length).fill(null));
-        }
+        setAnswers(new Array(data.length).fill(null));
+        setUserAnswers(new Array(data.length).fill(null));
+        setQuizLocked(false);
+        setIsLockedPage(false);
+        setShowResults(false);
       }
-      setInitialCheckDone(true);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -87,21 +84,21 @@ export default function QuizPage() {
 
   useEffect(() => {
     let timer;
-    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !showResults) {
+    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !isLockedPage) {
       timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
+    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked && !isLockedPage) {
       handleSubmitAnswer();
     }
     return () => clearTimeout(timer);
-  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked]);
+  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, isLockedPage]);
 
   const handleAnswerSelect = (answer) => {
-    if (quizLocked) return;
+    if (quizLocked || isLockedPage) return;
     setSelectedAnswer(answer);
   };
 
   const handleSubmitAnswer = () => {
-    if (quizLocked) return;
+    if (quizLocked || isLockedPage) return;
     if (!selectedAnswer && !showExplanation) return;
 
     if (!showExplanation && selectedAnswer) {
@@ -140,7 +137,7 @@ export default function QuizPage() {
   };
 
   const handlePreviousQuestion = () => {
-    if (currentQuestion > 0 && !quizLocked) {
+    if (currentQuestion > 0 && !quizLocked && !isLockedPage) {
       setShowExplanation(false);
       setCurrentQuestion(currentQuestion - 1);
       setSelectedAnswer(answers[currentQuestion - 1] || null);
@@ -162,7 +159,11 @@ export default function QuizPage() {
     setQuizLocked(true);
     
     // LOCK THE QUIZ - Save results
-    if (user && currentQuizVersion) {
+    if (user) {
+      // Create version hash
+      const versionString = questions.map(q => `${q._id}-${q.answer}`).join(',');
+      const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
+      
       const finalUserAnswers = [...userAnswers];
       for (let i = 0; i < answers.length; i++) {
         if (answers[i] && !finalUserAnswers[i]) {
@@ -177,10 +178,11 @@ export default function QuizPage() {
         }
       }
       
-      localStorage.setItem(`quizVersion_${user.instagramId}`, currentQuizVersion);
+      localStorage.setItem(`quizVersion_${user.instagramId}`, versionHash);
       localStorage.setItem(`quizResults_${user.instagramId}`, JSON.stringify({
         userAnswers: finalUserAnswers,
         score: finalScore,
+        questions: questions,
         completedAt: Date.now()
       }));
     }
@@ -225,8 +227,8 @@ export default function QuizPage() {
     return userAnswers.filter((ans) => ans !== null);
   };
 
-  // LOCKED PAGE - User already took quiz
-  if (quizLocked && showResults && !showReview && !loading) {
+  // LOCKED RESULTS PAGE - User already took quiz (SHOW ONLY THIS)
+  if ((quizLocked || isLockedPage) && showResults && !showReview && !loading) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
     
