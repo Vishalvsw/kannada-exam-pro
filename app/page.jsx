@@ -1,0 +1,316 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import AdSpace from '@/components/AdSpace';
+import Image from 'next/image';
+
+export default function Home() {
+  
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [topUsers, setTopUsers] = useState([]);
+  const [user, setUser] = useState(null);
+  const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
+
+  const slidingLogos = [
+    { image: '/logos/police.png', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-100' },
+    { image: '/logos/defence.jpg', color: 'from-green-500 to-green-600', bgColor: 'bg-green-100' },
+    { image: '/logos/SBI.jpeg', color: 'from-yellow-500 to-yellow-600', bgColor: 'bg-yellow-100' },
+    { image: '/logos/ssc.jpeg', color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-100' },
+    { image: '/logos/bsf.jpeg', color: 'from-pink-500 to-pink-600', bgColor: 'bg-pink-100' },
+    { image: '/logos/all jobs.jpeg', color: 'from-gray-500 to-gray-600', bgColor: 'bg-gray-100' },
+    { image: '/logos/railways.jpeg', color: 'from-red-500 to-red-600', bgColor: 'bg-red-100' },
+  ];
+
+  useEffect(() => {
+    fetchData();
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) setUser(JSON.parse(storedUser));
+    
+    const interval = setInterval(() => {
+      setCurrentLogoIndex((prev) => (prev + 1) % slidingLogos.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [questionsRes, usersRes] = await Promise.all([
+        fetch('/api/questions'),
+        fetch('/api/leaderboard'),
+      ]);
+      const questions = await questionsRes.json();
+      const users = await usersRes.json();
+      setTotalQuestions(questions.length);
+      setTopUsers(users.slice(0, 5)); // Get top 5 for better display
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const currentLogo = slidingLogos[currentLogoIndex];
+
+  const categories = [
+    { title: 'Quiz', icon: '❓', color: 'from-blue-500 to-blue-600', href: '/quiz', desc: '20 MCQ / Win Prizes' },
+    { title: 'Notes', icon: '📝', color: 'from-green-500 to-green-600', href: '/notes', desc: '50 imp Questions & Answers' },
+    { title: 'Current Affairs', icon: '📰', color: 'from-orange-500 to-orange-600', href: '/current-affairs', desc: 'Check It Now' },
+    { title: 'Leaderboard', icon: '🏆', color: 'from-yellow-500 to-yellow-600', href: '/leaderboard', desc: 'Top Winners' },
+  ];
+
+  // Calculate max score for bar chart
+  const maxScore = topUsers.length > 0 ? Math.max(...topUsers.map(u => u.score || 0)) : 100;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
+      <AdSpace type="banner" className="mx-4 mt-2" />
+
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold">Kannada Exam Pro</h1>
+          <p className="text-blue-100 text-sm mt-1">KAS | PSI | PDO | FDA | SDA</p>
+        </div>
+        
+        {/* Sliding Logos */}
+        <div className="flex justify-center">
+          <div className="bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 animate-slide-left inline-block shadow-xl">
+            <div className="flex items-center justify-center gap-3">
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${currentLogo.color} flex items-center justify-center p-1 shadow-lg ring-4 ring-white/50`}>
+                <Image 
+                  src={currentLogo.image} 
+                  alt={currentLogo.name}
+                  width={56}
+                  height={56}
+                  className="w-14 h-14 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `<div class="w-full h-full rounded-full flex items-center justify-center"><span class="text-white text-xl font-bold">📚</span></div>`;
+                  }}
+                />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-sm">{currentLogo.name}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Logo Indicators */}
+        <div className="flex justify-center gap-2 mt-4">
+          {slidingLogos.map((_, idx) => (
+            <div 
+              key={idx}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                idx === currentLogoIndex ? 'bg-white w-4' : 'bg-white/50'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* User Welcome Card */}
+      {user && (
+        <div className="px-5 -mt-4">
+          <div className="bg-white rounded-2xl shadow-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img 
+                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=80`} 
+                className="w-12 h-12 rounded-full border-2 border-blue-500 object-cover" 
+                alt={user.name}
+                onError={(e) => {
+                  e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=80`;
+                }}
+              />
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Welcome back, {user.name?.split(' ')[0]}! 👋</p>
+                <p className="text-xs text-gray-500">@{user.instagramId}</p>
+                <p className="text-xs text-green-600 font-medium">⭐ Total Score: {user.score || 0} points</p>
+              </div>
+            </div>
+            <Link href="/quiz">
+              <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
+                Take Quiz 🎯
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Category Cards */}
+      <div className="px-5 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {categories.map((cat, idx) => (
+            <Link key={idx} href={cat.href}>
+              <div className="bg-white rounded-2xl shadow-md p-4 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+                <div className={`w-14 h-14 mx-auto rounded-full bg-gradient-to-r ${cat.color} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform`}>
+                  {cat.icon}
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm mt-2">{cat.title}</h3>
+                <p className="text-xs text-gray-500 mt-1">{cat.desc}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <AdSpace type="inArticle" className="mx-4 my-6" />
+
+      {/* Top Performers - HORIZONTAL BAR CHART (Instagram Winner's Style) */}
+      {topUsers.length > 0 && (
+        <div className="px-5 mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              🏆 Karnataka Winner'
+              <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top 5</span>
+            </h2>
+            <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
+          </div>
+          
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-5">
+            <div className="space-y-4">
+              {topUsers.map((user, idx) => {
+                const rank = idx + 1;
+                const scorePercentage = maxScore > 0 ? (user.score / maxScore) * 100 : 0;
+                
+                // Rank icons
+                const rankIcon = {
+                  1: '👑',
+                  2: '🥈',
+                  3: '🥉',
+                };
+                
+                const rankColor = {
+                  1: 'text-yellow-600',
+                  2: 'text-gray-600',
+                  3: 'text-orange-600',
+                };
+                
+                const barColor = {
+                  1: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
+                  2: 'bg-gradient-to-r from-gray-400 to-gray-500',
+                  3: 'bg-gradient-to-r from-orange-400 to-orange-500',
+                };
+                
+                return (
+                  <div key={user._id} className="group">
+                    {/* User Row */}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-lg font-bold ${rank <= 3 ? rankColor[rank] : 'text-purple-600'}`}>
+                          {rank <= 3 ? rankIcon[rank] : `${rank}th`}
+                        </span>
+                        <p className="font-semibold text-gray-800 text-sm">
+                          {user.name?.split(' ')[0] || 'User'}
+                        </p>
+                        <span className="text-xs text-gray-400">@{user.instagramId || 'user'}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-purple-600">{user.score || 0}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Horizontal Bar Chart */}
+                    <div className="relative w-full bg-gray-200 rounded-full h-7 overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out ${
+                          rank === 1 ? barColor[1] :
+                          rank === 2 ? barColor[2] :
+                          rank === 3 ? barColor[3] :
+                          'bg-gradient-to-r from-purple-400 to-purple-500'
+                        }`}
+                        style={{ width: `${scorePercentage}%` }}
+                      >
+                        <span className="text-xs font-bold text-white drop-shadow-md">
+                          {Math.round(scorePercentage)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Footer Message */}
+            <div className="mt-4 pt-3 border-t border-purple-200 text-center">
+              <p className="text-xs text-gray-500">🏆 Keep practicing to reach the top!</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp & Instagram */}
+      <div className="px-5 mt-8 mb-4 text-center">
+        <p className="text-sm text-gray-500">For Daily Quiz and Updates</p>
+        <p className="text-xs text-gray-400 mb-3">Join More Channels</p>
+        
+        <div className="flex justify-center gap-5">
+          {/* WhatsApp */}
+          <a
+            href="https://whatsapp.com/channel/0029VbCnlxq3wtbEGjkxIM2M"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center group"
+          >
+            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow group-hover:scale-110 transition-transform duration-300">
+              <img 
+                src="/icons/whatsapp.png" 
+                alt="WhatsApp" 
+                className="w-7 h-7 object-contain"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<span class="text-2xl text-white">💬</span>';
+                }}
+              />
+            </div>
+            <span className="text-xs text-gray-600 mt-1 group-hover:text-green-600 transition">WhatsApp</span>
+          </a>
+          
+          {/* Instagram */}
+          <a
+            href="https://www.instagram.com/kannada_exam_pro"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center group"
+          >
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow group-hover:scale-110 transition-transform duration-300">
+              <img 
+                src="/icons/instagram.png" 
+                alt="Instagram"
+                className="w-7 h-7 object-contain"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<span class="text-2xl text-white">📸</span>';
+                }}
+              />
+            </div>
+            <span className="text-xs text-gray-600 mt-1 group-hover:text-pink-600 transition">Instagram</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Login Link */}
+      {!user && (
+        <div className="text-center mt-4">
+          <Link href="/login" className="text-xs text-gray-400 hover:text-blue-500 transition">
+            🔐 Admin / Login
+          </Link>
+        </div>
+      )}
+
+      <AdSpace type="banner" className="mx-4 mt-4 mb-4" />
+
+      <style jsx>{`
+        @keyframes slideLeft {
+          0% { transform: translateX(30%); opacity: 0; }
+          12% { transform: translateX(0); opacity: 1; }
+          88% { transform: translateX(0); opacity: 1; }
+          100% { transform: translateX(-30%); opacity: 0; }
+        }
+        .animate-slide-left { 
+          animation: slideLeft 5s ease-in-out infinite;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+      `}</style>
+    </div>
+  );
+}

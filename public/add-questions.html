@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Questions - Kannada Exam Pro</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: blue; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .success { background: green; color: white; padding: 10px; margin-top: 10px; }
+        .error { background: red; color: white; padding: 10px; margin-top: 10px; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>📝 Add Questions to Kannada Exam Pro</h1>
+    
+    <div id="message"></div>
+    
+    <form id="questionForm">
+        <div class="form-group">
+            <label>Question *</label>
+            <textarea id="question" rows="3" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Option A *</label>
+            <input id="optA" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Option B *</label>
+            <input id="optB" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Option C *</label>
+            <input id="optC" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Option D *</label>
+            <input id="optD" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Correct Answer *</label>
+            <input id="answer" required placeholder="Must match one of the options above">
+        </div>
+        
+        <div class="form-group">
+            <label>Category</label>
+            <select id="category">
+                <option>Karnataka GK</option>
+                <option>Karnataka History</option>
+                <option>Karnataka Geography</option>
+                <option>Kannada Literature</option>
+                <option>Current Affairs</option>
+                <option>General</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Difficulty</label>
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+        
+        <button type="submit">➕ Add Question</button>
+    </form>
+    
+    <hr>
+    
+    <h2>📋 Bulk Add - 20 Kannada Questions</h2>
+    <button onclick="addAllQuestions()">➕ Add All 20 Kannada Questions</button>
+    
+    <script>
+        const form = document.getElementById('questionForm');
+        const messageDiv = document.getElementById('message');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const questionData = {
+                question: document.getElementById('question').value,
+                options: [
+                    document.getElementById('optA').value,
+                    document.getElementById('optB').value,
+                    document.getElementById('optC').value,
+                    document.getElementById('optD').value
+                ],
+                answer: document.getElementById('answer').value,
+                category: document.getElementById('category').value,
+                difficulty: document.getElementById('difficulty').value
+            };
+            
+            try {
+                const response = await fetch('/api/questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(questionData)
+                });
+                
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="success">✅ Question added successfully!</div>';
+                    form.reset();
+                    setTimeout(() => messageDiv.innerHTML = '', 3000);
+                } else {
+                    const error = await response.json();
+                    messageDiv.innerHTML = `<div class="error">❌ Failed: ${error.error}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        async function addAllQuestions() {
+            const kannadaQuestions = [
+                { question: "ಕರ್ನಾಟಕದ ರಾಜಧಾನಿ ಯಾವುದು?", options: ["ಮೈಸೂರು", "ಹುಬ್ಬಳ್ಳಿ", "ಬೆಂಗಳೂರು", "ಮಂಗಳೂರು"], answer: "ಬೆಂಗಳೂರು", category: "ಕರ್ನಾಟಕ ಜಿಕೆ", difficulty: "easy" },
+                { question: "ಕರ್ನಾಟಕದ ಅಧಿಕೃತ ಭಾಷೆ ಯಾವುದು?", options: ["ತಮಿಳು", "ತೆಲುಗು", "ಕನ್ನಡ", "ಮಲಯಾಳಂ"], answer: "ಕನ್ನಡ", category: "ಕರ್ನಾಟಕ ಜಿಕೆ", difficulty: "easy" },
+                { question: "ಕರ್ನಾಟಕದ ರಾಜ್ಯ ಪ್ರಾಣಿ ಯಾವುದು?", options: ["ಆನೆ", "ಹುಲಿ", "ಭಾರತೀಯ ಆನೆ", "ಸಿಂಹ"], answer: "ಭಾರತೀಯ ಆನೆ", category: "ಕರ್ನಾಟಕ ಜಿಕೆ", difficulty: "easy" },
+                { question: "ಕರ್ನಾಟಕದ ರಾಜ್ಯ ಪಕ್ಷಿ ಯಾವುದು?", options: ["ನವಿಲು", "ಭಾರತೀಯ ರೋಲರ್", "ಗುಬ್ಬಚ್ಚಿ", "ಪಾರಿವಾಳ"], answer: "ಭಾರತೀಯ ರೋಲರ್", category: "ಕರ್ನಾಟಕ ಜಿಕೆ", difficulty: "easy" },
+                { question: "ಕರ್ನಾಟಕದ ರಾಜ್ಯ ಮರ ಯಾವುದು?", options: ["ಆಲದ ಮರ", "ಬೇವು", "ಗಂಧದ ಮರ", "ಮಾವಿನ ಮರ"], answer: "ಗಂಧದ ಮರ", category: "ಕರ್ನಾಟಕ ಜಿಕೆ", difficulty: "easy" }
+            ];
+            
+            messageDiv.innerHTML = '<div class="success">⏳ Adding questions...</div>';
+            
+            for (let i = 0; i < kannadaQuestions.length; i++) {
+                const q = kannadaQuestions[i];
+                try {
+                    const response = await fetch('/api/questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(q)
+                    });
+                    if (response.ok) {
+                        console.log(`✅ Added question ${i+1}`);
+                    }
+                } catch (error) {
+                    console.error(`Failed to add question ${i+1}:`, error);
+                }
+            }
+            
+            messageDiv.innerHTML = '<div class="success">✅ Added 5 sample Kannada questions! Refresh the admin panel to see them.</div>';
+            setTimeout(() => messageDiv.innerHTML = '', 5000);
+        }
+    </script>
+</body>
+</html>

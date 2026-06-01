@@ -1,0 +1,376 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+  
+  body {
+    @apply bg-gray-50 overflow-x-hidden;
+  }
+  
+  /* Better touch targets for mobile */
+  button, 
+  a,
+  [role="button"] {
+    @apply cursor-pointer select-none;
+    min-height: 44px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold 
+           hover:shadow-lg hover:scale-105 transition-all duration-300 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-semibold 
+           hover:bg-gray-300 transition-all duration-300;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none 
+           focus:ring-2 focus:ring-blue-500 transition-all;
+  }
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Mobile Devices (portrait) - 320px to 480px */
+@media (max-width: 480px) {
+  .mobile-only {
+    display: block !important;
+  }
+  .tablet-only {
+    display: none !important;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Mobile specific styles */
+  .container {
+    @apply px-4;
+  }
+  
+  h1 {
+    @apply text-2xl;
+  }
+  
+  h2 {
+    @apply text-xl;
+  }
+  
+  .card-grid {
+    @apply grid-cols-1 gap-3;
+  }
+}
+
+/* Mobile Devices (landscape) & Small Tablets - 481px to 768px */
+@media (min-width: 481px) and (max-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+  .tablet-only {
+    display: block !important;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Tablet styles */
+  .container {
+    @apply px-6;
+  }
+  
+  h1 {
+    @apply text-3xl;
+  }
+  
+  .card-grid {
+    @apply grid-cols-2 gap-4;
+  }
+}
+
+/* Tablets & Small Laptops - 769px to 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .mobile-only {
+    display: none !important;
+  }
+  .tablet-only {
+    display: none !important;
+  }
+  .desktop-only {
+    display: block !important;
+  }
+  
+  /* Tablet desktop styles */
+  .container {
+    @apply px-8;
+  }
+  
+  .card-grid {
+    @apply grid-cols-2 gap-5;
+  }
+}
+
+/* Desktop & Large Screens - 1025px and above */
+@media (min-width: 1025px) {
+  .mobile-only {
+    display: none !important;
+  }
+  .tablet-only {
+    display: none !important;
+  }
+  .desktop-only {
+    display: block !important;
+  }
+  
+  /* Desktop styles */
+  .container {
+    @apply px-8;
+  }
+  
+  .card-grid {
+    @apply grid-cols-3 gap-6;
+  }
+  
+  /* Desktop hover effects */
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* Ultra-wide screens - 1440px and above */
+@media (min-width: 1440px) {
+  .container {
+    @apply max-w-7xl mx-auto;
+  }
+  
+  .card-grid {
+    @apply grid-cols-4 gap-6;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  button, a {
+    @apply active:scale-95 transition-transform;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none;
+  }
+  
+  body {
+    @apply bg-white;
+  }
+}
+
+/* Animations */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-slide-down { animation: slideDown 0.3s ease-out; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+.animate-pulse-slow { animation: pulse 2s ease-in-out infinite; }
+.animate-bounce-slow { animation: bounce 2s ease-in-out infinite; }
+
+/* Loading skeleton */
+.skeleton {
+  @apply bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200;
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Safe area handling for modern devices */
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+/* Sliding Animation for Categories */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-slide-out {
+  animation: slideOutLeft 0.5s ease-in;
+}
+
+/* Continuous Sliding Animation */
+@keyframes continuousSlide {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  10% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.sliding-category {
+  animation: continuousSlide 4s ease-in-out infinite;
+}
+
+/* Carousel styles */
+.carousel-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.category-item {
+  flex: 0 0 auto;
+  width: 100%;
+}
+/* Additional Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(59,130,246,0.5); }
+  50% { box-shadow: 0 0 20px rgba(59,130,246,0.8); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Card hover animations */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+}
+
+/* Category icon animations */
+.category-icon {
+  transition: all 0.3s ease;
+}
+
+.category-icon:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Pulse animation for active elements */
+.pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

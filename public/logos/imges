@@ -1,0 +1,13 @@
+
+  // add sliding logos for exams with animation i have images in public -logos folder but for now i am using emojis and colors to represent different exams in the sliding logos section. you can replace the emojis with your actual images and adjust the colors as needed.
+  // Exam logos with images from public/logos folder
+  const slidingLogos = [
+    { name: 'KAS Exam', image: '/logos/police.png', color: 'from-blue-500 to-blue-600' },
+    { name: 'defence exam', image: '/logos/defence.jpg', color: 'from-green-500 to-green-600' },
+    {name: 'railway exam', image: '/logos/rail.jpg', color: 'from-red-500 to-red-600' },
+    {name:'sbi po exam', image: '/logos/SBI.jpeg', color: 'from-yellow-500 to-yellow-600' },
+    {name: 'ssc cpo', image: '/logos/ssc.jpeg', color: 'from-purple-500 to-purple-600' },
+    { name: 'SSC CGL', image: '/logos/ssc.jpeg', color: 'from-pink-500 to-pink-600' },
+    { name: 'UPSC', image: '/logos/upsc.png', color: 'from-indigo-500 to-indigo-600' },
+    {name:'KAE', image: '/logos/kae.jpeg', color: 'from-gray-500 to-gray-600' },
+  ];
