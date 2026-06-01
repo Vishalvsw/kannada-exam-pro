@@ -26,6 +26,7 @@ export default function QuizPage() {
   const [quizLocked, setQuizLocked] = useState(false);
   const [currentQuizVersion, setCurrentQuizVersion] = useState('');
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [testMessage, setTestMessage] = useState('');
 
   // First, get user from localStorage
   useEffect(() => {
@@ -60,11 +61,15 @@ export default function QuizPage() {
         const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
         setCurrentQuizVersion(versionHash);
         
+        console.log('📌 Current Quiz Version:', versionHash);
+        
         // Check if user has already taken this version
         const takenQuizVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
+        console.log('📌 Saved Version:', takenQuizVersion);
         
         if (takenQuizVersion && takenQuizVersion === versionHash) {
           // Quiz is LOCKED - Show saved results
+          console.log('🔒 QUIZ IS LOCKED!');
           const savedResults = localStorage.getItem(`quizResults_${user?.instagramId}`);
           if (savedResults) {
             const parsed = JSON.parse(savedResults);
@@ -73,23 +78,27 @@ export default function QuizPage() {
             setShowResults(true);
             setCanTakeQuiz(false);
             setQuizLocked(true);
+            setTestMessage('Quiz Locked - Showing saved results');
           }
         } else {
           // New quiz available
+          console.log('✅ New quiz available!');
           setCanTakeQuiz(true);
           setQuizLocked(false);
           setShowResults(false);
+          setTestMessage('New quiz available - Take the quiz');
         }
       }
       setInitialCheckDone(true);
     } catch (error) {
       console.error('Error:', error);
+      setTestMessage('Error loading questions');
     } finally {
       setLoading(false);
     }
   };
 
-  // Timer effect - FIXED
+  // Timer effect
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && canTakeQuiz && !quizLocked) {
@@ -163,15 +172,16 @@ export default function QuizPage() {
       }
     });
     
+    console.log('🏆 Final Score:', finalScore);
     setScore(finalScore);
     setShowResults(true);
     setTimerActive(false);
     setCanTakeQuiz(false);
     setQuizLocked(true);
-    saveQuizResult(finalScore);
     
+    // SAVE QUIZ RESULTS TO LOCALSTORAGE
     if (user && currentQuizVersion) {
-      // LOCK THE QUIZ - Save that user has taken this version
+      // Build final user answers
       const finalUserAnswers = [...userAnswers];
       for (let i = 0; i < answers.length; i++) {
         if (answers[i] && !finalUserAnswers[i]) {
@@ -186,13 +196,20 @@ export default function QuizPage() {
         }
       }
       
+      // SAVE TO LOCALSTORAGE - THIS IS CRITICAL!
       localStorage.setItem(`quizVersion_${user.instagramId}`, currentQuizVersion);
       localStorage.setItem(`quizResults_${user.instagramId}`, JSON.stringify({
         userAnswers: finalUserAnswers,
         score: finalScore,
         completedAt: Date.now()
       }));
+      
+      console.log('💾 Quiz LOCKED! Version saved:', currentQuizVersion);
+      console.log('💾 Score saved:', finalScore);
+      setTestMessage(`Quiz locked! Score: ${finalScore}/${questions.length}`);
     }
+    
+    saveQuizResult(finalScore);
   };
 
   const saveQuizResult = async (finalScore) => {
@@ -218,6 +235,7 @@ export default function QuizPage() {
       });
       const updatedUser = { ...user, score: (user.score || 0) + finalScore, totalQuizzesTaken: (user.totalQuizzesTaken || 0) + 1 };
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('💾 Quiz result saved to database');
     } catch (error) {
       console.error('Error saving result:', error);
     }
@@ -232,14 +250,13 @@ export default function QuizPage() {
     return userAnswers.filter((ans) => ans !== null);
   };
 
-  // LOCKED QUIZ RESULTS PAGE (User already took this version)
+  // LOCKED QUIZ RESULTS PAGE
   if ((!canTakeQuiz || quizLocked) && showResults && !showReview && !loading) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 pb-24">
-        {/* Top Ad */}
         <AdSpace type="banner" className="mx-4 mt-2" />
         <AdSpace type="inArticle" className="mx-4 my-2" />
         
@@ -249,6 +266,7 @@ export default function QuizPage() {
             <h2 className="text-2xl font-bold text-gray-800">Quiz Locked!</h2>
             <p className="text-gray-500 text-sm mt-1">You have already completed this quiz</p>
             <p className="text-xs text-orange-600 mt-1">New quiz will be available when admin adds new questions</p>
+            {testMessage && <p className="text-xs text-green-600 mt-2">{testMessage}</p>}
           </div>
           
           <div className="bg-white rounded-2xl shadow-lg p-5 mb-5 border border-gray-100">
@@ -312,14 +330,13 @@ export default function QuizPage() {
           </Link>
         </div>
         
-        {/* Bottom Ad */}
         <AdSpace type="inArticle" className="mx-4 my-4" />
         <AdSpace type="banner" className="mx-4 mt-4" />
       </div>
     );
   }
 
-  // REVIEW PAGE (PREVIEW)
+  // REVIEW PAGE
   if (showReview) {
     const filteredQuestions = getFilteredQuestions();
     const wrongCount = userAnswers.filter(a => a && !a.isCorrect).length;
@@ -456,7 +473,6 @@ export default function QuizPage() {
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   
-  // Format time as MM:SS
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -465,7 +481,6 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      {/* Top Banner Ad */}
       <AdSpace type="banner" className="mx-4 mt-2" />
       
       <div className="mx-4 mt-2">
@@ -477,7 +492,14 @@ export default function QuizPage() {
 
       <div className="max-w-md mx-auto px-4 py-4">
         
-        {/* Timer Row - Score Removed */}
+        {/* Debug Message - Remove in production */}
+        {testMessage && (
+          <div className="mb-4 p-2 bg-blue-50 text-blue-600 text-xs text-center rounded-lg">
+            {testMessage}
+          </div>
+        )}
+        
+        {/* Timer Row */}
         <div className="mb-6">
           <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 text-center">
             <p className="text-xs text-gray-400 mb-1">Time Remaining</p>
@@ -487,7 +509,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Native Ad - Between Timer and Progress */}
         <AdSpace type="inArticle" className="mx-0 my-2" />
 
         {/* Progress Bar */}
@@ -504,7 +525,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Native Ad - Before Question */}
         <AdSpace type="inArticle" className="mx-0 my-2" />
 
         {/* Question Box */}
@@ -593,7 +613,6 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* Native Ad - Before Navigation */}
         <AdSpace type="inArticle" className="mx-0 my-2" />
 
         <div className="flex gap-3">
@@ -627,7 +646,6 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* Bottom Ads */}
       <AdSpace type="inArticle" className="mx-4 my-2" />
       <AdSpace type="banner" className="mx-4 mt-2" />
 

@@ -73,3 +73,5 @@ data/*.json
 
 .vercel
 .env*
+.vercel
+.env*
