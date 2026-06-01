@@ -22,12 +22,10 @@ export default function QuizPage() {
   const [startTime, setStartTime] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [reviewFilter, setReviewFilter] = useState('all');
-  const [canTakeQuiz, setCanTakeQuiz] = useState(true);
   const [quizLocked, setQuizLocked] = useState(false);
   const [currentQuizVersion, setCurrentQuizVersion] = useState('');
-  const [hasTakenQuiz, setHasTakenQuiz] = useState(false);
+  const [debugMessage, setDebugMessage] = useState('');
 
-  // First, get user from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {
@@ -47,6 +45,7 @@ export default function QuizPage() {
   const fetchQuestionsAndCheck = async () => {
     try {
       setLoading(true);
+      setDebugMessage('Fetching questions...');
       const res = await fetch('/api/questions');
       const data = await res.json();
       
@@ -55,59 +54,57 @@ export default function QuizPage() {
         setAnswers(new Array(data.length).fill(null));
         setUserAnswers(new Array(data.length).fill(null));
         
-        // Create version hash from questions
+        // Create version hash
         const versionString = data.map(q => `${q._id}-${q.answer}`).join(',');
         const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
         setCurrentQuizVersion(versionHash);
+        setDebugMessage(`Version: ${versionHash.substring(0, 20)}...`);
         
-        // Check if user has already taken this version
-        const takenQuizVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
+        // Check if user already took this quiz
+        const takenVersion = localStorage.getItem(`quizVersion_${user?.instagramId}`);
         const savedResults = localStorage.getItem(`quizResults_${user?.instagramId}`);
         
-        if (takenQuizVersion && takenQuizVersion === versionHash && savedResults) {
-          // Quiz is LOCKED - User already took this version
+        setDebugMessage(`Saved version: ${takenVersion || 'none'}`);
+        
+        if (takenVersion && takenVersion === versionHash && savedResults) {
+          // Quiz is LOCKED
+          setDebugMessage('QUIZ IS LOCKED! Showing saved results');
           const parsed = JSON.parse(savedResults);
           setUserAnswers(parsed.userAnswers);
           setScore(parsed.score);
           setShowResults(true);
-          setCanTakeQuiz(false);
           setQuizLocked(true);
-          setHasTakenQuiz(true);
         } else {
-          // New quiz available
-          setCanTakeQuiz(true);
+          setDebugMessage('New quiz available! Take the quiz.');
           setQuizLocked(false);
-          setHasTakenQuiz(false);
           setShowResults(false);
         }
       }
     } catch (error) {
       console.error('Error:', error);
+      setDebugMessage(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Timer effect
   useEffect(() => {
     let timer;
-    if (timerActive && !showResults && !showReview && timeLeft > 0 && canTakeQuiz && !quizLocked && !hasTakenQuiz) {
-      timer = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && canTakeQuiz && !quizLocked && !hasTakenQuiz) {
+    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked) {
+      timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
       handleSubmitAnswer();
     }
     return () => clearTimeout(timer);
-  }, [timeLeft, timerActive, showResults, showReview, showExplanation, canTakeQuiz, quizLocked, hasTakenQuiz]);
+  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked]);
 
   const handleAnswerSelect = (answer) => {
-    if (!canTakeQuiz || quizLocked || hasTakenQuiz) return;
+    if (quizLocked) return;
     setSelectedAnswer(answer);
   };
 
   const handleSubmitAnswer = () => {
-    if (!canTakeQuiz || quizLocked || hasTakenQuiz) return;
+    if (quizLocked) return;
     if (!selectedAnswer && !showExplanation) return;
 
     if (!showExplanation && selectedAnswer) {
@@ -146,7 +143,7 @@ export default function QuizPage() {
   };
 
   const handlePreviousQuestion = () => {
-    if (currentQuestion > 0 && !quizLocked && !hasTakenQuiz && canTakeQuiz) {
+    if (currentQuestion > 0 && !quizLocked) {
       setShowExplanation(false);
       setCurrentQuestion(currentQuestion - 1);
       setSelectedAnswer(answers[currentQuestion - 1] || null);
@@ -155,6 +152,7 @@ export default function QuizPage() {
   };
 
   const calculateScore = () => {
+    setDebugMessage('Calculating final score...');
     let finalScore = 0;
     answers.forEach((answer, idx) => {
       if (answer && questions[idx] && answer === questions[idx].answer) {
@@ -162,16 +160,14 @@ export default function QuizPage() {
       }
     });
     
+    setDebugMessage(`Final Score: ${finalScore}/${questions.length}`);
     setScore(finalScore);
     setShowResults(true);
     setTimerActive(false);
-    setCanTakeQuiz(false);
     setQuizLocked(true);
-    setHasTakenQuiz(true);
     
-    // SAVE QUIZ RESULTS TO LOCALSTORAGE - LOCK THE QUIZ
+    // LOCK THE QUIZ - Save results
     if (user && currentQuizVersion) {
-      // Build final user answers
       const finalUserAnswers = [...userAnswers];
       for (let i = 0; i < answers.length; i++) {
         if (answers[i] && !finalUserAnswers[i]) {
@@ -186,13 +182,18 @@ export default function QuizPage() {
         }
       }
       
-      // SAVE TO LOCALSTORAGE - THIS LOCKS THE QUIZ
       localStorage.setItem(`quizVersion_${user.instagramId}`, currentQuizVersion);
       localStorage.setItem(`quizResults_${user.instagramId}`, JSON.stringify({
         userAnswers: finalUserAnswers,
         score: finalScore,
         completedAt: Date.now()
       }));
+      
+      setDebugMessage(`✅ QUIZ LOCKED! Version saved: ${currentQuizVersion.substring(0, 20)}...`);
+      console.log('✅ QUIZ LOCKED! Version saved:', currentQuizVersion);
+      console.log('✅ Score saved:', finalScore);
+    } else {
+      setDebugMessage('❌ Failed to save - user or version missing');
     }
     
     saveQuizResult(finalScore);
@@ -235,25 +236,24 @@ export default function QuizPage() {
     return userAnswers.filter((ans) => ans !== null);
   };
 
-  // LOCKED QUIZ RESULTS PAGE - User already took this version
-  if ((!canTakeQuiz || quizLocked || hasTakenQuiz) && showResults && !showReview && !loading) {
+  // LOCKED PAGE - User already took quiz
+  if (quizLocked && showResults && !showReview && !loading) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 pb-24">
         <AdSpace type="banner" className="mx-4 mt-2" />
-        <AdSpace type="inArticle" className="mx-4 my-2" />
-        
         <div className="max-w-md mx-auto">
           <div className="text-center mb-6">
             <div className="text-7xl mb-4">🔒</div>
             <h2 className="text-2xl font-bold text-gray-800">Quiz Locked!</h2>
             <p className="text-gray-500 text-sm mt-1">You have already completed this quiz</p>
-            <p className="text-xs text-orange-600 mt-1 font-medium">⚠️ New quiz will be available only when admin adds new questions</p>
+            <p className="text-xs text-orange-600 mt-1 font-semibold">⚠️ New quiz will be available only when admin adds new questions</p>
+            {debugMessage && <p className="text-xs text-green-600 mt-2">{debugMessage}</p>}
           </div>
           
-          <div className="bg-white rounded-2xl shadow-lg p-5 mb-5 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-lg p-5 mb-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white text-xl font-bold">
@@ -283,12 +283,12 @@ export default function QuizPage() {
           </div>
           
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-4 text-center shadow-sm">
               <div className="text-2xl mb-1">✅</div>
               <p className="text-2xl font-bold text-green-600">{score}</p>
               <p className="text-xs text-gray-500">Correct</p>
             </div>
-            <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-4 text-center shadow-sm">
               <div className="text-2xl mb-1">❌</div>
               <p className="text-2xl font-bold text-red-600">{wrongCount}</p>
               <p className="text-xs text-gray-500">Incorrect</p>
@@ -296,11 +296,11 @@ export default function QuizPage() {
           </div>
           
           <div className="bg-yellow-50 rounded-xl p-4 mb-6 border border-yellow-200">
-            <p className="text-sm text-yellow-800 text-center">
+            <p className="text-sm text-yellow-800 text-center font-medium">
               🔒 This quiz is locked! You cannot take it again.
             </p>
             <p className="text-xs text-yellow-600 text-center mt-1">
-              📢 New quiz will be available when admin adds new questions to the database.
+              📢 New quiz will be available when admin adds new questions.
             </p>
           </div>
           
@@ -316,14 +316,12 @@ export default function QuizPage() {
             📚 Study Notes
           </Link>
         </div>
-        
-        <AdSpace type="inArticle" className="mx-4 my-4" />
         <AdSpace type="banner" className="mx-4 mt-4" />
       </div>
     );
   }
 
-  // REVIEW PAGE (PREVIEW ONLY - READ ONLY)
+  // REVIEW PAGE
   if (showReview) {
     const filteredQuestions = getFilteredQuestions();
     const wrongCount = userAnswers.filter(a => a && !a.isCorrect).length;
@@ -332,120 +330,79 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
         <AdSpace type="banner" className="mx-4 mt-2" />
-        <AdSpace type="inArticle" className="mx-4 my-2" />
-        
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-6">
           <div className="text-center">
             <div className="text-5xl mb-2">📋</div>
             <h1 className="text-2xl font-bold">Quiz Review</h1>
             <p className="text-blue-100 text-sm mt-1">Review your answers - Read only mode</p>
-            <p className="text-xs text-yellow-200 mt-1">⚠️ You cannot edit answers in preview mode</p>
           </div>
         </div>
         
         <div className="max-w-md mx-auto px-4 py-4">
-          {/* Filter Tabs */}
           <div className="flex gap-2 mb-6 bg-white rounded-xl p-2 shadow-sm">
-            <button
-              onClick={() => setReviewFilter('all')}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${reviewFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
-            >
-              All ({userAnswers.filter(a => a !== null).length})
-            </button>
-            <button
-              onClick={() => setReviewFilter('wrong')}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${reviewFilter === 'wrong' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'}`}
-            >
-              ❌ Wrong ({wrongCount})
-            </button>
-            <button
-              onClick={() => setReviewFilter('correct')}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${reviewFilter === 'correct' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}
-            >
-              ✅ Correct ({correctCount})
-            </button>
+            <button onClick={() => setReviewFilter('all')} className={`flex-1 py-2 rounded-lg text-sm font-semibold ${reviewFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>All ({userAnswers.filter(a => a !== null).length})</button>
+            <button onClick={() => setReviewFilter('wrong')} className={`flex-1 py-2 rounded-lg text-sm font-semibold ${reviewFilter === 'wrong' ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>❌ Wrong ({wrongCount})</button>
+            <button onClick={() => setReviewFilter('correct')} className={`flex-1 py-2 rounded-lg text-sm font-semibold ${reviewFilter === 'correct' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>✅ Correct ({correctCount})</button>
           </div>
           
-          {/* Review Questions List - READ ONLY */}
           <div className="space-y-4 mb-24 select-none">
-            {filteredQuestions.length > 0 ? (
-              filteredQuestions.map((item, idx) => {
-                const originalIndex = userAnswers.findIndex(a => a === item);
-                return (
-                  <div 
-                    key={originalIndex} 
-                    className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-blue-500"
-                    onContextMenu={(e) => e.preventDefault()}
-                  >
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-bold text-blue-600">Question {originalIndex + 1}</span>
-                        {item.isCorrect ? (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">✅ Correct</span>
-                        ) : (
-                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">❌ Wrong</span>
-                        )}
-                      </div>
-                      <h3 className="font-semibold text-gray-800 text-sm mb-3">{item.question}</h3>
-                      <div className="space-y-2 mb-3">
-                        {item.options?.map((opt, optIdx) => {
-                          const letter = String.fromCharCode(65 + optIdx);
-                          const isUserAnswer = item.selected === opt;
-                          const isCorrectAnswer = item.correctAnswer === opt;
-                          let bgClass = 'bg-gray-50';
-                          if (isCorrectAnswer) bgClass = 'bg-green-100';
-                          if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
-                          return (
-                            <div key={optIdx} className={`p-2 rounded-lg ${bgClass} text-sm`}>
-                              <span className="font-medium">{letter}.</span> {opt}
-                              {isCorrectAnswer && <span className="text-green-600 text-xs ml-2">✓ Correct</span>}
-                              {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-xs ml-2">✗ Your Answer</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="bg-blue-50 rounded-lg p-2">
-                        <p className="text-xs font-semibold text-blue-800">📖 Explanation:</p>
-                        <p className="text-xs text-blue-700 mt-1">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
-                      </div>
+            {filteredQuestions.map((item, idx) => {
+              const originalIndex = userAnswers.findIndex(a => a === item);
+              return (
+                <div key={originalIndex} className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-blue-500" onContextMenu={(e) => e.preventDefault()}>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-blue-600">Question {originalIndex + 1}</span>
+                      {item.isCorrect ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">✅ Correct</span> : <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">❌ Wrong</span>}
+                    </div>
+                    <h3 className="font-semibold text-gray-800 text-sm mb-3">{item.question}</h3>
+                    <div className="space-y-2 mb-3">
+                      {item.options?.map((opt, optIdx) => {
+                        const letter = String.fromCharCode(65 + optIdx);
+                        const isUserAnswer = item.selected === opt;
+                        const isCorrectAnswer = item.correctAnswer === opt;
+                        let bgClass = 'bg-gray-50';
+                        if (isCorrectAnswer) bgClass = 'bg-green-100';
+                        if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
+                        return (
+                          <div key={optIdx} className={`p-2 rounded-lg ${bgClass} text-sm`}>
+                            <span className="font-medium">{letter}.</span> {opt}
+                            {isCorrectAnswer && <span className="text-green-600 text-xs ml-2">✓ Correct</span>}
+                            {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-xs ml-2">✗ Your Answer</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-2">
+                      <p className="text-xs font-semibold text-blue-800">📖 Explanation:</p>
+                      <p className="text-xs text-blue-700 mt-1">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
                     </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No questions to review</p>
-              </div>
-            )}
+                </div>
+              );
+            })}
           </div>
         </div>
         
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-4 shadow-lg">
           <div className="flex gap-3 max-w-md mx-auto">
-            <button onClick={() => setShowReview(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl font-semibold">
-              ← Back to Results
-            </button>
-            <Link href="/notes" className="flex-1 bg-green-600 text-white py-2 rounded-xl font-semibold text-center">
-              📚 Study More
-            </Link>
+            <button onClick={() => setShowReview(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl font-semibold">← Back to Results</button>
+            <Link href="/notes" className="flex-1 bg-green-600 text-white py-2 rounded-xl font-semibold text-center">📚 Study More</Link>
           </div>
         </div>
-        
-        <AdSpace type="inArticle" className="mx-4 my-4" />
       </div>
     );
   }
 
-  // LOADING
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        {debugMessage && <p className="ml-2 text-xs text-gray-500">{debugMessage}</p>}
       </div>
     );
   }
 
-  // NO QUESTIONS
   if (questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -462,7 +419,6 @@ export default function QuizPage() {
   const currentQ = questions[currentQuestion];
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
-  
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -481,13 +437,16 @@ export default function QuizPage() {
       </div>
 
       <div className="max-w-md mx-auto px-4 py-4">
+        {debugMessage && (
+          <div className="mb-4 p-2 bg-blue-50 text-blue-600 text-xs text-center rounded-lg">
+            🔍 {debugMessage}
+          </div>
+        )}
         
-        {/* Info Banner */}
-        <div className="mb-4 p-2 bg-blue-50 text-blue-600 text-xs text-center rounded-lg">
+        <div className="mb-4 p-2 bg-yellow-50 text-yellow-600 text-xs text-center rounded-lg">
           🔒 One attempt per question set • New quiz only when admin adds questions
         </div>
         
-        {/* Timer Row */}
         <div className="mb-6">
           <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 text-center">
             <p className="text-xs text-gray-400 mb-1">Time Remaining</p>
@@ -497,32 +456,20 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <AdSpace type="inArticle" className="mx-0 my-2" />
-
-        {/* Progress Bar */}
         <div className="mb-6">
           <div className="flex justify-between text-xs text-gray-500 mb-2">
             <span className="font-medium">Question {currentQuestion + 1} of {totalQuestions}</span>
             <span className="font-bold text-green-600">{Math.round(progress)}%</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-            <div 
-              className="h-2 rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-green-400 to-green-600"
-              style={{ width: `${progress}%` }}
-            ></div>
+            <div className="h-2 rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-green-400 to-green-600" style={{ width: `${progress}%` }}></div>
           </div>
         </div>
 
-        <AdSpace type="inArticle" className="mx-0 my-2" />
-
-        {/* Question Box */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-6">
           <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-            <h2 className="text-lg font-semibold text-gray-800 leading-relaxed">
-              {currentQ?.question}
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-800 leading-relaxed">{currentQ?.question}</h2>
           </div>
-          
           <div className="p-4 space-y-3">
             {currentQ?.options?.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
@@ -530,56 +477,18 @@ export default function QuizPage() {
               const isCorrect = opt === currentQ?.answer;
               const showCorrect = showExplanation && isCorrect;
               const showWrong = showExplanation && isSelected && !isCorrect;
-
               let bgColor = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
               let textColor = 'text-gray-700';
-              
-              if (showCorrect) {
-                bgColor = 'bg-green-50 border-green-400';
-                textColor = 'text-green-700';
-              } else if (showWrong) {
-                bgColor = 'bg-red-50 border-red-400';
-                textColor = 'text-red-700';
-              } else if (isSelected && !showExplanation) {
-                bgColor = 'bg-green-50 border-green-400';
-                textColor = 'text-green-700';
-              }
-
+              if (showCorrect) { bgColor = 'bg-green-50 border-green-400'; textColor = 'text-green-700'; }
+              else if (showWrong) { bgColor = 'bg-red-50 border-red-400'; textColor = 'text-red-700'; }
+              else if (isSelected && !showExplanation) { bgColor = 'bg-green-50 border-green-400'; textColor = 'text-green-700'; }
               return (
-                <button
-                  key={idx}
-                  onClick={() => !showExplanation && handleAnswerSelect(opt)}
-                  disabled={showExplanation || !canTakeQuiz || quizLocked || hasTakenQuiz}
-                  className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${bgColor}`}
-                >
+                <button key={idx} onClick={() => !showExplanation && handleAnswerSelect(opt)} disabled={showExplanation || quizLocked} className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${bgColor}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                      showCorrect ? 'bg-green-600 text-white' :
-                      showWrong ? 'bg-red-600 text-white' :
-                      isSelected ? 'bg-green-600 text-white' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
-                      {letter}
-                    </div>
-                    <span className={`flex-1 text-sm ${textColor} font-medium`}>
-                      {opt}
-                    </span>
-                    {showCorrect && (
-                      <span className="text-green-600 text-xs font-medium flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Correct
-                      </span>
-                    )}
-                    {showWrong && (
-                      <span className="text-red-600 text-xs font-medium flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Wrong
-                      </span>
-                    )}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${showCorrect ? 'bg-green-600 text-white' : showWrong ? 'bg-red-600 text-white' : isSelected ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{letter}</div>
+                    <span className={`flex-1 text-sm ${textColor} font-medium`}>{opt}</span>
+                    {showCorrect && <span className="text-green-600 text-xs font-medium flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Correct</span>}
+                    {showWrong && <span className="text-red-600 text-xs font-medium flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>Wrong</span>}
                   </div>
                 </button>
               );
@@ -593,39 +502,16 @@ export default function QuizPage() {
               <span className="text-blue-500 text-lg">💡</span>
               <div className="flex-1">
                 <p className="text-xs font-semibold text-blue-800 mb-1">Explanation:</p>
-                <p className="text-sm text-blue-700 leading-relaxed">
-                  {currentQ?.explanation || `The correct answer is ${currentQ?.answer}.`}
-                </p>
+                <p className="text-sm text-blue-700 leading-relaxed">{currentQ?.explanation || `The correct answer is ${currentQ?.answer}.`}</p>
               </div>
             </div>
           </div>
         )}
 
-        <AdSpace type="inArticle" className="mx-0 my-2" />
-
         <div className="flex gap-3">
-          {currentQuestion > 0 && (
-            <button
-              onClick={handlePreviousQuestion}
-              className="flex-1 bg-white text-gray-700 py-3 rounded-xl text-sm font-semibold border border-gray-300 hover:bg-gray-50 transition-all duration-200"
-            >
-              ← Previous
-            </button>
-          )}
-          <button
-            onClick={handleSubmitAnswer}
-            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              showExplanation
-                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md hover:shadow-lg'
-                : selectedAnswer
-                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md hover:shadow-lg'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-            disabled={(!showExplanation && !selectedAnswer) || !canTakeQuiz || quizLocked || hasTakenQuiz}
-          >
-            {showExplanation 
-              ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →')
-              : '✓ Submit Answer'}
+          {currentQuestion > 0 && <button onClick={handlePreviousQuestion} className="flex-1 bg-white text-gray-700 py-3 rounded-xl text-sm font-semibold border border-gray-300 hover:bg-gray-50">← Previous</button>}
+          <button onClick={handleSubmitAnswer} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${showExplanation ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`} disabled={(!showExplanation && !selectedAnswer) || quizLocked}>
+            {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →') : '✓ Submit Answer'}
           </button>
         </div>
 
@@ -634,45 +520,23 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <AdSpace type="inArticle" className="mx-4 my-2" />
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🏠</span><span className="text-xs">Home</span>
-          </Link>
-          <Link href="/quiz" className="flex flex-col items-center text-green-600">
-            <span className="text-xl">🎯</span><span className="text-xs">Quiz</span>
-          </Link>
-          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">📝</span><span className="text-xs">Notes</span>
-          </Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">📰</span><span className="text-xs">Current</span>
-          </Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🏆</span><span className="text-xs">Rank</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">👤</span><span className="text-xs">Profile</span>
-          </Link>
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition"><span className="text-xl">🏠</span><span className="text-xs">Home</span></Link>
+          <Link href="/quiz" className="flex flex-col items-center text-green-600"><span className="text-xl">🎯</span><span className="text-xs">Quiz</span></Link>
+          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition"><span className="text-xl">📝</span><span className="text-xs">Notes</span></Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition"><span className="text-xl">📰</span><span className="text-xs">Current</span></Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition"><span className="text-xl">🏆</span><span className="text-xs">Rank</span></Link>
+          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition"><span className="text-xl">👤</span><span className="text-xs">Profile</span></Link>
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-5px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        .select-none {
-          user-select: none;
-          -webkit-user-select: none;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        .select-none { user-select: none; -webkit-user-select: none; }
       `}</style>
     </div>
   );
