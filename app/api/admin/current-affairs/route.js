@@ -6,12 +6,10 @@ export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
-    
     const affairs = await db.collection("currentaffairs")
       .find({})
       .sort({ date: -1, createdAt: -1 })
       .toArray();
-    
     return NextResponse.json(affairs);
   } catch (error) {
     console.error('Admin Current Affairs GET Error:', error);
@@ -25,21 +23,31 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
+    // Convert date to YYYY-MM-DD string format
+    let dateString = body.date;
+    if (body.date && !body.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const d = new Date(body.date);
+      dateString = d.toISOString().split('T')[0];
+    } else if (!body.date) {
+      dateString = new Date().toISOString().split('T')[0];
+    }
+    
     const newAffair = {
-      ...body,
-      date: body.date ? new Date(body.date) : new Date(),
+      title: body.title,
+      title_en: body.title_en || '',
+      content: body.content,
+      content_en: body.content_en || '',
+      date: dateString,
+      category: body.category || 'General',
+      important: body.important || false,
+      source: body.source || 'Admin',
       createdAt: new Date(),
       updatedAt: new Date()
     };
     
     const result = await db.collection("currentaffairs").insertOne(newAffair);
     
-    return NextResponse.json({ 
-      success: true, 
-      _id: result.insertedId,
-      id: result.insertedId,
-      ...newAffair 
-    }, { status: 201 });
+    return NextResponse.json({ success: true, _id: result.insertedId, ...newAffair }, { status: 201 });
   } catch (error) {
     console.error('Admin Current Affairs POST Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -52,9 +60,7 @@ export async function DELETE(request) {
     const id = searchParams.get('id');
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
-    
     const result = await db.collection("currentaffairs").deleteOne({ _id: new ObjectId(id) });
-    
     return NextResponse.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
     console.error('Admin Current Affairs DELETE Error:', error);
@@ -69,6 +75,11 @@ export async function PUT(request) {
     const objectId = _id || id;
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
+    
+    if (updateData.date && !updateData.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const d = new Date(updateData.date);
+      updateData.date = d.toISOString().split('T')[0];
+    }
     
     const result = await db.collection("currentaffairs").updateOne(
       { _id: new ObjectId(objectId) },
