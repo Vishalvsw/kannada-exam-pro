@@ -23,10 +23,10 @@ export default function QuizPage() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [reviewFilter, setReviewFilter] = useState('all');
   const [quizLocked, setQuizLocked] = useState(false);
-  const [currentQuizVersion, setCurrentQuizVersion] = useState('');
   const [isLockedPage, setIsLockedPage] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [questionsHash, setQuestionsHash] = useState('');
 
   // Update date and time every second
   useEffect(() => {
@@ -56,10 +56,21 @@ export default function QuizPage() {
     try {
       setLoading(true);
       
-      const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
-      const savedVersion = localStorage.getItem(`quizVersion_${userData?.instagramId}`);
+      // Get current questions from server
+      const res = await fetch('/api/questions');
+      const serverQuestions = await res.json();
       
-      if (savedResults && savedVersion) {
+      // Create hash of server questions
+      const serverHash = serverQuestions.map(q => q._id).join(',');
+      setQuestionsHash(serverHash);
+      
+      // Get user's saved results
+      const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
+      const savedQuestionsHash = localStorage.getItem(`quizQuestionsHash_${userData?.instagramId}`);
+      
+      // Check if questions have changed (admin added new questions)
+      if (savedResults && savedQuestionsHash === serverHash) {
+        // Same questions - show PREVIEW PAGE
         const parsed = JSON.parse(savedResults);
         setUserAnswers(parsed.userAnswers || []);
         setScore(parsed.score || 0);
@@ -67,17 +78,16 @@ export default function QuizPage() {
         setShowResults(true);
         setQuizLocked(true);
         setIsLockedPage(true);
+        setQuizCompleted(true);
         setLoading(false);
         return;
       }
       
-      const res = await fetch('/api/questions');
-      const data = await res.json();
-      
-      if (data && data.length > 0) {
-        setQuestions(data);
-        setAnswers(new Array(data.length).fill(null));
-        setUserAnswers(new Array(data.length).fill(null));
+      // New questions available or no saved results - show new quiz
+      if (serverQuestions && serverQuestions.length > 0) {
+        setQuestions(serverQuestions);
+        setAnswers(new Array(serverQuestions.length).fill(null));
+        setUserAnswers(new Array(serverQuestions.length).fill(null));
         setQuizLocked(false);
         setIsLockedPage(false);
         setShowResults(false);
@@ -168,9 +178,6 @@ export default function QuizPage() {
     setQuizLocked(true);
     
     if (user) {
-      const versionString = questions.map(q => `${q._id || q.id}-${q.answer}`).join(',');
-      const versionHash = btoa(unescape(encodeURIComponent(versionString))).substring(0, 50);
-      
       const finalUserAnswers = [...userAnswers];
       for (let i = 0; i < answers.length; i++) {
         if (answers[i] && !finalUserAnswers[i]) {
@@ -185,7 +192,8 @@ export default function QuizPage() {
         }
       }
       
-      localStorage.setItem(`quizVersion_${user.instagramId}`, versionHash);
+      // Save results with questions hash
+      localStorage.setItem(`quizQuestionsHash_${user.instagramId}`, questionsHash);
       localStorage.setItem(`quizResults_${user.instagramId}`, JSON.stringify({
         userAnswers: finalUserAnswers,
         score: finalScore,
@@ -291,8 +299,8 @@ export default function QuizPage() {
     second: '2-digit'
   });
 
-  // ========== PREVIEW / RESULT PAGE ==========
-  if (quizCompleted && showResults && !showReview && !loading) {
+  // ========== PREVIEW PAGE (Shown after quiz completion OR when returning to quiz) ==========
+  if ((quizCompleted && showResults && !showReview && !loading) || (isLockedPage && !showReview && !loading)) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
     const isPassed = percentage >= 40;
@@ -335,7 +343,7 @@ export default function QuizPage() {
           <div className="text-center mb-6">
             <div className="text-7xl mb-3 animate-bounce">🎉</div>
             <h1 className="text-2xl font-bold text-gray-800">Congratulations!</h1>
-            <p className="text-gray-500 text-sm mt-1">You have completed the quiz</p>
+            <p className="text-gray-500 text-sm mt-1">You have completed this quiz</p>
           </div>
 
           {/* Score Card */}
@@ -373,9 +381,9 @@ export default function QuizPage() {
             <div className="flex items-center gap-3">
               <div className="text-3xl">🔒</div>
               <div>
-                <p className="text-sm font-semibold text-yellow-800">Quiz Locked!</p>
-                <p className="text-xs text-yellow-600">You have already completed this quiz</p>
-                <p className="text-xs text-orange-600 mt-1">⚠️ New quiz will be available only when admin adds new questions</p>
+                <p className="text-sm font-semibold text-yellow-800">Quiz Completed!</p>
+                <p className="text-xs text-yellow-600">You have already taken this quiz</p>
+                <p className="text-xs text-orange-600 mt-1">⚠️ New quiz will be available when admin adds new questions</p>
               </div>
             </div>
           </div>
@@ -383,12 +391,12 @@ export default function QuizPage() {
           {/* Preview Questions Section */}
           <div className="mb-6">
             <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <span className="text-2xl">📋</span> Preview Your Answers
+              <span className="text-2xl">📋</span> Your Answers Preview
             </h2>
-            <p className="text-xs text-gray-500 mb-3">Click on any question to review your answer</p>
+            <p className="text-xs text-gray-500 mb-3">Click on any question to review detailed explanation</p>
           </div>
 
-          {/* Questions Preview List */}
+          {/* Questions Preview List - Clickable */}
           <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
             {userAnswers.filter(a => a !== null).map((item, idx) => {
               const originalIndex = userAnswers.findIndex(a => a === item);
@@ -402,6 +410,7 @@ export default function QuizPage() {
                     setCurrentQuestion(originalIndex);
                     setShowResults(false);
                     setQuizCompleted(false);
+                    setIsLockedPage(false);
                     setShowReview(true);
                   }}
                 >
@@ -416,7 +425,7 @@ export default function QuizPage() {
                     <h3 className="font-medium text-gray-800 text-sm line-clamp-2">
                       {item.question}
                     </h3>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
                       <span className="text-xs text-gray-400">Your answer:</span>
                       <span className={`text-xs font-medium ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                         {item.selected}
@@ -435,6 +444,17 @@ export default function QuizPage() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Wait for New Quiz Message */}
+          <div className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-2xl">⏳</span>
+              <span className="text-sm font-semibold text-blue-800">Waiting for New Quiz</span>
+            </div>
+            <p className="text-xs text-blue-600">
+              New quiz will be available when admin adds new questions. Check back later!
+            </p>
           </div>
 
           {/* Action Buttons */}
@@ -577,7 +597,7 @@ export default function QuizPage() {
         
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-4 shadow-lg">
           <div className="flex gap-3 max-w-md mx-auto">
-            <button onClick={() => setShowReview(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl font-semibold">← Back to Results</button>
+            <button onClick={() => setShowReview(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl font-semibold">← Back to Preview</button>
             <Link href="/notes" className="flex-1 bg-green-600 text-white py-2 rounded-xl font-semibold text-center">📚 Study More</Link>
           </div>
         </div>
