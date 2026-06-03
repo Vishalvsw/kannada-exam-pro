@@ -12,7 +12,6 @@ export default function CurrentAffairsPage() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export default function CurrentAffairsPage() {
     if (selectedDate) {
       fetchCurrentAffairs();
     }
-  }, [selectedDate, selectedCategory]);
+  }, [selectedDate]);
 
   const fetchCurrentAffairs = async () => {
     setLoading(true);
@@ -32,11 +31,6 @@ export default function CurrentAffairsPage() {
       const data = await res.json();
       setAllAffairs(Array.isArray(data) ? data : []);
       let filtered = Array.isArray(data) ? data.filter(a => a.date === selectedDate) : [];
-      
-      if (selectedCategory !== 'all') {
-        filtered = filtered.filter(a => a.category === selectedCategory);
-      }
-      
       setAffairs(filtered);
     } catch (error) {
       console.error('Error fetching affairs:', error);
@@ -78,8 +72,6 @@ export default function CurrentAffairsPage() {
       }
     }
   };
-
-  const categories = ['all', ...new Set(allAffairs.map(a => a.category).filter(Boolean))];
 
   const filteredAffairs = affairs.filter(affair => {
     const matchesSearch = searchTerm === '' || 
@@ -207,27 +199,6 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Category Filters - Green */}
-      {categories.length > 1 && (
-        <div className="max-w-md mx-auto px-4 mt-4 overflow-x-auto">
-          <div className="flex gap-2 pb-2">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
-                  selectedCategory === cat
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {cat === 'all' ? '📰 All' : cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Results Header */}
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="flex justify-between items-center mb-3">
@@ -264,11 +235,6 @@ export default function CurrentAffairsPage() {
                         <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
                           📅 {affair.date}
                         </span>
-                        {affair.category && (
-                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
-                            📂 {affair.category}
-                          </span>
-                        )}
                       </div>
                       <details className="mt-2">
                         <summary className="cursor-pointer text-green-600 text-xs font-medium hover:text-green-700 transition inline-flex items-center gap-1">

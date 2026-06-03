@@ -77,7 +77,7 @@ export default function NotesPage() {
             {/* Animated Icon */}
             <div className="mb-4 animate-bounce">
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-transform duration-300">
-                <span className="text-5xl animate-pulse">📚</span>
+                <span className="text-5xl animate-pulse"></span>
               </div>
             </div>
             <div>
