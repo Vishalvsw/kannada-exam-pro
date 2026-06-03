@@ -56,6 +56,60 @@ export async function POST(request) {
   }
 }
 
+
+
+
+// ✅ PUT - Update existing QA question
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { _id, id, ...updateData } = body;
+    const objectId = _id || id;
+    
+    if (!objectId) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+    
+    const client = await clientPromise;
+    const db = client.db("kannada_exam_pro");
+    
+    const updatedQA = {
+      question: updateData.question,
+      question_en: updateData.question_en || '',
+      answer: updateData.answer,
+      answer_en: updateData.answer_en || '',
+      category: updateData.category || 'General',
+      important: updateData.important === 'true' || updateData.important === true,
+      updatedAt: new Date()
+    };
+    
+    const result = await db.collection("qaquestions").updateOne(
+      { _id: new ObjectId(objectId) },
+      { $set: updatedQA }
+    );
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      modified: result.modifiedCount,
+      _id: objectId,
+      ...updatedQA
+    });
+  } catch (error) {
+    console.error('Admin QA PUT Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+
+
+
+
+
+
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
