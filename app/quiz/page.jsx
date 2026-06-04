@@ -29,7 +29,6 @@ export default function QuizPage() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState({});
 
-  // Live clock
   useEffect(() => {
     const interval = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(interval);
@@ -132,7 +131,7 @@ export default function QuizPage() {
       setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
       setShowExplanation(true);
     } else {
-      // ✅ FIX: Move to next question when clicking Next
+      // ✅ This runs when clicking NEXT after explanation
       setShowExplanation(false);
       setSelectedAnswer(null);
       
@@ -715,7 +714,7 @@ export default function QuizPage() {
             }`} 
             disabled={(!showExplanation && !selectedAnswer) || quizLocked || isQuestionAnswered}
           >
-            {showExplanation ? (currentQuestion + 1 === totalQuestions ? 'Finish ✓' : 'Next →') : 'Submit ✓'}
+            {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →') : '✓ Submit Answer'}
           </button>
         </div>
 
