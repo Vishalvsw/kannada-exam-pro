@@ -27,8 +27,9 @@ export default function QuizPage() {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [questionsHash, setQuestionsHash] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
-  // ✅ CRITICAL: Add this state to track answered questions
+  // ✅ FIXED: Uncommented and added both states
   const [answeredQuestions, setAnsweredQuestions] = useState({});
+  const [questionSubmitted, setQuestionSubmitted] = useState(false);
 
   // Live clock
   useEffect(() => {
@@ -83,7 +84,8 @@ export default function QuizPage() {
         setQuizLocked(false);
         setShowResults(false);
         setQuizCompleted(false);
-        setAnsweredQuestions({}); // Reset answered questions for new quiz
+        setAnsweredQuestions({});
+        setQuestionSubmitted(false);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -102,9 +104,8 @@ export default function QuizPage() {
     return () => clearTimeout(timer);
   }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted]);
 
-  // ✅ FIX: Prevent selecting answer if question already answered
   const handleAnswerSelect = (answer) => {
-    if (quizLocked || quizCompleted || answeredQuestions[currentQuestion]) return;
+    if (quizLocked || quizCompleted || answeredQuestions[currentQuestion] || questionSubmitted) return;
     setSelectedAnswer(answer);
   };
 
@@ -131,12 +132,13 @@ export default function QuizPage() {
       };
       setUserAnswers(newUserAnswers);
       
-      // ✅ FIX: Mark this question as answered (LOCK IT)
       setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
+      setQuestionSubmitted(true);
       setShowExplanation(true);
     } else {
       setShowExplanation(false);
       setSelectedAnswer(null);
+      setQuestionSubmitted(false);
       
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
@@ -151,8 +153,8 @@ export default function QuizPage() {
     if (currentQuestion > 0 && !quizLocked && !quizCompleted) {
       setShowExplanation(false);
       setCurrentQuestion(currentQuestion - 1);
-      // Load previously selected answer for this question
       setSelectedAnswer(answers[currentQuestion - 1] || null);
+      setQuestionSubmitted(answeredQuestions[currentQuestion - 1]);
       setTimeLeft(120);
     }
   };
@@ -580,6 +582,7 @@ export default function QuizPage() {
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const isQuestionAnswered = answeredQuestions[currentQuestion];
+  const isSubmitted = questionSubmitted;
 
   // ========== ACTIVE QUIZ PAGE ==========
   return (
@@ -633,7 +636,6 @@ export default function QuizPage() {
                 <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
               </div>
               <h2 className="font-semibold text-gray-800 text-sm flex-1">{currentQ?.question}</h2>
-              {/* ✅ Show lock indicator if question is answered */}
               {isQuestionAnswered && (
                 <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
                   <span className="text-green-600 text-[10px]">✓</span>
@@ -647,13 +649,12 @@ export default function QuizPage() {
               const isSelected = selectedAnswer === opt;
               const showCorrect = showExplanation && opt === currentQ?.answer;
               const showWrong = showExplanation && isSelected && opt !== currentQ?.answer;
-              // ✅ Disable if question already answered
-              const isDisabled = showExplanation || quizLocked || isQuestionAnswered;
+              const isDisabled = showExplanation || quizLocked || isQuestionAnswered || isSubmitted;
               
               let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
               if (showCorrect) bgClass = 'bg-green-50 border-green-400';
               if (showWrong) bgClass = 'bg-red-50 border-red-400';
-              if (isSelected && !showExplanation && !isQuestionAnswered) bgClass = 'bg-green-50 border-green-400';
+              if (isSelected && !showExplanation && !isQuestionAnswered && !isSubmitted) bgClass = 'bg-green-50 border-green-400';
               if (isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation) bgClass = 'bg-green-50 border-green-400';
               
               return (
@@ -718,8 +719,7 @@ export default function QuizPage() {
               selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`} 
-            // ✅ Disable submit if question already answered
-            disabled={(!showExplanation && !selectedAnswer) || quizLocked || isQuestionAnswered}
+            disabled={(!showExplanation && !selectedAnswer) || quizLocked || isQuestionAnswered || isSubmitted}
           >
             {showExplanation ? (currentQuestion + 1 === totalQuestions ? 'Finish ✓' : 'Next →') : 'Submit ✓'}
           </button>
