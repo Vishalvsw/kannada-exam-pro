@@ -26,6 +26,7 @@ export default function QuizPage() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [questionsHash, setQuestionsHash] = useState('');
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Live clock
   useEffect(() => {
@@ -159,6 +160,10 @@ export default function QuizPage() {
     setQuizCompleted(true);
     setTimerActive(false);
     setQuizLocked(true);
+    setShowCelebration(true);
+    
+    // Hide celebration after 3 seconds
+    setTimeout(() => setShowCelebration(false), 3000);
     
     if (user) {
       const finalUserAnswers = [...userAnswers];
@@ -255,12 +260,10 @@ export default function QuizPage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const timeSpent = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-  const formattedTimeSpent = formatTime(timeSpent);
   const formattedDate = currentDateTime.toLocaleDateString();
   const formattedTime = currentDateTime.toLocaleTimeString();
 
-  // ========== RESULT PAGE - COMPACT, NO EMOJIS, 2 BOXES ==========
+  // ========== RESULT PAGE WITH ANIMATION ==========
   if ((quizCompleted && showResults && !showReview && !loading) || (quizLocked && !showReview && !loading)) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
@@ -269,59 +272,122 @@ export default function QuizPage() {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
         <AdSpace type="banner" className="mx-4 mt-2" />
         
+        {/* Celebration Animation */}
+        {showCelebration && (
+          <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/30 animate-fadeOut"></div>
+            <div className="relative">
+              {/* Animated Stars */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="text-8xl animate-bounce">🎉</div>
+              </div>
+              <div className="absolute -top-20 left-1/4 text-4xl animate-ping">✨</div>
+              <div className="absolute -top-10 right-1/4 text-3xl animate-pulse">⭐</div>
+              <div className="absolute bottom-20 left-1/4 text-3xl animate-bounce">🌟</div>
+              <div className="absolute bottom-10 right-1/4 text-2xl animate-ping">💫</div>
+              <div className="absolute top-10 left-10 text-3xl animate-spin">🎊</div>
+              <div className="absolute bottom-32 right-10 text-2xl animate-pulse">🎈</div>
+            </div>
+          </div>
+        )}
+        
         <div className="max-w-md mx-auto px-4 py-3">
           
-          {/* BOX 1: QUIZ INFO */}
+          {/* BOX 1: QUIZ INFO - add Duration */}
+
           <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">
-            <div className="flex justify-around items-center">
+            <div className="flex justify-center items-center">
               <div className="text-center">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-1">
-                  <span className="text-blue-600 text-sm font-bold">📅</span>
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-1 animate-pulse">
+                  <span className="text-blue-600 text-lg font-bold">📅</span>
                 </div>
                 <p className="text-[10px] text-gray-400">DATE</p>
                 <p className="text-xs font-semibold text-gray-700">{formattedDate}</p>
               </div>
-              <div className="w-px h-12 bg-gray-200"></div>
+              <div className="w-px h-10 bg-gray-200 mx-4"></div>
               <div className="text-center">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
-                  <span className="text-green-600 text-sm font-bold">⏱️</span>
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1 animate-pulse">
+                  <span className="text-green-600 text-lg font-bold">⏱️</span>
                 </div>
                 <p className="text-[10px] text-gray-400">DURATION</p>
-                <p className="text-xs font-semibold text-gray-700">{formattedTimeSpent}</p>
-              </div>
+                <p className="text-xs font-semibold text-gray-700">{formatTime(120 - timeLeft)}</p>
+                  
             </div>
           </div>
 
-          {/* BOX 2: SCORE CARD */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 mb-3 text-white shadow-lg">
+          {/* Celebration Message with Animation */}
+          <div className="text-center mb-3 animate-slideDown">
+            <div className="text-6xl mb-2 animate-bounce inline-block">🎉</div>
+            <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600 animate-pulse">
+              Quiz Completed!
+            </h1>
+            <p className="text-[11px] text-gray-500 mt-1">Great effort! Check your results below</p>
+          </div>
+
+          {/* BOX 2: SCORE CARD withno need animation */}
+
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 mb-3 text-white shadow-lg animate-scaleUp">
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
-                <span className="text-white text-xl font-bold">🏆</span>
+              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
+                <span className="text-white text-2xl font-bold">★</span>
               </div>
               <p className="text-[11px] text-blue-100 uppercase tracking-wide">Your Score</p>
               <div className="flex items-center justify-center gap-1">
-                <span className="text-4xl font-bold">{score}</span>
+                <span className="text-5xl font-bold animate-pulse">{score}</span>
                 <span className="text-xl opacity-80">/{questions.length}</span>
               </div>
               <div className="mt-2">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20 animate-pulse">
                   {percentage}%
                 </span>
               </div>
             </div>
           </div>
 
-          {/* STATS ROW - Correct/Wrong */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+          {/* STATS ROW - Correct/Wrong no need animation */}
+
+          <div className="flex justify-around mb-4">
+            <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
                 <span className="text-green-600 text-sm font-bold">✓</span>
+              </div>
+              <p className="text-[10px] text-gray-400">Correct</p>
+              <p className="text-sm font-semibold text-gray-700">{score}</p>
+            </div>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-1">
+                <span className="text-red-600 text-sm font-bold">✗</span>
+              </div>
+              <p className="text-[10px] text-gray-400">Wrong</p>
+              <p className="text-sm font-semibold text-gray-700">{wrongCount}</p>
+            </div>
+          </div>
+
+          
+          {/* LOCKED MESSAGE */}
+          <div className="bg-yellow-50 rounded-lg p-2 mb-3 border border-yellow-200">
+            <div className="flex items-center gap-2"> 
+              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
+                <span className="text-yellow-600 text-sm font-bold">🔒</span>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-yellow-800">You already completed this quiz</p>
+                <p className="text-[10px] text-yellow-600">New quiz when admin adds questions</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ANSWERS PREVIEW - 2 COLUMN GRID */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center animate-pulse">
+                <span className="text-purple-600 text-xs font-bold">📋</span>
               </div>
               <p className="text-lg font-bold text-green-600">{score}</p>
               <p className="text-[10px] text-gray-500">CORRECT</p>
             </div>
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-1">
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100 animate-slideLeft">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-1 animate-shake">
                 <span className="text-red-600 text-sm font-bold">✗</span>
               </div>
               <p className="text-lg font-bold text-red-600">{wrongCount}</p>
@@ -329,23 +395,24 @@ export default function QuizPage() {
             </div>
           </div>
 
+          
           {/* LOCKED MESSAGE */}
           <div className="bg-yellow-50 rounded-lg p-2 mb-3 border border-yellow-200">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+            <div className="flex items-center gap-2"> 
+              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center animate-pulse">
                 <span className="text-yellow-600 text-sm font-bold">🔒</span>
               </div>
               <div>
-                <p className="text-xs font-semibold text-yellow-800">Quiz Locked</p>
+                <p className="text-xs font-semibold text-yellow-800">You already completed this quiz</p>
                 <p className="text-[10px] text-yellow-600">New quiz when admin adds questions</p>
               </div>
             </div>
           </div>
 
-          {/* ANSWERS PREVIEW - 2 COLUMN GRID (NO SCROLL) */}
+          {/* ANSWERS PREVIEW - 2 COLUMN GRID */}
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center animate-pulse">
                 <span className="text-purple-600 text-xs font-bold">📋</span>
               </div>
               <h2 className="text-sm font-bold text-gray-700">Your Answers</h2>
@@ -398,7 +465,7 @@ export default function QuizPage() {
 
         <AdSpace type="banner" className="mx-4 mt-2" />
         
-        {/* BOTTOM NAVIGATION - SYMBOLS ONLY */}
+        {/* BOTTOM NAVIGATION */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
           <div className="flex justify-around max-w-md mx-auto">
             <Link href="/" className="flex flex-col items-center py-1">
@@ -439,6 +506,40 @@ export default function QuizPage() {
             </Link>
           </div>
         </div>
+
+        <style jsx>{`
+          @keyframes fadeOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+          }
+          @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+          }
+          @keyframes slideRight {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes slideLeft {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+          }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+          }
+          .animate-fadeOut { animation: fadeOut 3s ease-out forwards; }
+          .animate-slideDown { animation: slideDown 0.5s ease-out; }
+          .animate-scaleUp { animation: scaleUp 0.5s ease-out; }
+          .animate-slideRight { animation: slideRight 0.5s ease-out; }
+          .animate-slideLeft { animation: slideLeft 0.5s ease-out; }
+          .animate-shake { animation: shake 0.5s ease-in-out; }
+        `}</style>
       </div>
     );
   }
