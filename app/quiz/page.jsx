@@ -27,6 +27,8 @@ export default function QuizPage() {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [questionsHash, setQuestionsHash] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
+  // ✅ CRITICAL: Add this state to track answered questions
+  const [answeredQuestions, setAnsweredQuestions] = useState({});
 
   // Live clock
   useEffect(() => {
@@ -81,6 +83,7 @@ export default function QuizPage() {
         setQuizLocked(false);
         setShowResults(false);
         setQuizCompleted(false);
+        setAnsweredQuestions({}); // Reset answered questions for new quiz
       }
     } catch (error) {
       console.error('Error:', error);
@@ -99,8 +102,9 @@ export default function QuizPage() {
     return () => clearTimeout(timer);
   }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted]);
 
+  // ✅ FIX: Prevent selecting answer if question already answered
   const handleAnswerSelect = (answer) => {
-    if (quizLocked || quizCompleted) return;
+    if (quizLocked || quizCompleted || answeredQuestions[currentQuestion]) return;
     setSelectedAnswer(answer);
   };
 
@@ -126,6 +130,9 @@ export default function QuizPage() {
         explanation: questions[currentQuestion]?.explanation
       };
       setUserAnswers(newUserAnswers);
+      
+      // ✅ FIX: Mark this question as answered (LOCK IT)
+      setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
       setShowExplanation(true);
     } else {
       setShowExplanation(false);
@@ -144,6 +151,7 @@ export default function QuizPage() {
     if (currentQuestion > 0 && !quizLocked && !quizCompleted) {
       setShowExplanation(false);
       setCurrentQuestion(currentQuestion - 1);
+      // Load previously selected answer for this question
       setSelectedAnswer(answers[currentQuestion - 1] || null);
       setTimeLeft(120);
     }
@@ -272,7 +280,6 @@ export default function QuizPage() {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
         <AdSpace type="banner" className="mx-4 mt-2" />
         
-        {/* Celebration Animation */}
         {showCelebration && (
           <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30 animate-fadeOut"></div>
@@ -292,7 +299,6 @@ export default function QuizPage() {
         
         <div className="max-w-md mx-auto px-4 py-3">
           
-          {/* BOX 1: QUIZ INFO */}
           <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">
             <div className="flex justify-around items-center">
               <div className="text-center">
@@ -313,14 +319,12 @@ export default function QuizPage() {
             </div>
           </div>
 
-          {/* Celebration Message */}
           <div className="text-center mb-3">
             <div className="text-6xl mb-2 animate-bounce inline-block">🎉</div>
             <h1 className="text-xl font-bold text-gray-800">Quiz Completed!</h1>
             <p className="text-[11px] text-gray-500 mt-1">Great effort! Check your results below</p>
           </div>
 
-          {/* SCORE CARD */}
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 mb-3 text-white shadow-lg">
             <div className="text-center">
               <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
@@ -339,7 +343,6 @@ export default function QuizPage() {
             </div>
           </div>
 
-          {/* STATS ROW */}
           <div className="flex justify-around mb-4">
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
@@ -357,7 +360,6 @@ export default function QuizPage() {
             </div>
           </div>
 
-          {/* LOCKED MESSAGE */}
           <div className="bg-yellow-50 rounded-lg p-2 mb-3 border border-yellow-200">
             <div className="flex items-center gap-2"> 
               <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -370,7 +372,6 @@ export default function QuizPage() {
             </div>
           </div>
 
-          {/* ANSWERS PREVIEW */}
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
@@ -410,7 +411,6 @@ export default function QuizPage() {
             </div>
           </div>
 
-          {/* ACTION BUTTONS */}
           <div className="flex gap-2">
             <button onClick={() => setShowReview(true)} className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
               Review All
@@ -426,7 +426,6 @@ export default function QuizPage() {
 
         <AdSpace type="banner" className="mx-4 mt-2" />
         
-        {/* BOTTOM NAVIGATION */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
           <div className="flex justify-around max-w-md mx-auto">
             <Link href="/" className="flex flex-col items-center py-1">
@@ -580,6 +579,7 @@ export default function QuizPage() {
   const currentQ = questions[currentQuestion];
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  const isQuestionAnswered = answeredQuestions[currentQuestion];
 
   // ========== ACTIVE QUIZ PAGE ==========
   return (
@@ -588,7 +588,6 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* QUIZ INFO */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
           <div className="flex justify-around items-center">
             <div className="text-center">
@@ -609,7 +608,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* TIMER */}
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
           <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
@@ -617,7 +615,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* PROGRESS */}
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-gray-500">Question {currentQuestion + 1}</span>
@@ -629,7 +626,6 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
-        {/* QUESTION CARD */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-center gap-2">
@@ -637,6 +633,12 @@ export default function QuizPage() {
                 <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
               </div>
               <h2 className="font-semibold text-gray-800 text-sm flex-1">{currentQ?.question}</h2>
+              {/* ✅ Show lock indicator if question is answered */}
+              {isQuestionAnswered && (
+                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-green-600 text-[10px]">✓</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="p-3 space-y-2">
@@ -645,27 +647,38 @@ export default function QuizPage() {
               const isSelected = selectedAnswer === opt;
               const showCorrect = showExplanation && opt === currentQ?.answer;
               const showWrong = showExplanation && isSelected && opt !== currentQ?.answer;
+              // ✅ Disable if question already answered
+              const isDisabled = showExplanation || quizLocked || isQuestionAnswered;
+              
               let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
               if (showCorrect) bgClass = 'bg-green-50 border-green-400';
               if (showWrong) bgClass = 'bg-red-50 border-red-400';
-              if (isSelected && !showExplanation) bgClass = 'bg-green-50 border-green-400';
+              if (isSelected && !showExplanation && !isQuestionAnswered) bgClass = 'bg-green-50 border-green-400';
+              if (isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation) bgClass = 'bg-green-50 border-green-400';
+              
               return (
                 <button 
                   key={idx} 
-                  onClick={() => !showExplanation && handleAnswerSelect(opt)} 
-                  disabled={showExplanation || quizLocked} 
-                  className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass}`}
+                  onClick={() => !isDisabled && handleAnswerSelect(opt)} 
+                  disabled={isDisabled} 
+                  className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${isDisabled ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      showCorrect || (isSelected && !showExplanation) ? 'bg-green-600 text-white' : 
-                      showWrong ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'
+                      showCorrect ? 'bg-green-600 text-white' : 
+                      showWrong ? 'bg-red-600 text-white' : 
+                      (isSelected && !isDisabled) ? 'bg-green-600 text-white' :
+                      (isQuestionAnswered && answers[currentQuestion] === opt) ? 'bg-green-600 text-white' :
+                      'bg-gray-100 text-gray-600'
                     }`}>
                       {letter}
                     </div>
                     <span className="text-sm text-gray-700 flex-1">{opt}</span>
-                    {showCorrect && <span className="text-green-600 text-xs">✓</span>}
-                    {showWrong && <span className="text-red-600 text-xs">✗</span>}
+                    {showCorrect && <span className="text-green-600 text-xs">✓ Correct</span>}
+                    {showWrong && <span className="text-red-600 text-xs">✗ Wrong</span>}
+                    {isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation && (
+                      <span className="text-green-600 text-xs">✓ Your Answer</span>
+                    )}
                   </div>
                 </button>
               );
@@ -673,7 +686,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* EXPLANATION */}
         {showExplanation && (
           <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
             <div className="flex gap-2">
@@ -690,7 +702,6 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* NAVIGATION BUTTONS */}
         <div className="flex gap-2 mt-2">
           {currentQuestion > 0 && (
             <button 
@@ -707,7 +718,8 @@ export default function QuizPage() {
               selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`} 
-            disabled={(!showExplanation && !selectedAnswer) || quizLocked}
+            // ✅ Disable submit if question already answered
+            disabled={(!showExplanation && !selectedAnswer) || quizLocked || isQuestionAnswered}
           >
             {showExplanation ? (currentQuestion + 1 === totalQuestions ? 'Finish ✓' : 'Next →') : 'Submit ✓'}
           </button>
@@ -720,7 +732,6 @@ export default function QuizPage() {
 
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* BOTTOM NAVIGATION */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center py-1">
