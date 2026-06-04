@@ -27,9 +27,7 @@ export default function QuizPage() {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [questionsHash, setQuestionsHash] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
-  // ✅ FIXED: Uncommented and added both states
   const [answeredQuestions, setAnsweredQuestions] = useState({});
-  const [questionSubmitted, setQuestionSubmitted] = useState(false);
 
   // Live clock
   useEffect(() => {
@@ -85,7 +83,6 @@ export default function QuizPage() {
         setShowResults(false);
         setQuizCompleted(false);
         setAnsweredQuestions({});
-        setQuestionSubmitted(false);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -105,7 +102,7 @@ export default function QuizPage() {
   }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted]);
 
   const handleAnswerSelect = (answer) => {
-    if (quizLocked || quizCompleted || answeredQuestions[currentQuestion] || questionSubmitted) return;
+    if (quizLocked || quizCompleted || answeredQuestions[currentQuestion]) return;
     setSelectedAnswer(answer);
   };
 
@@ -133,12 +130,11 @@ export default function QuizPage() {
       setUserAnswers(newUserAnswers);
       
       setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
-      setQuestionSubmitted(true);
       setShowExplanation(true);
     } else {
+      // ✅ FIX: Move to next question when clicking Next
       setShowExplanation(false);
       setSelectedAnswer(null);
-      setQuestionSubmitted(false);
       
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
@@ -154,7 +150,6 @@ export default function QuizPage() {
       setShowExplanation(false);
       setCurrentQuestion(currentQuestion - 1);
       setSelectedAnswer(answers[currentQuestion - 1] || null);
-      setQuestionSubmitted(answeredQuestions[currentQuestion - 1]);
       setTimeLeft(120);
     }
   };
@@ -582,7 +577,6 @@ export default function QuizPage() {
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const isQuestionAnswered = answeredQuestions[currentQuestion];
-  const isSubmitted = questionSubmitted;
 
   // ========== ACTIVE QUIZ PAGE ==========
   return (
@@ -649,12 +643,12 @@ export default function QuizPage() {
               const isSelected = selectedAnswer === opt;
               const showCorrect = showExplanation && opt === currentQ?.answer;
               const showWrong = showExplanation && isSelected && opt !== currentQ?.answer;
-              const isDisabled = showExplanation || quizLocked || isQuestionAnswered || isSubmitted;
+              const isDisabled = showExplanation || quizLocked || isQuestionAnswered;
               
               let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
               if (showCorrect) bgClass = 'bg-green-50 border-green-400';
               if (showWrong) bgClass = 'bg-red-50 border-red-400';
-              if (isSelected && !showExplanation && !isQuestionAnswered && !isSubmitted) bgClass = 'bg-green-50 border-green-400';
+              if (isSelected && !showExplanation && !isQuestionAnswered) bgClass = 'bg-green-50 border-green-400';
               if (isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation) bgClass = 'bg-green-50 border-green-400';
               
               return (
@@ -719,7 +713,7 @@ export default function QuizPage() {
               selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`} 
-            disabled={(!showExplanation && !selectedAnswer) || quizLocked || isQuestionAnswered || isSubmitted}
+            disabled={(!showExplanation && !selectedAnswer) || quizLocked || isQuestionAnswered}
           >
             {showExplanation ? (currentQuestion + 1 === totalQuestions ? 'Finish ✓' : 'Next →') : 'Submit ✓'}
           </button>
