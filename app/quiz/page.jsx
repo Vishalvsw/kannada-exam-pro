@@ -61,7 +61,6 @@ export default function QuizPage() {
       const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
       const savedHash = localStorage.getItem(`quizQuestionsHash_${userData?.instagramId}`);
       
-      // Show preview if same questions
       if (savedResults && savedHash === serverHash) {
         const parsed = JSON.parse(savedResults);
         setUserAnswers(parsed.userAnswers || []);
@@ -74,7 +73,6 @@ export default function QuizPage() {
         return;
       }
       
-      // New quiz
       if (serverQuestions && serverQuestions.length > 0) {
         setQuestions(serverQuestions);
         setAnswers(new Array(serverQuestions.length).fill(null));
@@ -90,7 +88,6 @@ export default function QuizPage() {
     }
   };
 
-  // Timer effect
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
@@ -263,7 +260,7 @@ export default function QuizPage() {
   const formattedDate = currentDateTime.toLocaleDateString();
   const formattedTime = currentDateTime.toLocaleTimeString();
 
-  // ========== PREVIEW PAGE (Compact - No Scroll) ==========
+  // ========== RESULT PAGE - COMPACT, NO EMOJIS, 2 BOXES ==========
   if ((quizCompleted && showResults && !showReview && !loading) || (quizLocked && !showReview && !loading)) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
@@ -273,88 +270,173 @@ export default function QuizPage() {
         <AdSpace type="banner" className="mx-4 mt-2" />
         
         <div className="max-w-md mx-auto px-4 py-3">
-          {/* Date/Time Bar */}
-          <div className="bg-white rounded-xl shadow-sm p-2 mb-3 border">
-            <div className="flex justify-around text-center">
-              <div><p className="text-[10px] text-gray-400">Date</p><p className="text-xs font-semibold">{formattedDate}</p></div>
-              <div className="w-px h-8 bg-gray-200"></div>
-              <div><p className="text-[10px] text-gray-400">Time</p><p className="text-xs font-semibold">{formattedTime}</p></div>
-              <div className="w-px h-8 bg-gray-200"></div>
-              <div><p className="text-[10px] text-gray-400">Duration</p><p className="text-xs font-semibold">{formattedTimeSpent}</p></div>
-            </div>
-          </div>
-
-          {/* Header */}
-          <div className="text-center mb-2">
-            <div className="text-4xl mb-1">🎉</div>
-            <h1 className="text-xl font-bold">Quiz Completed!</h1>
-          </div>
-
-          {/* Score Card */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 mb-3 text-white">
-            <div className="text-center">
-              <p className="text-[10px] text-blue-100">Your Score</p>
-              <div className="flex items-center justify-center gap-1">
-                <span className="text-3xl font-bold">{score}</span>
-                <span className="text-lg opacity-80">/{questions.length}</span>
+          
+          {/* BOX 1: QUIZ INFO */}
+          <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">
+            <div className="flex justify-around items-center">
+              <div className="text-center">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-1">
+                  <span className="text-blue-600 text-sm font-bold">📅</span>
+                </div>
+                <p className="text-[10px] text-gray-400">DATE</p>
+                <p className="text-xs font-semibold text-gray-700">{formattedDate}</p>
               </div>
-              <div className="mt-1"><span className="px-2 py-0.5 rounded-full text-xs bg-white/20">{percentage}%</span></div>
+              <div className="w-px h-12 bg-gray-200"></div>
+              <div className="text-center">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
+                  <span className="text-green-600 text-sm font-bold">⏱️</span>
+                </div>
+                <p className="text-[10px] text-gray-400">DURATION</p>
+                <p className="text-xs font-semibold text-gray-700">{formattedTimeSpent}</p>
+              </div>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm"><div className="text-xl">✅</div><p className="text-lg font-bold text-green-600">{score}</p><p className="text-[10px] text-gray-500">Correct</p></div>
-            <div className="bg-white rounded-lg p-2 text-center shadow-sm"><div className="text-xl">❌</div><p className="text-lg font-bold text-red-600">{wrongCount}</p><p className="text-[10px] text-gray-500">Wrong</p></div>
+          {/* BOX 2: SCORE CARD */}
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 mb-3 text-white shadow-lg">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
+                <span className="text-white text-xl font-bold">🏆</span>
+              </div>
+              <p className="text-[11px] text-blue-100 uppercase tracking-wide">Your Score</p>
+              <div className="flex items-center justify-center gap-1">
+                <span className="text-4xl font-bold">{score}</span>
+                <span className="text-xl opacity-80">/{questions.length}</span>
+              </div>
+              <div className="mt-2">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20">
+                  {percentage}%
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Locked Message */}
+          {/* STATS ROW - Correct/Wrong */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
+                <span className="text-green-600 text-sm font-bold">✓</span>
+              </div>
+              <p className="text-lg font-bold text-green-600">{score}</p>
+              <p className="text-[10px] text-gray-500">CORRECT</p>
+            </div>
+            <div className="bg-white rounded-lg p-2 text-center shadow-sm border border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-1">
+                <span className="text-red-600 text-sm font-bold">✗</span>
+              </div>
+              <p className="text-lg font-bold text-red-600">{wrongCount}</p>
+              <p className="text-[10px] text-gray-500">WRONG</p>
+            </div>
+          </div>
+
+          {/* LOCKED MESSAGE */}
           <div className="bg-yellow-50 rounded-lg p-2 mb-3 border border-yellow-200">
             <div className="flex items-center gap-2">
-              <div className="text-xl">🔒</div>
-              <div><p className="text-xs font-semibold text-yellow-800">Quiz Completed!</p><p className="text-[10px] text-yellow-600">New quiz when admin adds questions</p></div>
+              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                <span className="text-yellow-600 text-sm font-bold">🔒</span>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-yellow-800">Quiz Locked</p>
+                <p className="text-[10px] text-yellow-600">New quiz when admin adds questions</p>
+              </div>
             </div>
           </div>
 
-          {/* Answers Preview - 2 Column Grid */}
+          {/* ANSWERS PREVIEW - 2 COLUMN GRID (NO SCROLL) */}
           <div className="mb-3">
-            <h2 className="text-sm font-bold mb-2">📋 Your Answers</h2>
-            <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                <span className="text-purple-600 text-xs font-bold">📋</span>
+              </div>
+              <h2 className="text-sm font-bold text-gray-700">Your Answers</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto">
               {userAnswers.filter(a => a !== null).map((item, idx) => {
                 const originalIndex = userAnswers.findIndex(a => a === item);
                 return (
-                  <div key={originalIndex} 
-                    className={`bg-white rounded-lg p-2 shadow-sm border-l-3 cursor-pointer hover:shadow-md ${item.isCorrect ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}`}
-                    onClick={() => { setCurrentQuestion(originalIndex); setShowResults(false); setQuizCompleted(false); setQuizLocked(false); setShowReview(true); }}>
-                    <div className="flex justify-between mb-1"><span className="text-[10px] font-bold">Q{originalIndex + 1}</span>{item.isCorrect ? <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">✓</span> : <span className="text-[10px] bg-red-100 text-red-700 px-1 rounded">✗</span>}</div>
-                    <p className="text-[11px] font-medium line-clamp-2">{item.question?.substring(0, 50)}</p>
-                    <div className="mt-1"><span className="text-[10px] text-gray-400">You:</span><span className={`text-[10px] font-medium ml-1 ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>{item.selected}</span></div>
-                    <div className="mt-1 text-[10px] text-blue-500 text-center">🔍 View</div>
+                  <div 
+                    key={originalIndex} 
+                    className={`bg-white rounded-lg p-2 shadow-sm border-l-3 cursor-pointer hover:shadow-md transition-all ${item.isCorrect ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}`}
+                    onClick={() => { setCurrentQuestion(originalIndex); setShowResults(false); setQuizCompleted(false); setQuizLocked(false); setShowReview(true); }}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold text-gray-500">Q{originalIndex + 1}</span>
+                      {item.isCorrect ? 
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">✓</span> : 
+                        <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">✗</span>
+                      }
+                    </div>
+                    <p className="text-[11px] font-medium text-gray-700 line-clamp-2">{item.question?.substring(0, 45)}</p>
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="text-[9px] text-gray-400">Ans:</span>
+                      <span className={`text-[10px] font-medium ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.selected}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-center">
+                      <span className="text-[9px] text-blue-500">View Details →</span>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Buttons */}
+          {/* ACTION BUTTONS - 3 BUTTONS */}
           <div className="flex gap-2">
-            <button onClick={() => setShowReview(true)} className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold">📖 Review</button>
-            <Link href="/" className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-semibold text-center">🏠 Home</Link>
-            <Link href="/notes" className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg text-sm font-semibold text-center">📚 Notes</Link>
+            <button onClick={() => setShowReview(true)} className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+              Review All
+            </button>
+            <Link href="/" className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-semibold text-center hover:bg-green-700 transition">
+              Go Home
+            </Link>
+            <Link href="/notes" className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-semibold text-center hover:bg-gray-300 transition">
+              Study
+            </Link>
           </div>
         </div>
 
         <AdSpace type="banner" className="mx-4 mt-2" />
         
-        {/* Bottom Nav */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t py-1 px-4">
+        {/* BOTTOM NAVIGATION - SYMBOLS ONLY */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
           <div className="flex justify-around max-w-md mx-auto">
-            <Link href="/" className="flex flex-col items-center"><span className="text-lg">🏠</span><span className="text-[10px]">Home</span></Link>
-            <Link href="/quiz" className="flex flex-col items-center text-green-600"><span className="text-lg">🎯</span><span className="text-[10px]">Quiz</span></Link>
-            <Link href="/notes" className="flex flex-col items-center"><span className="text-lg">📝</span><span className="text-[10px]">Notes</span></Link>
-            <Link href="/current-affairs" className="flex flex-col items-center"><span className="text-lg">📰</span><span className="text-[10px]">Current</span></Link>
-            <Link href="/leaderboard" className="flex flex-col items-center"><span className="text-lg">🏆</span><span className="text-[10px]">Rank</span></Link>
-            <Link href="/profile" className="flex flex-col items-center"><span className="text-lg">👤</span><span className="text-[10px]">Profile</span></Link>
+            <Link href="/" className="flex flex-col items-center py-1">
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-gray-600 text-lg">⌂</span>
+              </div>
+              <span className="text-[9px] text-gray-500 mt-0.5">Home</span>
+            </Link>
+            <Link href="/quiz" className="flex flex-col items-center py-1">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-green-600 text-lg">◉</span>
+              </div>
+              <span className="text-[9px] text-green-600 font-semibold mt-0.5">Quiz</span>
+            </Link>
+            <Link href="/notes" className="flex flex-col items-center py-1">
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-gray-600 text-lg">◻</span>
+              </div>
+              <span className="text-[9px] text-gray-500 mt-0.5">Notes</span>
+            </Link>
+            <Link href="/current-affairs" className="flex flex-col items-center py-1">
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-gray-600 text-lg">◈</span>
+              </div>
+              <span className="text-[9px] text-gray-500 mt-0.5">News</span>
+            </Link>
+            <Link href="/leaderboard" className="flex flex-col items-center py-1">
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-gray-600 text-lg">⌗</span>
+              </div>
+              <span className="text-[9px] text-gray-500 mt-0.5">Rank</span>
+            </Link>
+            <Link href="/profile" className="flex flex-col items-center py-1">
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <span className="text-gray-600 text-lg">⍟</span>
+              </div>
+              <span className="text-[9px] text-gray-500 mt-0.5">Profile</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -372,14 +454,20 @@ export default function QuizPage() {
         <AdSpace type="banner" className="mx-4 mt-2" />
         
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-6 pb-5">
-          <div className="text-center"><div className="text-4xl mb-1">📋</div><h1 className="text-xl font-bold">Your Answers</h1><p className="text-blue-100 text-xs">Detailed review with explanations</p></div>
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
+              <span className="text-white text-xl font-bold">⌘</span>
+            </div>
+            <h1 className="text-xl font-bold">Answer Review</h1>
+            <p className="text-blue-100 text-xs">Detailed explanations</p>
+          </div>
         </div>
         
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex gap-2 mb-4 bg-white rounded-xl p-1 shadow-sm">
             <button onClick={() => setReviewFilter('all')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>All ({userAnswers.filter(a => a !== null).length})</button>
-            <button onClick={() => setReviewFilter('wrong')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'wrong' ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>❌ Wrong ({wrongCount})</button>
-            <button onClick={() => setReviewFilter('correct')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'correct' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>✅ Correct ({correctCount})</button>
+            <button onClick={() => setReviewFilter('wrong')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'wrong' ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>Wrong ({wrongCount})</button>
+            <button onClick={() => setReviewFilter('correct')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'correct' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>Correct ({correctCount})</button>
           </div>
           
           <div className="space-y-3 mb-24">
@@ -388,7 +476,13 @@ export default function QuizPage() {
               return (
                 <div key={originalIndex} className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-blue-500">
                   <div className="p-3">
-                    <div className="flex justify-between mb-2"><span className="text-[11px] font-bold text-blue-600">Question {originalIndex + 1}</span>{item.isCorrect ? <span className="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✅ Correct</span> : <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full">❌ Wrong</span>}</div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-[11px] font-bold text-blue-600">Q{originalIndex + 1}</span>
+                      {item.isCorrect ? 
+                        <span className="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Correct</span> : 
+                        <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full">✗ Wrong</span>
+                      }
+                    </div>
                     <h3 className="font-semibold text-gray-800 text-sm mb-2">{item.question}</h3>
                     <div className="space-y-1 mb-2">
                       {item.options?.map((opt, optIdx) => {
@@ -398,10 +492,19 @@ export default function QuizPage() {
                         let bgClass = 'bg-gray-50';
                         if (isCorrectAnswer) bgClass = 'bg-green-100';
                         if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
-                        return <div key={optIdx} className={`p-1.5 rounded-lg ${bgClass} text-xs`}><span className="font-medium">{letter}.</span> {opt}{isCorrectAnswer && <span className="text-green-600 text-[10px] ml-1">✓ Correct</span>}{isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-[10px] ml-1">✗ Your Answer</span>}</div>;
+                        return (
+                          <div key={optIdx} className={`p-1.5 rounded-lg ${bgClass} text-xs`}>
+                            <span className="font-medium">{letter}.</span> {opt}
+                            {isCorrectAnswer && <span className="text-green-600 text-[10px] ml-1">✓</span>}
+                            {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-[10px] ml-1">✗ Your Answer</span>}
+                          </div>
+                        );
                       })}
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-2"><p className="text-[10px] font-semibold text-blue-800">📖 Explanation:</p><p className="text-[11px] text-blue-700 mt-0.5">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p></div>
+                    <div className="bg-blue-50 rounded-lg p-2">
+                      <p className="text-[10px] font-semibold text-blue-800">Explanation:</p>
+                      <p className="text-[11px] text-blue-700 mt-0.5">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
+                    </div>
                   </div>
                 </div>
               );
@@ -412,7 +515,7 @@ export default function QuizPage() {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t py-2 px-4">
           <div className="flex gap-3 max-w-md mx-auto">
             <button onClick={() => setShowReview(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold">← Back</button>
-            <Link href="/notes" className="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm font-semibold text-center">📚 Study</Link>
+            <Link href="/notes" className="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm font-semibold text-center">Study</Link>
           </div>
         </div>
       </div>
@@ -420,13 +523,20 @@ export default function QuizPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full"></div></div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full"></div></div>;
   }
 
   if (questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center"><div className="text-6xl mb-4">📝</div><h2 className="text-xl font-bold">No Questions Available</h2><p className="text-gray-500 text-sm mt-2">Please add questions from admin panel.</p><Link href="/" className="text-green-600 mt-4 inline-block">Back to Home</Link></div>
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+            <span className="text-3xl">⌘</span>
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">No Questions</h2>
+          <p className="text-gray-500 text-sm mt-2">Add questions from admin panel.</p>
+          <Link href="/" className="text-green-600 mt-4 inline-block">← Back to Home</Link>
+        </div>
       </div>
     );
   }
@@ -437,35 +547,61 @@ export default function QuizPage() {
 
   // ========== ACTIVE QUIZ PAGE ==========
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
-      <div className="max-w-md mx-auto px-4 py-4">
-        {/* Date/Time Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-2 mb-4 border">
-          <div className="flex justify-around text-center">
-            <div><p className="text-[10px] text-gray-400">Date</p><p className="text-xs font-semibold">{formattedDate}</p></div>
-            <div className="w-px h-8 bg-gray-200"></div>
-            <div><p className="text-[10px] text-gray-400">Time</p><p className="text-xs font-semibold">{formattedTime}</p></div>
+      <div className="max-w-md mx-auto px-4 py-3">
+        
+        {/* QUIZ INFO - 2 BOXES */}
+        <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
+          <div className="flex justify-around items-center">
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-1">
+                <span className="text-blue-600 text-sm font-bold">📅</span>
+              </div>
+              <p className="text-[10px] text-gray-400">DATE</p>
+              <p className="text-xs font-semibold text-gray-700">{formattedDate}</p>
+            </div>
+            <div className="w-px h-10 bg-gray-200"></div>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
+                <span className="text-green-600 text-sm font-bold">⏱️</span>
+              </div>
+              <p className="text-[10px] text-gray-400">TIME</p>
+              <p className="text-xs font-semibold text-gray-700">{formattedTime}</p>
+            </div>
           </div>
         </div>
 
-        {/* Timer */}
-        <div className="bg-white rounded-xl p-3 text-center shadow-sm mb-4">
-          <p className="text-[11px] text-gray-400">Time Remaining</p>
-          <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>{formatTime(timeLeft)}</div>
+        {/* TIMER BOX */}
+        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
+          <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
+          <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+            {formatTime(timeLeft)}
+          </div>
         </div>
 
-        {/* Progress */}
+        {/* PROGRESS */}
         <div className="mb-4">
-          <div className="flex justify-between text-xs mb-1"><span>Question {currentQuestion + 1} of {totalQuestions}</span><span className="text-green-600 font-bold">{Math.round(progress)}%</span></div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5"><div className="h-1.5 rounded-full bg-gradient-to-r from-green-400 to-green-600" style={{ width: `${progress}%` }}></div></div>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-gray-500">Question {currentQuestion + 1}</span>
+            <span className="text-green-600 font-bold">{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div className="h-1.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500" style={{ width: `${progress}%` }}></div>
+          </div>
+          <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
-        {/* Question */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
-          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
-            <h2 className="font-semibold text-gray-800">{currentQ?.question}</h2>
+        {/* QUESTION CARD */}
+        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
+          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
+              </div>
+              <h2 className="font-semibold text-gray-800 text-sm flex-1">{currentQ?.question}</h2>
+            </div>
           </div>
           <div className="p-3 space-y-2">
             {currentQ?.options?.map((opt, idx) => {
@@ -473,51 +609,130 @@ export default function QuizPage() {
               const isSelected = selectedAnswer === opt;
               const showCorrect = showExplanation && opt === currentQ?.answer;
               const showWrong = showExplanation && isSelected && opt !== currentQ?.answer;
-              let bgClass = 'bg-white border hover:border-green-300 hover:bg-green-50';
+              let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
               if (showCorrect) bgClass = 'bg-green-50 border-green-400';
               if (showWrong) bgClass = 'bg-red-50 border-red-400';
               if (isSelected && !showExplanation) bgClass = 'bg-green-50 border-green-400';
               return (
-                <button key={idx} onClick={() => !showExplanation && handleAnswerSelect(opt)} disabled={showExplanation || quizLocked} className={`w-full p-3 rounded-xl text-left transition-all ${bgClass} border`}>
-                  <div className="flex items-center gap-2"><div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${showCorrect || (isSelected && !showExplanation) ? 'bg-green-600 text-white' : showWrong ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>{letter}</div><span className="text-sm">{opt}</span>{showCorrect && <span className="text-green-600 text-xs ml-auto">✓ Correct</span>}{showWrong && <span className="text-red-600 text-xs ml-auto">✗ Wrong</span>}</div>
+                <button 
+                  key={idx} 
+                  onClick={() => !showExplanation && handleAnswerSelect(opt)} 
+                  disabled={showExplanation || quizLocked} 
+                  className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      showCorrect || (isSelected && !showExplanation) ? 'bg-green-600 text-white' : 
+                      showWrong ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {letter}
+                    </div>
+                    <span className="text-sm text-gray-700 flex-1">{opt}</span>
+                    {showCorrect && <span className="text-green-600 text-xs">✓</span>}
+                    {showWrong && <span className="text-red-600 text-xs">✗</span>}
+                  </div>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Explanation */}
+        {/* EXPLANATION */}
         {showExplanation && (
-          <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
-            <div className="flex gap-1"><span className="text-blue-500">💡</span><p className="text-xs font-semibold text-blue-800">Explanation:</p></div>
-            <p className="text-xs text-blue-700 mt-1">{currentQ?.explanation || `Correct answer is ${currentQ?.answer}`}</p>
+          <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100 animate-fadeIn">
+            <div className="flex gap-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-blue-600 text-xs">i</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-[11px] font-semibold text-blue-800">Explanation</p>
+                <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                  {currentQ?.explanation || `The correct answer is ${currentQ?.answer}`}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Buttons */}
-        <div className="flex gap-2">
-          {currentQuestion > 0 && <button onClick={handlePreviousQuestion} className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold">← Previous</button>}
-          <button onClick={handleSubmitAnswer} className={`flex-1 py-2 rounded-xl text-sm font-semibold ${showExplanation ? 'bg-green-600 text-white' : selectedAnswer ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`} disabled={(!showExplanation && !selectedAnswer) || quizLocked}>
-            {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish' : 'Next →') : '✓ Submit'}
+        {/* NAVIGATION BUTTONS */}
+        <div className="flex gap-2 mt-2">
+          {currentQuestion > 0 && (
+            <button 
+              onClick={handlePreviousQuestion} 
+              className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 hover:bg-gray-200 transition"
+            >
+              ← Previous
+            </button>
+          )}
+          <button 
+            onClick={handleSubmitAnswer} 
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+              showExplanation ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
+              selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
+              'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`} 
+            disabled={(!showExplanation && !selectedAnswer) || quizLocked}
+          >
+            {showExplanation ? (currentQuestion + 1 === totalQuestions ? 'Finish ✓' : 'Next →') : 'Submit ✓'}
           </button>
         </div>
 
-        <p className="text-center text-[10px] text-gray-400 mt-4">🔒 One attempt per question set • New quiz when admin adds questions</p>
+        <p className="text-center text-[9px] text-gray-400 mt-4">
+          ◈ One attempt per question set • New quiz when admin adds questions ◈
+        </p>
       </div>
 
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t py-1 px-4">
+      {/* BOTTOM NAVIGATION */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center"><span className="text-lg">🏠</span><span className="text-[10px]">Home</span></Link>
-          <Link href="/quiz" className="flex flex-col items-center text-green-600"><span className="text-lg">🎯</span><span className="text-[10px]">Quiz</span></Link>
-          <Link href="/notes" className="flex flex-col items-center"><span className="text-lg">📝</span><span className="text-[10px]">Notes</span></Link>
-          <Link href="/current-affairs" className="flex flex-col items-center"><span className="text-lg">📰</span><span className="text-[10px]">Current</span></Link>
-          <Link href="/leaderboard" className="flex flex-col items-center"><span className="text-lg">🏆</span><span className="text-[10px]">Rank</span></Link>
-          <Link href="/profile" className="flex flex-col items-center"><span className="text-lg">👤</span><span className="text-[10px]">Profile</span></Link>
+          <Link href="/" className="flex flex-col items-center py-1">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-600 text-lg">⌂</span>
+            </div>
+            <span className="text-[9px] text-gray-500 mt-0.5">Home</span>
+          </Link>
+          <Link href="/quiz" className="flex flex-col items-center py-1">
+            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+              <span className="text-green-600 text-lg">◉</span>
+            </div>
+            <span className="text-[9px] text-green-600 font-semibold mt-0.5">Quiz</span>
+          </Link>
+          <Link href="/notes" className="flex flex-col items-center py-1">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-600 text-lg">◻</span>
+            </div>
+            <span className="text-[9px] text-gray-500 mt-0.5">Notes</span>
+          </Link>
+          <Link href="/current-affairs" className="flex flex-col items-center py-1">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-600 text-lg">◈</span>
+            </div>
+            <span className="text-[9px] text-gray-500 mt-0.5">News</span>
+          </Link>
+          <Link href="/leaderboard" className="flex flex-col items-center py-1">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-600 text-lg">⌗</span>
+            </div>
+            <span className="text-[9px] text-gray-500 mt-0.5">Rank</span>
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center py-1">
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-600 text-lg">⍟</span>
+            </div>
+            <span className="text-[9px] text-gray-500 mt-0.5">Profile</span>
+          </Link>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+      `}</style>
     </div>
   );
 }
