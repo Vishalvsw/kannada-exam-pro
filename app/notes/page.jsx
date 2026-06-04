@@ -40,7 +40,6 @@ export default function NotesPage() {
     }
   };
 
-  // Filter notes by search term only
   const filteredNotes = notes.filter(note => {
     const matchesSearch = searchTerm === '' || 
                           note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,7 +48,6 @@ export default function NotesPage() {
     return matchesSearch;
   });
 
-  // Filter QA questions by search term
   const filteredQA = qaQuestions.filter(qa => {
     const matchesSearch = searchTerm === '' || 
                           qa.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,7 +66,7 @@ export default function NotesPage() {
           <div className="flex flex-col items-center text-center">
             <div className="mb-4 animate-bounce">
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-transform duration-300">
-                <span className="text-5xl animate-pulse">📓</span>
+                <span className="text-5xl animate-pulse">📖</span>
               </div>
             </div>
             <div>
@@ -100,7 +98,7 @@ export default function NotesPage() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            📓 Notes ({notes.length})
+            📖 Notes ({notes.length})
           </button>
         </div>
       </div>
@@ -126,7 +124,7 @@ export default function NotesPage() {
         </div>
       </div>
 
-      {/* Content Section - NO SCROLL BARS */}
+      {/* Content Section */}
       <div className="max-w-4xl mx-auto px-5 py-6">
         {loading ? (
           <div className="text-center py-12">
@@ -134,7 +132,6 @@ export default function NotesPage() {
             <p className="text-gray-500 mt-4">Loading...</p>
           </div>
         ) : activeTab === 'qa' ? (
-          // Q&A Tab
           filteredQA.length > 0 ? (
             <div className="space-y-3">
               {filteredQA.map((qa, index) => (
@@ -179,14 +176,13 @@ export default function NotesPage() {
             </div>
           )
         ) : (
-          // Notes Tab
           filteredNotes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredNotes.map((note) => (
                 <Link key={note._id} href={`/notes/${note._id}`}>
                   <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-1">
                     <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 text-white">
-                      <div className="text-2xl">📓</div>
+                      <div className="text-2xl">📖</div>
                       <h3 className="font-bold text-sm mt-2 line-clamp-2">{note.title}</h3>
                     </div>
                     <div className="p-3">
@@ -206,7 +202,7 @@ export default function NotesPage() {
             </div>
           ) : (
             <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-              <div className="text-6xl mb-4">📓</div>
+              <div className="text-6xl mb-4">📖</div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">No Notes Available</h3>
               <p className="text-gray-500 text-sm">Study notes will appear here once added.</p>
             </div>
@@ -228,7 +224,7 @@ export default function NotesPage() {
             <span className="text-[10px]">Quiz</span>
           </Link>
           <Link href="/notes" className="flex flex-col items-center text-green-600">
-            <span className="text-xl">📓</span>
+            <span className="text-xl">📖</span>
             <span className="text-[10px]">Study</span>
           </Link>
           <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
