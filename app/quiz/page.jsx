@@ -269,7 +269,6 @@ export default function QuizPage() {
   };
 
   const formattedDate = currentDateTime.toLocaleDateString();
-  const formattedTime = currentDateTime.toLocaleTimeString();
   const durationSpent = startTime ? formatTime(Math.floor((Date.now() - startTime) / 1000)) : '00:00';
 
   // ========== RESULT PAGE ==========
@@ -280,6 +279,7 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
         <AdSpace type="banner" className="mx-4 mt-2" />
+        <AdSpace type="native" className="mx-4 mt-2" />
         
         {showCelebration && (
           <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
@@ -297,7 +297,6 @@ export default function QuizPage() {
             </div>
           </div>
         )}
-
 
         <div className="max-w-md mx-auto px-4 py-3">
           
@@ -374,6 +373,8 @@ export default function QuizPage() {
             </div>
           </div>
 
+          <AdSpace type="native" className="mx-4 my-2" />
+
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
@@ -427,6 +428,7 @@ export default function QuizPage() {
         </div>
 
         <AdSpace type="banner" className="mx-4 mt-2" />
+        <AdSpace type="native" className="mx-4 mt-2" />
         
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
           <div className="flex justify-around max-w-md mx-auto">
@@ -489,6 +491,7 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <AdSpace type="banner" className="mx-4 mt-2" />
+        <AdSpace type="native" className="mx-4 mt-2" />
         
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-6 pb-5">
           <div className="text-center">
@@ -608,8 +611,8 @@ export default function QuizPage() {
               <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
                 <span className="text-green-600 text-sm font-bold">⏱️</span>
               </div>
-              <p className="text-[10px] text-gray-400">TIME</p>
-              <p className="text-xs font-semibold text-gray-700">{formattedTime}</p>
+              <p className="text-[10px] text-gray-400">DURATION</p>
+              <p className="text-xs font-semibold text-gray-700">{durationSpent}</p>
             </div>
           </div>
         </div>
@@ -734,6 +737,7 @@ export default function QuizPage() {
       </div>
 
       <AdSpace type="banner" className="mx-4 mt-2" />
+      <AdSpace type="native" className="mx-4 mt-2" />
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
