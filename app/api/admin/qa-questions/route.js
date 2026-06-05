@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+// ========== GET - Fetch all QA questions for admin ==========
 export async function GET() {
   try {
     const client = await clientPromise;
@@ -20,7 +21,8 @@ export async function GET() {
       answer_en: qa.answer_en || '',
       category: qa.category || 'General',
       important: qa.important || false,
-      createdAt: qa.createdAt
+      createdAt: qa.createdAt,
+      updatedAt: qa.updatedAt
     }));
     
     return NextResponse.json(formattedQA);
@@ -30,6 +32,7 @@ export async function GET() {
   }
 }
 
+// ========== POST - Add new QA question ==========
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -49,17 +52,18 @@ export async function POST(request) {
     
     const result = await db.collection("qaquestions").insertOne(newQA);
     
-    return NextResponse.json({ success: true, _id: result.insertedId.toString(), ...newQA });
+    return NextResponse.json({ 
+      success: true, 
+      _id: result.insertedId.toString(), 
+      ...newQA 
+    });
   } catch (error) {
     console.error('Admin QA POST Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-
-
-
-// ✅ PUT - Update existing QA question
+// ========== PUT - Update existing QA question ==========
 export async function PUT(request) {
   try {
     const body = await request.json();
@@ -104,22 +108,26 @@ export async function PUT(request) {
   }
 }
 
-
-
-
-
-
-
+// ========== DELETE - Remove QA question ==========
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+    
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    await db.collection("qaquestions").deleteOne({ _id: new ObjectId(id) });
+    const result = await db.collection("qaquestions").deleteOne({ _id: new ObjectId(id) });
     
-    return NextResponse.json({ success: true });
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
     console.error('Admin QA DELETE Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

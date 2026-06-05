@@ -297,7 +297,8 @@ export default function QuizPage() {
             </div>
           </div>
         )}
-        
+
+
         <div className="max-w-md mx-auto px-4 py-3">
           
           <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">

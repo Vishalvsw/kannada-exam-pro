@@ -12,8 +12,21 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .toArray();
     
-    console.log(`❓ Returning ${qaQuestions.length} Q&A to user`);
-    return NextResponse.json(qaQuestions);
+    // Format the data properly for frontend
+    const formattedQA = qaQuestions.map(qa => ({
+      _id: qa._id.toString(),
+      question: qa.question,
+      question_en: qa.question_en || '',
+      answer: qa.answer,
+      answer_en: qa.answer_en || '',
+      category: qa.category || 'General',
+      important: qa.important || false,
+      createdAt: qa.createdAt,
+      updatedAt: qa.updatedAt
+    }));
+    
+    console.log(`❓ Returning ${formattedQA.length} Q&A to user`);
+    return NextResponse.json(formattedQA);
   } catch (error) {
     console.error('QA Questions API Error:', error);
     return NextResponse.json([]);
