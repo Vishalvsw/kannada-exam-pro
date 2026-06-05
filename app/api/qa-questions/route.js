@@ -6,18 +6,18 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    // Get ALL Q&A questions
+    // Get ALL Q&A questions - NO FILTERING
     const qaQuestions = await db.collection("qaquestions")
       .find({})
       .sort({ createdAt: -1 })
       .toArray();
     
-    // Format the data properly for frontend
+    // Format ALL questions - preserve everything
     const formattedQA = qaQuestions.map(qa => ({
       _id: qa._id.toString(),
-      question: qa.question,
+      question: qa.question || '',
       question_en: qa.question_en || '',
-      answer: qa.answer,
+      answer: qa.answer || '',
       answer_en: qa.answer_en || '',
       category: qa.category || 'General',
       important: qa.important || false,
@@ -25,7 +25,6 @@ export async function GET() {
       updatedAt: qa.updatedAt
     }));
     
-    console.log(`❓ Returning ${formattedQA.length} Q&A to user`);
     return NextResponse.json(formattedQA);
   } catch (error) {
     console.error('QA Questions API Error:', error);
