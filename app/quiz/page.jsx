@@ -372,7 +372,6 @@ export default function QuizPage() {
             </div>
           </div>
 
-          <AdSpace type="native" className="mx-4 my-2" />
 
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
