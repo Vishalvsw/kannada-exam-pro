@@ -599,14 +599,13 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Timer Box - Single Timer (Time Remaining) */}
-        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
-          <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-            {formatTime(timeLeft)}
-          </div>
-          <p className="text-[9px] text-gray-400 mt-1">per question</p>
-        </div>
+      {/* Timer Box - Single Timer (Time Remaining) */}
+<div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
+  <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
+  <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+    {formatTime(timeLeft)}
+  </div>
+</div>
 
         {/* Progress Bar */}
         <div className="mb-4">
