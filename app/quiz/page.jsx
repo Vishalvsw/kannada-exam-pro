@@ -726,7 +726,6 @@ export default function QuizPage() {
       </div>
 
       <AdSpace type="banner" className="mx-4 mt-2" />
-      <AdSpace type="native" className="mx-4 mt-2" />
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
