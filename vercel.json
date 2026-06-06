@@ -4,11 +4,7 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": ".next"
-}
-
-
-{
+  "outputDirectory": ".next",
   "headers": [
     {
       "source": "/api/notes",
@@ -20,7 +16,25 @@
       ]
     },
     {
-      "source": "/api/notes/(.*)",
+      "source": "/api/notes/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, private"
+        }
+      ]
+    },
+    {
+      "source": "/api/current-affairs",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, private"
+        }
+      ]
+    },
+    {
+      "source": "/api/qa-questions",
       "headers": [
         {
           "key": "Cache-Control",
