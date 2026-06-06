@@ -108,7 +108,7 @@ export default function QuizPage() {
     setSelectedAnswer(answer);
   };
 
-  // ✅ FIXED: Answer locking moved to NEXT click
+  // ✅ Answer locking moved to NEXT click
   const handleSubmitAnswer = () => {
     if (quizLocked || quizCompleted) return;
     if (!selectedAnswer && !showExplanation) return;
@@ -132,10 +132,8 @@ export default function QuizPage() {
       };
       setUserAnswers(newUserAnswers);
       
-      // ✅ DON'T lock here - just show explanation
       setShowExplanation(true);
     } else {
-      // ✅ Lock the question ONLY when clicking NEXT
       setShowExplanation(false);
       setSelectedAnswer(null);
       setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
@@ -146,15 +144,6 @@ export default function QuizPage() {
       } else {
         calculateScore();
       }
-    }
-  };
-
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0 && !quizLocked && !quizCompleted) {
-      setShowExplanation(false);
-      setCurrentQuestion(currentQuestion - 1);
-      setSelectedAnswer(answers[currentQuestion - 1] || null);
-      setTimeLeft(120);
     }
   };
 
@@ -590,15 +579,16 @@ export default function QuizPage() {
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const isQuestionAnswered = answeredQuestions[currentQuestion];
 
-  // ========== ACTIVE QUIZ PAGE ==========
+  // ========== ACTIVE QUIZ PAGE (NO PREVIOUS BUTTON) ==========
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
       <div className="max-w-md mx-auto px-4 py-3">
         
+        {/* DATE ONLY - Removed DURATION from active quiz */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
-          <div className="flex justify-around items-center">
+          <div className="flex justify-center items-center">
             <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-1">
                 <span className="text-blue-600 text-sm font-bold">📅</span>
@@ -606,24 +596,19 @@ export default function QuizPage() {
               <p className="text-[10px] text-gray-400">DATE</p>
               <p className="text-xs font-semibold text-gray-700">{formattedDate}</p>
             </div>
-            <div className="w-px h-10 bg-gray-200"></div>
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
-                <span className="text-green-600 text-sm font-bold">⏱️</span>
-              </div>
-              <p className="text-[10px] text-gray-400">DURATION</p>
-              <p className="text-xs font-semibold text-gray-700">{durationSpent}</p>
-            </div>
           </div>
         </div>
 
+        {/* SINGLE TIMER - Time Remaining */}
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
           <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
             {formatTime(timeLeft)}
           </div>
+          <p className="text-[9px] text-gray-400 mt-1">for this question</p>
         </div>
 
+        {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-gray-500">Question {currentQuestion + 1}</span>
@@ -635,13 +620,14 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
+        {/* Question Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center">
                 <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
               </div>
-              <h2 className="font-semibold text-gray-800 text-sm flex-1">{currentQ?.question}</h2>
+              <h2 className="font-semibold text-gray-800 text-sm flex-1 leading-relaxed">{currentQ?.question}</h2>
               {isQuestionAnswered && (
                 <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
                   <span className="text-green-600 text-[10px]">✓</span>
@@ -693,6 +679,7 @@ export default function QuizPage() {
           </div>
         </div>
 
+        {/* Explanation */}
         {showExplanation && (
           <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
             <div className="flex gap-2">
@@ -709,18 +696,11 @@ export default function QuizPage() {
           </div>
         )}
 
+        {/* SINGLE BUTTON - Only Submit/Next/Finish (No Previous) */}
         <div className="flex gap-2 mt-2">
-          {currentQuestion > 0 && (
-            <button 
-              onClick={handlePreviousQuestion} 
-              className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 hover:bg-gray-200 transition"
-            >
-              ← Previous
-            </button>
-          )}
           <button 
             onClick={handleSubmitAnswer} 
-            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               showExplanation ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -739,6 +719,7 @@ export default function QuizPage() {
       <AdSpace type="banner" className="mx-4 mt-2" />
       <AdSpace type="native" className="mx-4 mt-2" />
 
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center py-1">
