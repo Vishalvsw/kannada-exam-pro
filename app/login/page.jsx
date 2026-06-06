@@ -34,8 +34,8 @@ function LoginContent() {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-6">
             <div className="text-6xl mb-3 animate-bounce">🎯</div>
-            <h1 className="text-2xl font-bold text-gray-800">{'Kannada Exam Pro'}</h1>
-            <p className="text-gray-600 text-sm mt-2">{t.startPreparation}</p>
+            <h1 className="text-2xl font-bold text-gray-800">Kannada Exam Pro</h1>
+            <p className="text-gray-600 text-sm mt-2">Start your preparation today!</p>
           </div>
 
           {error && (
