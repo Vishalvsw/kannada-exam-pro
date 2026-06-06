@@ -13,7 +13,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
-  const [logoVersion, setLogoVersion] = useState(Date.now());
+  // ✅ REMOVED: logoVersion and auto-refresh interval
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,13 +23,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Auto-refresh logo in development
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLogoVersion(Date.now());
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  // ✅ REMOVED: The auto-refresh interval that was causing the logo to disappear
 
   const handleLogout = () => {
     logout();
@@ -40,7 +34,7 @@ export default function Navbar() {
   const navItems = [
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/quiz', label: 'Quiz', icon: '❓' },
-    { path: '/notes', label: 'Notes', icon: '📝' },
+    { path: '/notes', label: 'Notes', icon: '📓' },
     { path: '/current-affairs', label: 'Current Affairs', icon: '📰' },
     { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
   ];
@@ -53,13 +47,14 @@ export default function Navbar() {
     navItems.push({ path: '/profile', label: 'Profile', icon: '👤' });
   }
 
-  const logoSrc = `/images/logo.png?v=${logoVersion}`;
+  // ✅ Fixed: Simple logo path without version parameter
+  const logoSrc = '/images/logo.png';
 
   return (
     <>
       {/* Top Announcement Bar */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white text-center py-1.5 text-xs font-medium">
-        <span>📢 Daily Quiz: One attempt per 24 hours | 🏆 Top scorers get featured on leaderboard!</span>
+        <span>📢 Daily Quiz: One attempt per question set | 🏆 New quiz when admin adds questions!</span>
       </div>
 
       <nav className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -80,7 +75,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
-                  <span className="text-white text-xl"></span>                  
+                  <span className="text-white text-xl">📚</span>                  
                 </div>
               )}
               <div>
@@ -120,7 +115,10 @@ export default function Navbar() {
                     <img 
                       src={user.image || user.profileImage || `https://ui-avatars.com/api/?name=${user.name}&background=10b981&color=fff`} 
                       className="w-9 h-9 rounded-full border-2 border-green-500 object-cover" 
-                      alt={user.name} 
+                      alt={user.name}
+                      onError={(e) => {
+                        e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=10b981&color=fff`;
+                      }}
                     />
                     <span className="hidden lg:block text-sm font-medium text-gray-700">
                       {user.name?.split(' ')[0]}
@@ -137,7 +135,10 @@ export default function Navbar() {
                           <img 
                             src={user.image || user.profileImage || `https://ui-avatars.com/api/?name=${user.name}&background=10b981&color=fff`} 
                             className="w-12 h-12 rounded-full border-2 border-green-500" 
-                            alt={user.name} 
+                            alt={user.name}
+                            onError={(e) => {
+                              e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=10b981&color=fff`;
+                            }}
                           />
                           <div>
                             <p className="font-semibold">{user.name}</p>
@@ -190,10 +191,10 @@ export default function Navbar() {
                 </div>
               ) : (
                 <Link 
-                  href="/demo-login" 
+                  href="/login" 
                   className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg text-sm font-semibold"
                 >
-                  🚀 Demo Login
+                  🚀 Login
                 </Link>
               )}
 

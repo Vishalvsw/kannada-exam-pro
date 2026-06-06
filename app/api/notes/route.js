@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
@@ -12,7 +15,6 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .toArray();
     
-    // ✅ Format notes for frontend (convert ObjectId to string)
     const formattedNotes = notes.map(note => ({
       _id: note._id.toString(),
       title: note.title || 'Untitled',
@@ -25,12 +27,9 @@ export async function GET() {
       updatedAt: note.updatedAt
     }));
     
-    console.log(`📝 User API returning ${formattedNotes.length} notes`);
-    
-    // ✅ Add no-cache headers
     return NextResponse.json(formattedNotes, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, private',
         'Pragma': 'no-cache',
         'Expires': '0',
       }
