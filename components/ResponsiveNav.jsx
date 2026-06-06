@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
-import LanguageToggle from '@/components/LanguageToggle';
 import ClientOnly from '@/components/ClientOnly';
 
 export default function ResponsiveNav({ children }) {
@@ -38,14 +37,14 @@ export default function ResponsiveNav({ children }) {
   };
 
   const navItems = [
-    { path: '/', label: t.home, icon: '🏠' },
+    { path: '/', label: 'Home', icon: '🏠' },
     { path: '/quiz', label: 'Quiz', icon: '❓' },
     { path: '/notes', label: 'Notes', icon: '📝' },
     { path: '/current-affairs', label: 'Current Affairs', icon: '📰' },
     { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
   ];
   
-  if (user) navItems.push({ path: '/profile', label: t.profile, icon: '👤' });
+  if (user) navItems.push({ path: '/profile', label: 'Profile', icon: '👤' });
 
   if (!mounted) {
     return <div className="min-h-screen bg-white"></div>;
@@ -60,19 +59,18 @@ export default function ResponsiveNav({ children }) {
             <Link href="/" className="flex items-center gap-2">
               <Logo size="sm" showText={false} />
               <div className="flex flex-col">
-                <span className="text-white font-bold text-sm">{'Kannada Exam Pro'}</span>
-                <span className="text-blue-200 text-xs">{'KAS | PSI | PDO | FDA | SDA'}</span>
+                <span className="text-white font-bold text-sm">Kannada Exam Pro</span>
+                <span className="text-blue-200 text-xs">KAS | PSI | PDO | FDA | SDA</span>
               </div>
             </Link>
             <div className="flex items-center gap-2">
-              <LanguageToggle />
               {user ? (
                 <>
                   <img src={user.profileImage} className="w-8 h-8 rounded-full border-2 border-white" />
-                  <button onClick={handleLogout} className="text-xs bg-white/20 px-2 py-1 rounded-lg text-white">{t.logout}</button>
+                  <button onClick={handleLogout} className="text-xs bg-white/20 px-2 py-1 rounded-lg text-white">Logout</button>
                 </>
               ) : (
-                <Link href="/login" className="text-sm bg-white text-blue-600 px-3 py-1 rounded-lg font-semibold">{t.login}</Link>
+                <Link href="/login" className="text-sm bg-white text-blue-600 px-3 py-1 rounded-lg font-semibold">Login</Link>
               )}
             </div>
           </div>
@@ -102,8 +100,8 @@ export default function ResponsiveNav({ children }) {
               <Link href="/" className="flex items-center gap-2">
                 <Logo size="md" showText={false} />
                 <div className="flex flex-col">
-                  <span className="text-gray-800 font-bold text-lg">{'Kannada Exam Pro'}</span>
-                  <span className="text-gray-500 text-xs">{'KAS | PSI | PDO | FDA | SDA'}</span>
+                  <span className="text-gray-800 font-bold text-lg">Kannada Exam Pro</span>
+                  <span className="text-gray-500 text-xs">KAS | PSI | PDO | FDA | SDA</span>
                 </div>
               </Link>
               <div className="hidden md:flex ml-10 space-x-4">
@@ -115,18 +113,17 @@ export default function ResponsiveNav({ children }) {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <LanguageToggle />
               {user ? (
                 <div className="flex items-center space-x-3">
                   <img src={user.profileImage} className="w-8 h-8 rounded-full" />
                   <div className="hidden sm:block">
                     <p className="text-sm font-semibold">@{user.instagramId}</p>
-                    <p className="text-xs text-gray-500">{user.score || 0} {'points'}</p>
+                    <p className="text-xs text-gray-500">{user.score || 0} points</p>
                   </div>
-                  <button onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">{t.logout}</button>
+                  <button onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">Logout</button>
                 </div>
               ) : (
-                <Link href="/login" className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg">{t.login}</Link>
+                <Link href="/login" className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg">Login</Link>
               )}
             </div>
           </div>

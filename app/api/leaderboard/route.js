@@ -58,8 +58,8 @@ export async function GET(request) {
     const scoreMap = new Map();
     quizResultsAgg.forEach(result => {
       scoreMap.set(result._id, {
-        totalScore: resul'Total Score',
-        quizzesTaken: resul'Quiz'zesTaken,
+        totalScore: result.totalScore,
+        quizzesTaken: result.quizzesTaken,
         lastQuizDate: result.lastQuizDate,
         avgPercentage: result.avgPercentage
       });
