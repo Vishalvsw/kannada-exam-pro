@@ -3,7 +3,6 @@
 import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
-import { LanguageProvider } from '@/contexts/LanguageContext';
 import ClientOnly from '@/components/ClientOnly';
 import './globals.css';
 
@@ -19,14 +18,12 @@ export default function RootLayout({ children }) {
       </head>
       <body suppressHydrationWarning>
         <ClientOnly>
-          <LanguageProvider>
             <DemoAuthProvider>
               <ResponsiveNav>
                 {children}
               </ResponsiveNav>
               <Footer />
             </DemoAuthProvider>
-          </LanguageProvider>
         </ClientOnly>
       </body>
     </html>

@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
-import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle';
 import ClientOnly from '@/components/ClientOnly';
 
 export default function ResponsiveNav({ children }) {
-  const { t } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const [deviceType, setDeviceType] = useState('mobile');
@@ -41,10 +39,10 @@ export default function ResponsiveNav({ children }) {
 
   const navItems = [
     { path: '/', label: t.home, icon: '🏠' },
-    { path: '/quiz', label: t.quiz, icon: '❓' },
-    { path: '/notes', label: t.notes, icon: '📝' },
-    { path: '/current-affairs', label: t.currentAffairs, icon: '📰' },
-    { path: '/leaderboard', label: t.leaderboard, icon: '🏆' },
+    { path: '/quiz', label: 'Quiz', icon: '❓' },
+    { path: '/notes', label: 'Notes', icon: '📝' },
+    { path: '/current-affairs', label: 'Current Affairs', icon: '📰' },
+    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
   ];
   
   if (user) navItems.push({ path: '/profile', label: t.profile, icon: '👤' });
@@ -62,8 +60,8 @@ export default function ResponsiveNav({ children }) {
             <Link href="/" className="flex items-center gap-2">
               <Logo size="sm" showText={false} />
               <div className="flex flex-col">
-                <span className="text-white font-bold text-sm">{t.appName}</span>
-                <span className="text-blue-200 text-xs">{t.tagline}</span>
+                <span className="text-white font-bold text-sm">{'Kannada Exam Pro'}</span>
+                <span className="text-blue-200 text-xs">{'KAS | PSI | PDO | FDA | SDA'}</span>
               </div>
             </Link>
             <div className="flex items-center gap-2">
@@ -104,8 +102,8 @@ export default function ResponsiveNav({ children }) {
               <Link href="/" className="flex items-center gap-2">
                 <Logo size="md" showText={false} />
                 <div className="flex flex-col">
-                  <span className="text-gray-800 font-bold text-lg">{t.appName}</span>
-                  <span className="text-gray-500 text-xs">{t.tagline}</span>
+                  <span className="text-gray-800 font-bold text-lg">{'Kannada Exam Pro'}</span>
+                  <span className="text-gray-500 text-xs">{'KAS | PSI | PDO | FDA | SDA'}</span>
                 </div>
               </Link>
               <div className="hidden md:flex ml-10 space-x-4">
@@ -123,7 +121,7 @@ export default function ResponsiveNav({ children }) {
                   <img src={user.profileImage} className="w-8 h-8 rounded-full" />
                   <div className="hidden sm:block">
                     <p className="text-sm font-semibold">@{user.instagramId}</p>
-                    <p className="text-xs text-gray-500">{user.score || 0} {t.points}</p>
+                    <p className="text-xs text-gray-500">{user.score || 0} {'points'}</p>
                   </div>
                   <button onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">{t.logout}</button>
                 </div>

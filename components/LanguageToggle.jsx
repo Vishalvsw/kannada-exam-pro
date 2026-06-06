@@ -1,9 +1,7 @@
 'use client';
 
-import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function LanguageToggle() {
-  const { language, toggleLanguage } = useLanguage();
 
   return (
     <button

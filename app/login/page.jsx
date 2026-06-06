@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import GoogleLogin from '@/components/GoogleLogin';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '631788793965-cnah9hm9s0vq7qis7em75jui1net5ebp.apps.googleusercontent.com';
 
 function LoginContent() {
-  const { t } = useLanguage();
   const router = useRouter();
   const [error, setError] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -36,7 +34,7 @@ function LoginContent() {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-6">
             <div className="text-6xl mb-3 animate-bounce">🎯</div>
-            <h1 className="text-2xl font-bold text-gray-800">{t.appName}</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{'Kannada Exam Pro'}</h1>
             <p className="text-gray-600 text-sm mt-2">{t.startPreparation}</p>
           </div>
 

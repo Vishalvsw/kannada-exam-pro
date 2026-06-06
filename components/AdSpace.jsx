@@ -2,27 +2,27 @@
 
 export default function AdSpace({ type = 'banner', className = '' }) {
   
-  // Native Ad Style (Blends with content)
-  if (type === 'native') {
-    return (
-      <div className={`bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100 ${className}`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-            <span className="text-blue-600 text-xl">📘</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Sponsored</p>
-            <p className="text-sm font-medium text-blue-800">Karnataka Exam Prep</p>
-            <p className="text-[10px] text-gray-500">Study materials & mock tests</p>
-          </div>
-          <button className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">
-            Learn More →
-          </button>
-        </div>
-        <p className="text-[9px] text-gray-400 text-center mt-2">Advertisement</p>
-      </div>
-    );
-  }
+  // // Native Ad Style (Blends with content)
+  // if (type === 'native') {
+  //   return (
+  //     <div className={`bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100 ${className}`}>
+  //       <div className="flex items-center gap-3">
+  //         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+  //           <span className="text-blue-600 text-xl">📘</span>
+  //         </div>
+  //         <div className="flex-1">
+  //           <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Sponsored</p>
+  //           <p className="text-sm font-medium text-blue-800">Karnataka Exam Prep</p>
+  //           <p className="text-[10px] text-gray-500">Study materials & mock tests</p>
+  //         </div>
+  //         <button className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">
+  //           Learn More →
+  //         </button>
+  //       </div>
+  //       <p className="text-[9px] text-gray-400 text-center mt-2">Advertisement</p>
+  //     </div>
+  //   );
+  // }
   
   // Banner Ad Style (Default)
   const adStyles = {
