@@ -28,6 +28,7 @@ export default function QuizPage() {
   const [questionsHash, setQuestionsHash] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState({});
+  const [finalTimeTaken, setFinalTimeTaken] = useState('00:00');
 
   // Live clock
   useEffect(() => {
@@ -64,11 +65,13 @@ export default function QuizPage() {
       const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
       const savedHash = localStorage.getItem(`quizQuestionsHash_${userData?.instagramId}`);
       
+      // Check if saved results exist and hash matches
       if (savedResults && savedHash === serverHash) {
         const parsed = JSON.parse(savedResults);
         setUserAnswers(parsed.userAnswers || []);
         setScore(parsed.score || 0);
         setQuestions(parsed.questions || []);
+        setFinalTimeTaken(parsed.timeTaken || '00:00');
         setShowResults(true);
         setQuizLocked(true);
         setQuizCompleted(true);
@@ -84,6 +87,7 @@ export default function QuizPage() {
         setShowResults(false);
         setQuizCompleted(false);
         setAnsweredQuestions({});
+        setFinalTimeTaken('00:00');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -152,6 +156,13 @@ export default function QuizPage() {
       if (answer && questions[idx] && answer === questions[idx].answer) finalScore++;
     });
     
+    // ✅ Calculate FINAL time taken (capture once, not live)
+    const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    const timeSpent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    
+    setFinalTimeTaken(timeSpent);
     setScore(finalScore);
     setShowResults(true);
     setQuizCompleted(true);
@@ -181,18 +192,16 @@ export default function QuizPage() {
         userAnswers: finalUserAnswers,
         score: finalScore,
         questions: questions,
-        completedAt: Date.now()
+        completedAt: Date.now(),
+        timeTaken: timeSpent
       }));
     }
     
-    saveQuizResult(finalScore);
+    saveQuizResult(finalScore, timeSpent);
   };
 
-  const saveQuizResult = async (finalScore) => {
+  const saveQuizResult = async (finalScore, timeSpent) => {
     if (!user) return;
-    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-    const minutes = Math.floor(timeTaken / 60);
-    const seconds = timeTaken % 60;
 
     try {
       await fetch('/api/quiz-results', {
@@ -205,7 +214,7 @@ export default function QuizPage() {
           score: finalScore,
           totalQuestions: questions.length,
           percentage: Math.round((finalScore / questions.length) * 100),
-          timeFormatted: `${minutes}m ${seconds}s`,
+          timeFormatted: timeSpent,
           correctCount: finalScore,
           wrongCount: questions.length - finalScore,
           completedAt: new Date()
@@ -257,12 +266,13 @@ export default function QuizPage() {
   };
 
   const formattedDate = currentDateTime.toLocaleDateString();
-  const durationSpent = startTime ? formatTime(Math.floor((Date.now() - startTime) / 1000)) : '00:00';
 
   // ========== RESULT PAGE ==========
   if ((quizCompleted && showResults && !showReview && !loading) || (quizLocked && !showReview && !loading)) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
+    // Use finalTimeTaken from state or localStorage
+    const displayTime = finalTimeTaken || '00:00';
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
@@ -304,7 +314,7 @@ export default function QuizPage() {
                   <span className="text-green-600 text-lg font-bold">⏱️</span>
                 </div>
                 <p className="text-[10px] text-gray-400">TIME TAKEN</p>
-                <p className="text-xs font-semibold text-gray-700">{durationSpent}</p>
+                <p className="text-xs font-semibold text-gray-700">{displayTime}</p>
               </div>
             </div>
           </div>
@@ -586,7 +596,7 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Date Box - Only Date (No Duration) */}
+        {/* Date Box - Only Date */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
           <div className="flex justify-center items-center">
             <div className="text-center">
@@ -599,13 +609,13 @@ export default function QuizPage() {
           </div>
         </div>
 
-      {/* Timer Box - Single Timer (Time Remaining) */}
-<div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
-  <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
-  <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-    {formatTime(timeLeft)}
-  </div>
-</div>
+        {/* Timer Box - Single Timer (Time Remaining) */}
+        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
+          <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
+          <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+            {formatTime(timeLeft)}
+          </div>
+        </div>
 
         {/* Progress Bar */}
         <div className="mb-4">
