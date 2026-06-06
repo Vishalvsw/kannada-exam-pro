@@ -108,7 +108,6 @@ export default function QuizPage() {
     setSelectedAnswer(answer);
   };
 
-  // ✅ Answer locking moved to NEXT click
   const handleSubmitAnswer = () => {
     if (quizLocked || quizCompleted) return;
     if (!selectedAnswer && !showExplanation) return;
@@ -289,6 +288,7 @@ export default function QuizPage() {
 
         <div className="max-w-md mx-auto px-4 py-3">
           
+          {/* Result Box - Date and Time Taken */}
           <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">
             <div className="flex justify-around items-center">
               <div className="text-center">
@@ -303,7 +303,7 @@ export default function QuizPage() {
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-1">
                   <span className="text-green-600 text-lg font-bold">⏱️</span>
                 </div>
-                <p className="text-[10px] text-gray-400">DURATION</p>
+                <p className="text-[10px] text-gray-400">TIME TAKEN</p>
                 <p className="text-xs font-semibold text-gray-700">{durationSpent}</p>
               </div>
             </div>
@@ -586,7 +586,7 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* DATE ONLY - Removed DURATION from active quiz */}
+        {/* Date Box - Only Date (No Duration) */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
           <div className="flex justify-center items-center">
             <div className="text-center">
@@ -599,19 +599,19 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* SINGLE TIMER - Time Remaining */}
+        {/* Timer Box - Single Timer (Time Remaining) */}
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
           <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
             {formatTime(timeLeft)}
           </div>
-          <p className="text-[9px] text-gray-400 mt-1">for this question</p>
+          <p className="text-[9px] text-gray-400 mt-1">per question</p>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-gray-500">Question {currentQuestion + 1}</span>
+            <span className="text-gray-500">Question {currentQuestion + 1} of {totalQuestions}</span>
             <span className="text-green-600 font-bold">{Math.round(progress)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -627,7 +627,7 @@ export default function QuizPage() {
               <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center">
                 <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
               </div>
-              <h2 className="font-semibold text-gray-800 text-sm flex-1 leading-relaxed">{currentQ?.question}</h2>
+              <h2 className="font-semibold text-gray-800 text-sm flex-1">{currentQ?.question}</h2>
               {isQuestionAnswered && (
                 <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
                   <span className="text-green-600 text-[10px]">✓</span>
@@ -679,7 +679,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Explanation */}
+        {/* Explanation Box */}
         {showExplanation && (
           <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
             <div className="flex gap-2">
@@ -696,7 +696,7 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* SINGLE BUTTON - Only Submit/Next/Finish (No Previous) */}
+        {/* Navigation Buttons - NO PREVIOUS BUTTON */}
         <div className="flex gap-2 mt-2">
           <button 
             onClick={handleSubmitAnswer} 
@@ -719,7 +719,6 @@ export default function QuizPage() {
       <AdSpace type="banner" className="mx-4 mt-2" />
       <AdSpace type="native" className="mx-4 mt-2" />
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center py-1">
