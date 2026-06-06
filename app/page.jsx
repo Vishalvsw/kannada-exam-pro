@@ -12,14 +12,19 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
 
+
+
+
+
+   // ✅ Updated sliding logos with better sizing
   const slidingLogos = [
-    { image: '/logos/police.png', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-100' },
-    { image: '/logos/defence.jpg', color: 'from-green-500 to-green-600', bgColor: 'bg-green-100' },
-    { image: '/logos/SBI.jpeg', color: 'from-yellow-500 to-yellow-600', bgColor: 'bg-yellow-100' },
-    { image: '/logos/ssc.jpeg', color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-100' },
-    { image: '/logos/bsf.jpeg', color: 'from-pink-500 to-pink-600', bgColor: 'bg-pink-100' },
-    { image: '/logos/all jobs.jpeg', color: 'from-gray-500 to-gray-600', bgColor: 'bg-gray-100' },
-    { image: '/logos/railways.jpeg', color: 'from-red-500 to-red-600', bgColor: 'bg-red-100' },
+    { image: '/logos/police.png', name: 'Police', color: 'from-blue-500 to-blue-600', fallback: '👮' },
+    { image: '/logos/defence.jpg', name: 'Defence', color: 'from-green-500 to-green-600', fallback: '🛡️' },
+    { image: '/logos/SBI.jpeg', name: 'SBI', color: 'from-yellow-500 to-yellow-600', fallback: '🏦' },
+    { image: '/logos/ssc.jpeg', name: 'SSC', color: 'from-purple-500 to-purple-600', fallback: '📚' },
+    { image: '/logos/bsf.jpeg', name: 'BSF', color: 'from-pink-500 to-pink-600', fallback: '🚔' },
+    { image: '/logos/all jobs.jpeg', name: 'All Jobs', color: 'from-gray-500 to-gray-600', fallback: '💼' },
+    { image: '/logos/railways.jpeg', name: 'Railways', color: 'from-red-500 to-red-600', fallback: '🚂' },
   ];
 
   useEffect(() => {
