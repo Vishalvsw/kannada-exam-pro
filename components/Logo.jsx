@@ -15,7 +15,6 @@ export default function Logo() {
         <div className="w-10 h-10 overflow-hidden rounded-xl shadow-md group-hover:scale-105 transition-transform bg-gray-100 flex items-center justify-center">
           <img 
             src="/images/logo.png" 
-            alt="Kannada Exam Pro Logo" 
             className="w-full h-full object-cover" 
             onError={() => setLogoError(true)} 
           />
