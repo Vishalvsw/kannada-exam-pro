@@ -276,7 +276,6 @@ export default function QuizPage() {
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
-        <AdSpace type="banner" className="mx-4 mt-2" />
         <AdSpace type="native" className="mx-4 mt-2" />
         
         {showCelebration && (
@@ -425,7 +424,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <AdSpace type="banner" className="mx-4 mt-2" />
         <AdSpace type="native" className="mx-4 mt-2" />
         
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
@@ -489,8 +487,7 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <AdSpace type="banner" className="mx-4 mt-2" />
-        <AdSpace type="native" className="mx-4 mt-2" />
-        
+#        
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-6 pb-5">
           <div className="text-center">
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
