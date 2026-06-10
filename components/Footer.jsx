@@ -1,54 +1,115 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 export default function Footer() {
-  const pathname = usePathname();
-  
-  // Only show footer on home page (/)
-  const isHomePage = pathname === '/';
-  
-  if (!isHomePage) {
-    return null;
-  }
-
   return (
-    <footer className="bg-gray-800 text-white py-8 mt-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          {/* Column 1 - About */}
           <div>
-            <h3 className="text-lg font-bold mb-3">Kannada Exam Pro</h3>
-            <p className="text-sm text-gray-400">Prepare for KAS, PSI, PDO, FDA, SDA exams with interactive quizzes.</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Kannada Exam Pro
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Your trusted platform for KAS, PSI, PDO, FDA, SDA exam preparation in Karnataka.
+            </p>
           </div>
+
+          {/* Column 2 - Quick Links */}
           <div>
-            <h3 className="text-lg font-bold mb-3">Quick Links</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Quick Links
+            </h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/about" className="text-gray-400 hover:text-white transition">About Us</Link></li>
-              <li><Link href="/contact" className="text-gray-400 hover:text-white transition">Contact Us</Link></li>
-              <li><Link href="/privacy-policy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-gray-400 hover:text-white transition">Terms & Conditions</Link></li>
+              <li>
+                <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/quiz" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Quiz
+                </Link>
+              </li>
+              <li>
+                <Link href="/leaderboard" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Leaderboard
+                </Link>
+              </li>
+              <li>
+                <Link href="/notes" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Notes
+                </Link>
+              </li>
             </ul>
           </div>
+
+          {/* Column 3 - Contact */}
           <div>
-            <h3 className="text-lg font-bold mb-3">Exams</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Support
+            </h3>
             <ul className="space-y-2 text-sm">
-              <li className="text-gray-400">KAS - Karnataka Administrative Service</li>
-              <li className="text-gray-400">PSI - Police Sub-Inspector</li>
-              <li className="text-gray-400">PDO - Panchayat Development Officer</li>
-              <li className="text-gray-400">FDA/SDA - First/Second Division Assistant</li>
+              <li>
+                <Link href="/contact" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-gray-600 dark:text-gray-400 hover:text-green-600 transition">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
-          <div>
-            <h3 className="text-lg font-bold mb-3">Follow Us</h3>
-            <div className="flex gap-4 mb-4">
-              <a href="https://www.instagram.com/kannada_exam_pro" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-pink-400 transition">📸</a>
-              <a href="#" className="text-2xl hover:text-blue-400 transition">👍</a>
-              <a href="#" className="text-2xl hover:text-red-400 transition">❤️</a>
+        </div>
+
+        {/* Disclaimer Section */}
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-6 mb-6">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+            <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-2">⚠️ Disclaimer</h4>
+            <div className="text-xs text-yellow-700 dark:text-yellow-400 space-y-2">
+              <p>
+                The information provided on this website is for <strong>educational and informational purposes only</strong>.
+              </p>
+              <p>
+                We make every effort to ensure that the content, including MCQs, Current Affairs, Notes, and other study materials, 
+                is accurate and up to date. However, we do not guarantee the completeness, accuracy, reliability, or suitability 
+                of any information provided.
+              </p>
+              <p>
+                This website is <strong>not affiliated with, endorsed by, or connected to</strong> any government organization, 
+                recruitment board, examination authority, or educational institution.
+              </p>
+              <p>
+                Users are advised to verify important information through official government notifications, websites, 
+                and authorized sources before making any decisions.
+              </p>
+              <p>
+                The quizzes, leaderboards, notes, and study materials available on this website are intended solely 
+                for <strong>learning, practice, and exam preparation purposes</strong>.
+              </p>
+              <p>
+                By using this website, you agree that the website owner shall not be held responsible for any loss, error, 
+                or consequence resulting from the use of the information provided.
+              </p>
+              <p className="pt-2 font-medium">
+                Thank you for using our platform and supporting quality education for all students. 📚
+              </p>
             </div>
-            <p className="text-sm text-gray-400">© 2024 Kannada Exam Pro</p>
-            <p className="text-xs text-gray-500 mt-1">All rights reserved.</p>
           </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="text-center text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <p>&copy; {new Date().getFullYear()} Kannada Exam Pro. All rights reserved.</p>
         </div>
       </div>
     </footer>
