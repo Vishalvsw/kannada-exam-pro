@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
   images: {
-    domains: ['ui-avatars.com'],
+    unoptimized: true,
   },
-  swcMinify: true,
+  trailingSlash: true,
 }
 
 module.exports = nextConfig
