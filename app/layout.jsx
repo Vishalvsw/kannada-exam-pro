@@ -25,7 +25,8 @@ export default function RootLayout({ children }) {
               <Footer />
             </DemoAuthProvider>
         </ClientOnly>
-      </body>
+      <AdSenseScript />
+    </body>
     </html>
   );
 }
