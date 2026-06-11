@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";\n
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
