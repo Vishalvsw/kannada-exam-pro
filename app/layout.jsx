@@ -4,6 +4,7 @@ import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
+import Script from 'next/script';  // ← Capital 'S' Script
 import './globals.css';
 
 export default function RootLayout({ children }) {
@@ -15,6 +16,13 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes" />
         <meta name="theme-color" content="#3B82F6" />
         <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+        
+        {/* ✅ Correct: Using Next.js Script component */}
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3976598981288611"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
       </head>
       <body suppressHydrationWarning>
         <ClientOnly>
@@ -25,8 +33,7 @@ export default function RootLayout({ children }) {
               <Footer />
             </DemoAuthProvider>
         </ClientOnly>
-      {/* <AdSenseScript /> */}
-    </body>
+      </body>
     </html>
   );
 }
