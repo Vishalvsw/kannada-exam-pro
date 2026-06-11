@@ -12,11 +12,7 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
 
-
-
-
-
-   // ✅ Updated sliding logos with better sizing
+  // Updated sliding logos with better sizing
   const slidingLogos = [
     { image: '/logos/police.png', name: 'Police', color: 'from-blue-500 to-blue-600', fallback: '👮' },
     { image: '/logos/defence.jpg', name: 'Defence', color: 'from-green-500 to-green-600', fallback: '🛡️' },
@@ -38,18 +34,38 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // ✅ FIXED: Handle API responses correctly
   const fetchData = async () => {
     try {
       const [questionsRes, usersRes] = await Promise.all([
         fetch('/api/questions'),
         fetch('/api/leaderboard'),
       ]);
+      
       const questions = await questionsRes.json();
       const users = await usersRes.json();
-      setTotalQuestions(questions.length);
-      setTopUsers(users.slice(0, 5)); // Get top 5 for better display
+      
+      // Fix: Check if questions is an array
+      const questionsArray = Array.isArray(questions) ? questions : [];
+      setTotalQuestions(questionsArray.length);
+      
+      // Fix: Handle different API response formats
+      let usersArray = [];
+      if (Array.isArray(users)) {
+        usersArray = users;
+      } else if (users && Array.isArray(users.users)) {
+        usersArray = users.users;
+      } else if (users && Array.isArray(users.data)) {
+        usersArray = users.data;
+      } else if (users && typeof users === 'object') {
+        usersArray = [users];
+      }
+      
+      setTopUsers(usersArray.slice(0, 5));
     } catch (error) {
       console.error('Error fetching data:', error);
+      setTotalQuestions(0);
+      setTopUsers([]);
     }
   };
 
@@ -160,12 +176,12 @@ export default function Home() {
 
       <AdSpace type="inArticle" className="mx-4 my-6" />
 
-      {/* Top Performers - HORIZONTAL BAR CHART (Instagram Winner's Style) */}
+      {/* Top Performers - HORIZONTAL BAR CHART */}
       {topUsers.length > 0 && (
         <div className="px-5 mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              🏆 Karnataka Winner'
+              🏆 Karnataka Winner's
               <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top 5</span>
             </h2>
             <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
@@ -177,19 +193,8 @@ export default function Home() {
                 const rank = idx + 1;
                 const scorePercentage = maxScore > 0 ? (user.score / maxScore) * 100 : 0;
                 
-                // Rank icons
-                const rankIcon = {
-                  1: '👑',
-                  2: '🥈',
-                  3: '🥉',
-                };
-                
-                const rankColor = {
-                  1: 'text-yellow-600',
-                  2: 'text-gray-600',
-                  3: 'text-orange-600',
-                };
-                
+                const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
+                const rankColor = { 1: 'text-yellow-600', 2: 'text-gray-600', 3: 'text-orange-600' };
                 const barColor = {
                   1: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
                   2: 'bg-gradient-to-r from-gray-400 to-gray-500',
@@ -197,8 +202,7 @@ export default function Home() {
                 };
                 
                 return (
-                  <div key={user._id} className="group">
-                    {/* User Row */}
+                  <div key={user._id || idx} className="group">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className={`text-lg font-bold ${rank <= 3 ? rankColor[rank] : 'text-purple-600'}`}>
@@ -214,7 +218,6 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    {/* Horizontal Bar Chart */}
                     <div className="relative w-full bg-gray-200 rounded-full h-7 overflow-hidden">
                       <div 
                         className={`h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out ${
@@ -235,7 +238,6 @@ export default function Home() {
               })}
             </div>
             
-            {/* Footer Message */}
             <div className="mt-4 pt-3 border-t border-purple-200 text-center">
               <p className="text-xs text-gray-500">🏆 Keep practicing to reach the top!</p>
             </div>
@@ -249,7 +251,6 @@ export default function Home() {
         <p className="text-xs text-gray-400 mb-3">Join More Channels</p>
         
         <div className="flex justify-center gap-5">
-          {/* WhatsApp */}
           <a
             href="https://whatsapp.com/channel/0029VbCnlxq3wtbEGjkxIM2M"
             target="_blank"
@@ -257,20 +258,11 @@ export default function Home() {
             className="flex flex-col items-center group"
           >
             <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow group-hover:scale-110 transition-transform duration-300">
-              <img 
-                src="/icons/whatsapp.png" 
-                alt="WhatsApp" 
-                className="w-7 h-7 object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<span class="text-2xl text-white">💬</span>';
-                }}
-              />
+              <span className="text-2xl text-white">💬</span>
             </div>
             <span className="text-xs text-gray-600 mt-1 group-hover:text-green-600 transition">WhatsApp</span>
           </a>
           
-          {/* Instagram */}
           <a
             href="https://www.instagram.com/kannada_exam_pro"
             target="_blank"
@@ -278,15 +270,7 @@ export default function Home() {
             className="flex flex-col items-center group"
           >
             <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow group-hover:scale-110 transition-transform duration-300">
-              <img 
-                src="/icons/instagram.png" 
-                alt="Instagram"
-                className="w-7 h-7 object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '<span class="text-2xl text-white">📸</span>';
-                }}
-              />
+              <span className="text-2xl text-white">📸</span>
             </div>
             <span className="text-xs text-gray-600 mt-1 group-hover:text-pink-600 transition">Instagram</span>
           </a>
