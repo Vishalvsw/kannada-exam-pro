@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 
 // import { NextResponse } from 'next/server';
 // import clientPromise from '@/lib/mongodb';
@@ -31,7 +30,6 @@ export const dynamic = "force-dynamic";
 
 
 
-export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { NextResponse } from 'next/server';

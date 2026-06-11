@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
@@ -16,7 +15,6 @@ export async function GET(request, { params }) {
 }
 EOF# Fix current-affairs/[id]/route.js
 cat > app/api/current-affairs/[id]/route.js << 'EOF'
-export const dynamic = "force-dynamic";
 
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
