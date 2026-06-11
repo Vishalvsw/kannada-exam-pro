@@ -1,20 +1,18 @@
-export const dynamic = "force-dynamic";\n
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const { username, password } = await request.json();
     
-    if (email === 'admin@kannadaexampro.com' && password === 'Admin@123') {
-      return NextResponse.json({
-        success: true,
-        token: 'demo-token-' + Date.now(),
-        admin: { name: 'Admin User', email: email, role: 'admin' }
-      });
+    // Add your admin login logic here
+    if (username === "admin" && password === "admin123") {
+      return NextResponse.json({ success: true, message: "Login successful" });
     }
     
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    return NextResponse.json({ success: false, message: "Invalid credentials" }, { status: 401 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
   }
 }
