@@ -24,16 +24,16 @@ export default function LeaderboardPage() {
       }
     }
     fetchLeaderboard();
-    const interval = setInterval(() => fetchLeaderboard(), 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchLeaderboard = async () => {
     try {
       const response = await fetch('/api/leaderboard');
       const data = await response.json();
+      // Filter ONLY users who have taken tests (score > 0 OR totalQuizzesTaken > 0)
       let allUsers = Array.isArray(data) ? data : [];
-      const sortedUsers = allUsers.sort((a, b) => (b.score || 0) - (a.score || 0));
+      const testTakers = allUsers.filter(user => (user.score || 0) > 0 || (user.totalQuizzesTaken || 0) > 0);
+      const sortedUsers = testTakers.sort((a, b) => (b.score || 0) - (a.score || 0));
       setUsers(sortedUsers);
       setTotalParticipants(sortedUsers.length);
       setLastUpdated(new Date());
@@ -47,6 +47,20 @@ export default function LeaderboardPage() {
     }
   };
 
+  const filterUsersByTime = (users, period) => {
+    const now = new Date();
+    return users.filter(user => {
+      if (period === 'all') return true;
+      const userDate = new Date(user.lastQuizDate || user.createdAt);
+      if (isNaN(userDate.getTime())) return period === 'all';
+      const diffDays = Math.floor((now - userDate) / (1000 * 60 * 60 * 24));
+      if (period === 'today') return diffDays === 0;
+      if (period === 'week') return diffDays <= 7;
+      if (period === 'month') return diffDays <= 30;
+      return true;
+    });
+  };
+
   const tabs = [
     { id: 'all', label: '🏆 All-Time' },
     { id: 'today', label: '📅 Today' },
@@ -54,10 +68,11 @@ export default function LeaderboardPage() {
     { id: 'month', label: '📊 This Month' }
   ];
 
-  const filteredUsers = users;
+  const filteredUsers = filterUsersByTime(users, activeTab);
   const sortedFilteredUsers = [...filteredUsers].sort((a, b) => (b.score || 0) - (a.score || 0));
   const topThree = sortedFilteredUsers.slice(0, 3);
-  const remainingUsers = sortedFilteredUsers.slice(3);
+  const topTen = sortedFilteredUsers.slice(0, 10);
+  const remainingUsers = sortedFilteredUsers.slice(10);
   
   const currentUserRank = sortedFilteredUsers.findIndex(u => {
     const userId = (u.instagramId || u.email || '').toString().toLowerCase();
@@ -81,12 +96,8 @@ export default function LeaderboardPage() {
             <div>
               <h1 className="text-3xl font-bold">Leaderboard</h1>
               <p className="text-purple-100 text-sm mt-1">
-                {totalParticipants} Active Participants
-                {lastUpdated && <span> · Updated {lastUpdated.toLocaleTimeString()}</span>}
+                {totalParticipants} Candidates Attempted
               </p>
-              <button onClick={() => fetchLeaderboard()} className="mt-2 text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">
-                🔄 Refresh Now
-              </button>
             </div>
           </div>
         </div>
@@ -191,38 +202,72 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          {/* Users List */}
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 px-5 py-3">
-              <div className="flex items-center justify-between text-white text-sm font-semibold">
-                <div className="flex items-center gap-4"><span>#</span><span>User</span></div>
-                <span>Score</span>
+          {/* Top 10 List */}
+          {topTen.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-6">
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 px-5 py-3">
+                <div className="flex items-center justify-between text-white text-sm font-semibold">
+                  <div className="flex items-center gap-4"><span>#</span><span>Top 10 Rankers</span></div>
+                  <span>Score</span>
+                </div>
               </div>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {remainingUsers.map((user, idx) => {
-                const rank = idx + 4;
-                const isCurrentUser = (user.instagramId || user.email || '').toLowerCase() === (currentUser?.instagramId || currentUser?.email || '').toLowerCase();
-                return (
-                  <div key={user._id || idx} className={`px-5 py-3 flex items-center justify-between transition-all ${isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md ${
-                        rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-500' : rank === 3 ? 'bg-orange-500' : 'bg-purple-500'
-                      }`}>{rank}</div>
-                      <div>
-                        <p className="font-semibold text-gray-800 text-sm">{user.name || 'Anonymous'}{isCurrentUser && <span className="ml-1 text-xs text-purple-600 font-bold">(You)</span>}</p>
-                        <p className="text-xs text-gray-400">@{user.instagramId}</p>
+              <div className="divide-y divide-gray-100">
+                {topTen.map((user, idx) => {
+                  const rank = idx + 1;
+                  const isCurrentUser = (user.instagramId || user.email || '').toLowerCase() === (currentUser?.instagramId || currentUser?.email || '').toLowerCase();
+                  return (
+                    <div key={user._id || idx} className={`px-5 py-3 flex items-center justify-between transition-all ${isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md ${
+                          rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-500' : rank === 3 ? 'bg-orange-500' : 'bg-purple-500'
+                        }`}>{rank}</div>
+                        <div>
+                          <p className="font-semibold text-gray-800 text-sm">{user.name || 'Anonymous'}{isCurrentUser && <span className="ml-1 text-xs text-purple-600 font-bold">(You)</span>}</p>
+                          <p className="text-xs text-gray-400">@{user.instagramId}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-purple-600">{user.score || 0}</p>
+                        <p className="text-[10px] text-gray-400">{user.totalQuizzesTaken || 0} quizzes</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-purple-600">{user.score || 0}</p>
-                      <p className="text-[10px] text-gray-400">{user.totalQuizzesTaken || 0} quizzes</p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* View All - Remaining Users */}
+          {remainingUsers.length > 0 && (
+            <details className="group">
+              <summary className="cursor-pointer text-sm font-semibold text-gray-600 bg-gray-100 px-4 py-2 rounded-lg inline-flex items-center gap-2 hover:bg-gray-200 transition">
+                <span>📋</span> View All ({remainingUsers.length} more)
+                <svg className="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <div className="mt-3 bg-white rounded-xl shadow-lg overflow-hidden">
+                {remainingUsers.map((user, idx) => {
+                  const rank = idx + 11;
+                  const isCurrentUser = (user.instagramId || user.email || '').toLowerCase() === (currentUser?.instagramId || currentUser?.email || '').toLowerCase();
+                  return (
+                    <div key={user._id || idx} className={`px-4 py-2 flex items-center justify-between border-b border-gray-100 last:border-0 ${isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs">{rank}</div>
+                        <div>
+                          <p className="font-medium text-gray-700 text-sm">{user.name || 'Anonymous'}{isCurrentUser && <span className="ml-1 text-xs text-purple-600">(You)</span>}</p>
+                          <p className="text-xs text-gray-400">@{user.instagramId}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-purple-600">{user.score || 0}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          )}
         </div>
       ) : (
         <div className="max-w-4xl mx-auto px-5 py-12">
@@ -241,15 +286,27 @@ export default function LeaderboardPage() {
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - No refresh/update button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">🏠</span><span className="text-[10px]">Home</span></Link>
-          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span></Link>
-          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">📖</span><span className="text-[10px]">Study</span></Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">📰</span><span className="text-[10px]">Current</span></Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-purple-600"><span className="text-xl">🏆</span><span className="text-[10px]">Rank</span></Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">👤</span><span className="text-[10px]">Profile</span></Link>
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
+          </Link>
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
+          </Link>
+          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
+          </Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">📰</span><span className="text-[10px]">Current</span>
+          </Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-purple-600">
+            <span className="text-xl">🏆</span><span className="text-[10px]">Rank</span>
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
+          </Link>
         </div>
       </div>
     </div>
