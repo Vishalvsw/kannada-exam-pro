@@ -6,23 +6,17 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db();
     
-    // Try multiple possible collection names
-    let currentAffairs = [];
-    const possibleNames = ['currentaffairs', 'currentAffairs', 'current_affairs'];
+    // Get current affairs from MongoDB
+    let currentAffairs = await db.collection('currentaffairs')
+      .find({})
+      .sort({ date: -1 })
+      .toArray();
     
-    for (const name of possibleNames) {
-      const collection = db.collection(name);
-      const count = await collection.countDocuments();
-      if (count > 0) {
-        currentAffairs = await collection.find({}).sort({ date: -1 }).toArray();
-        console.log(`Found data in collection: ${name}`);
-        break;
-      }
-    }
+    console.log(`Current Affairs API: Found ${currentAffairs.length} items`);
     
     return NextResponse.json(currentAffairs);
   } catch (error) {
-    console.error('Current Affairs API error:', error);
-    return NextResponse.json([], { status: 200 }); // Return empty array instead of error
+    console.error('Current Affairs error:', error);
+    return NextResponse.json([]);
   }
 }
