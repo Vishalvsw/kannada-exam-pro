@@ -6,15 +6,18 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db();
     
+    // Get all users with scores
     const users = await db.collection('users')
-      .find({})
+      .find({ score: { $gt: 0 } })
       .sort({ score: -1 })
-      .limit(50)
+      .limit(100)
       .toArray();
+    
+    console.log(`Leaderboard API: Found ${users.length} users with scores`);
     
     return NextResponse.json(users);
   } catch (error) {
     console.error('Leaderboard error:', error);
-    return NextResponse.json([]);
+    return NextResponse.json([], { status: 200 });
   }
 }
