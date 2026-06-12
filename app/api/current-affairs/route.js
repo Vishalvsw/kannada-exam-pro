@@ -1,22 +1,31 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { getCurrentAffairs, saveCurrentAffairs } from '@/lib/storage';
 
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db();
-    
-    // Get current affairs from MongoDB
-    let currentAffairs = await db.collection('currentaffairs')
-      .find({})
-      .sort({ date: -1 })
-      .toArray();
-    
-    console.log(`Current Affairs API: Found ${currentAffairs.length} items`);
-    
-    return NextResponse.json(currentAffairs);
+    const affairs = getCurrentAffairs();
+    return NextResponse.json(affairs || []);
   } catch (error) {
-    console.error('Current Affairs error:', error);
-    return NextResponse.json([]);
+    return NextResponse.json([], { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const affairs = getCurrentAffairs() || [];
+    const newAffair = {
+      id: affairs.length + 1,
+      title: body.title,
+      content: body.content,
+      category: body.category || 'General',
+      date: body.date || new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString()
+    };
+    affairs.push(newAffair);
+    saveCurrentAffairs(affairs);
+    return NextResponse.json(newAffair, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

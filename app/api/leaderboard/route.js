@@ -1,34 +1,25 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { getUsers } from '@/lib/storage';
 
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const users = getUsers() || [];
     
-    // Get all users, sorted by score
-    const users = await db.collection('users')
-      .find({})
-      .sort({ score: -1 })
-      .limit(100)
-      .toArray();
+    const leaderboard = users
+      .sort((a, b) => (b.score || 0) - (a.score || 0))
+      .slice(0, 50)
+      .map(user => ({
+        _id: user.id,
+        name: user.name || 'Anonymous',
+        instagramId: user.instagramId || '',
+        score: user.score || 0,
+        totalQuizzesTaken: user.totalQuizzesTaken || 0,
+        image: user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=3B82F6&color=fff&size=100`
+      }));
     
-    console.log(`Leaderboard API: Found ${users.length} users`);
-    
-    // Format users for leaderboard
-    const formattedUsers = users.map(user => ({
-      _id: user._id,
-      name: user.name || 'Anonymous',
-      instagramId: user.instagramId || user.email || 'user',
-      score: user.score || 0,
-      totalQuizzesTaken: user.totalQuizzesTaken || 0,
-      profileImage: user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=22c55e&color=fff`,
-      createdAt: user.createdAt
-    }));
-    
-    return NextResponse.json(formattedUsers);
+    return NextResponse.json(leaderboard);
   } catch (error) {
     console.error('Leaderboard error:', error);
-    return NextResponse.json([]);
+    return NextResponse.json([], { status: 200 });
   }
 }
