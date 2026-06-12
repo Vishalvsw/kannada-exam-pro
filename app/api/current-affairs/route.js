@@ -12,6 +12,7 @@ export async function GET() {
     
     return NextResponse.json(affairs);
   } catch (error) {
+    console.error('Current Affairs error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

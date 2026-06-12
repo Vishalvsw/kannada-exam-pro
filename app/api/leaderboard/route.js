@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
-export async function GET(request) {
+export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db();
     const users = await db.collection('users')
       .find({})
-      .sort({ totalScore: -1 })
+      .sort({ score: -1 })
       .limit(50)
       .toArray();
     
-    return NextResponse.json({ success: true, users });
+    return NextResponse.json(users);
   } catch (error) {
     console.error('Leaderboard error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
