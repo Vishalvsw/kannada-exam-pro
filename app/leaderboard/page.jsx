@@ -14,7 +14,6 @@ export default function LeaderboardPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get current user from localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -25,13 +24,11 @@ export default function LeaderboardPage() {
       }
     }
     
-    // Initial fetch
     fetchLeaderboard();
     
-    // Refresh every 10 seconds
     const interval = setInterval(() => {
       fetchLeaderboard();
-    }, 10000);
+    }, 30000);
     
     return () => clearInterval(interval);
   }, []);
@@ -46,11 +43,8 @@ export default function LeaderboardPage() {
         allUsers = data;
       } else if (data.users && Array.isArray(data.users)) {
         allUsers = data.users;
-      } else if (data.success && Array.isArray(data.data)) {
-        allUsers = data.data;
       }
       
-      // Sort by score
       const sortedUsers = allUsers.sort((a, b) => (b.score || 0) - (a.score || 0));
       
       setUsers(sortedUsers);
@@ -103,31 +97,6 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   };
 
-  // Demo user registration
-  const registerDemoUser = async () => {
-    try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'Demo Student',
-          instagramId: 'demo_student',
-          score: 850,
-          totalQuizzesTaken: 5
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setCurrentUser(data.user);
-        fetchLeaderboard();
-        alert('Demo user created! Take a quiz to increase your score.');
-      }
-    } catch (error) {
-      console.error('Error creating demo user:', error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
@@ -168,18 +137,6 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Demo User Button - Only show when no users */}
-      {!loading && users.length === 0 && !currentUser && (
-        <div className="max-w-4xl mx-auto px-5 mt-4">
-          <button
-            onClick={registerDemoUser}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold text-sm hover:shadow-lg transition"
-          >
-            🎯 Create Demo User & Start Quiz
-          </button>
-        </div>
-      )}
-
       {/* Your Rank Card */}
       {currentUser && currentUserRank > 0 && currentUserRank <= sortedFilteredUsers.length && (
         <div className="max-w-4xl mx-auto px-5 mt-4">
@@ -203,7 +160,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Same as Notes */}
       <div className="max-w-4xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-md p-1 flex gap-1">
           {tabs.map(tab => (
@@ -351,7 +308,7 @@ export default function LeaderboardPage() {
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - Green Theme */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
