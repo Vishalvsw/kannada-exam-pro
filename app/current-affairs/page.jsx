@@ -65,181 +65,208 @@ export default function CurrentAffairsPage() {
   const uniqueDates = [...new Set(currentAffairs.map(a => a.date))].filter(date => date).sort().reverse();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
-      
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-5 pt-8 pb-6">
-        <div className="text-center">
-          <div className="text-5xl mb-2">📰</div>
-          <h1 className="text-2xl font-bold">Current Affairs</h1>
-          <p className="text-orange-100 text-xs mt-1">Daily updates for competitive exams</p>
+
+      {/* Header - Same as Notes page (Green theme) */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-4 animate-bounce">
+              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-transform duration-300">
+                <span className="text-5xl animate-pulse">📰</span>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Current Affairs</h1>
+              <p className="text-green-100 text-sm mt-1">Daily updates for competitive exams</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="max-w-md mx-auto px-4 mt-4">
-        <div className="bg-white rounded-xl shadow-md p-4 space-y-3">
-          <div className="relative">
+      {/* Search Bar - Same as Notes page */}
+      <div className="max-w-4xl mx-auto px-5 mt-4">
+        <div className="bg-white rounded-2xl shadow-lg p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-xl">🔍</span>
             <input
               type="text"
-              placeholder="🔍 Search current affairs..."
+              placeholder="Search current affairs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="flex-1 outline-none text-sm"
             />
-          </div>
-          
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => setShowDateFilter(!showDateFilter)}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm flex items-center gap-1"
-            >
-              📅 {selectedDate ? new Date(selectedDate).toLocaleDateString() : 'All Dates'}
-              <span className="text-xs">▼</span>
-            </button>
-            {selectedDate && (
-              <button
-                onClick={() => setSelectedDate('')}
-                className="px-2 py-2 text-red-500 text-sm hover:bg-red-50 rounded-lg transition"
-              >
-                ✕ Clear
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600">
+                ✕
               </button>
             )}
           </div>
-
-          {/* Date Filter Dropdown */}
-          {showDateFilter && (
-            <div className="border-t pt-3 mt-2">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => {
-                    setSelectedDate('');
-                    setShowDateFilter(false);
-                  }}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    !selectedDate ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  All Dates
-                </button>
-                {uniqueDates.map(date => (
-                  <button
-                    key={date}
-                    onClick={() => {
-                      setSelectedDate(date);
-                      setShowDateFilter(false);
-                    }}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      selectedDate === date ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {new Date(date).toLocaleDateString()}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Stats */}
-      {!loading && currentAffairs.length > 0 && (
-        <div className="max-w-md mx-auto px-4 mt-4">
-          <div className="bg-orange-50 rounded-xl p-3">
-            <p className="text-center text-sm text-orange-800">
-              📊 Total Updates: {currentAffairs.length} | Showing: {filteredAffairs.length}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="text-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-2 text-gray-500">Loading current affairs...</p>
-        </div>
-      )}
-
-      {/* Current Affairs List */}
-      {!loading && (
-        <div className="max-w-md mx-auto px-4 mt-4 mb-20">
-          {filteredAffairs.length > 0 ? (
-            <div className="space-y-4">
-              {filteredAffairs.map((affair, idx) => (
-                <div key={affair._id || idx} className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white text-xl flex-shrink-0">
-                      📰
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                        <h3 className="font-bold text-gray-800 text-lg">{affair.title}</h3>
-                        {affair.date && (
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">
-                            {new Date(affair.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
-                        {affair.content}
-                      </p>
-                      {affair.source && affair.source !== 'Admin' && (
-                        <p className="text-xs text-gray-400 mt-2">Source: {affair.source}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-white rounded-xl shadow-md">
-              <div className="text-6xl mb-3">📭</div>
-              <p className="text-gray-600 font-medium">No current affairs found</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {searchTerm || selectedDate 
-                  ? 'Try changing your search or clear the date filter'
-                  : 'Check back later for updates'}
-              </p>
-              {(searchTerm || selectedDate) && (
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedDate('');
-                  }}
-                  className="mt-4 text-orange-600 text-sm underline"
-                >
-                  Clear All Filters
-                </button>
-              )}
-            </div>
+      {/* Date Filter - Optional */}
+      <div className="max-w-4xl mx-auto px-5 mt-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setShowDateFilter(!showDateFilter)}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-green-600 transition bg-white px-3 py-1.5 rounded-lg shadow-sm"
+          >
+            <span>📅</span>
+            <span>{selectedDate ? new Date(selectedDate).toLocaleDateString() : 'Filter by Date'}</span>
+            <span className="text-xs">▼</span>
+          </button>
+          {selectedDate && (
+            <button
+              onClick={() => setSelectedDate('')}
+              className="text-xs text-red-500 hover:text-red-700"
+            >
+              Clear Date
+            </button>
+          )}
+          {currentAffairs.length > 0 && (
+            <span className="text-xs text-gray-400 bg-white px-3 py-1.5 rounded-lg shadow-sm">
+              📊 Total: {currentAffairs.length} | Showing: {filteredAffairs.length}
+            </span>
           )}
         </div>
-      )}
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg z-50">
+        {/* Date Filter Dropdown */}
+        {showDateFilter && (
+          <div className="mt-2 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  setSelectedDate('');
+                  setShowDateFilter(false);
+                }}
+                className={`px-3 py-1 rounded-full text-xs transition ${
+                  !selectedDate ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Dates
+              </button>
+              {uniqueDates.map(date => (
+                <button
+                  key={date}
+                  onClick={() => {
+                    setSelectedDate(date);
+                    setShowDateFilter(false);
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs transition ${
+                    selectedDate === date ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {new Date(date).toLocaleDateString()}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content Section - Same grid layout as Notes */}
+      <div className="max-w-6xl mx-auto px-5 py-6">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-gray-500 mt-4">Loading current affairs...</p>
+          </div>
+        ) : filteredAffairs.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredAffairs.map((affair, idx) => (
+              <div key={affair._id || idx} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-1">
+                <div className="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white">
+                  <div className="text-3xl mb-2">📰</div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-sm line-clamp-2 flex-1">{affair.title}</h3>
+                    {affair.date && (
+                      <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full ml-2 whitespace-nowrap">
+                        {new Date(affair.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p className="text-gray-600 text-xs leading-relaxed line-clamp-3">
+                    {affair.content}
+                  </p>
+                  {affair.source && affair.source !== 'Admin' && (
+                    <p className="text-[10px] text-gray-400 mt-2">Source: {affair.source}</p>
+                  )}
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
+                    <span className="text-[10px] text-gray-400">
+                      📅 {affair.date ? new Date(affair.date).toLocaleDateString() : 'No date'}
+                    </span>
+                    <details className="group relative">
+                      <summary className="cursor-pointer text-green-600 text-xs font-semibold hover:text-green-700 transition flex items-center gap-1">
+                        <span>Read More</span>
+                        <svg className="w-3 h-3 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </summary>
+                      <div className="absolute bottom-full left-0 mb-2 w-64 bg-gray-800 text-white text-xs rounded-lg p-2 shadow-xl z-10 hidden group-open:block">
+                        <p className="leading-relaxed">{affair.content}</p>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+            <div className="text-6xl mb-4">📭</div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">No Current Affairs Found</h3>
+            <p className="text-gray-500 text-sm">
+              {searchTerm || selectedDate 
+                ? 'Try changing your search or clear the date filter'
+                : 'Current affairs will appear here once added.'}
+            </p>
+            {(searchTerm || selectedDate) && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedDate('');
+                }}
+                className="mt-4 text-green-600 text-sm underline"
+              >
+                Clear All Filters
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
+
+      {/* Bottom Navigation - Same as Notes page */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
             <span className="text-xl">🏠</span>
-            <span className="text-xs">Home</span>
+            <span className="text-[10px]">Home</span>
           </Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-orange-600">
-            <span className="text-xl">📰</span>
-            <span className="text-xs">Current</span>
-          </Link>
-          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
             <span className="text-xl">🎯</span>
-            <span className="text-xs">Test</span>
+            <span className="text-[10px]">Quiz</span>
           </Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
+          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+            <span className="text-xl">📖</span>
+            <span className="text-[10px]">Study</span>
+          </Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-green-600">
+            <span className="text-xl">📰</span>
+            <span className="text-[10px]">Current</span>
+          </Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
             <span className="text-xl">🏆</span>
-            <span className="text-xs">Rank</span>
+            <span className="text-[10px]">Rank</span>
           </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
+          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
             <span className="text-xl">👤</span>
-            <span className="text-xs">Profile</span>
+            <span className="text-[10px]">Profile</span>
           </Link>
         </div>
       </div>
