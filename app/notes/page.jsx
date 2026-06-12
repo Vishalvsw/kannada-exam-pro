@@ -216,28 +216,22 @@ export default function NotesPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🏠</span>
-            <span className="text-[10px]">Home</span>
+            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
           </Link>
           <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🎯</span>
-            <span className="text-[10px]">Quiz</span>
+            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
           </Link>
           <Link href="/notes" className="flex flex-col items-center text-green-600">
-            <span className="text-xl">📖</span>
-            <span className="text-[10px]">Study</span>
+            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
           </Link>
           <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">📰</span>
-            <span className="text-[10px]">Current</span>
+            <span className="text-xl">📰</span><span className="text-[10px]">Current</span>
           </Link>
           <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🏆</span>
-            <span className="text-[10px]">Rank</span>
+            <span className="text-xl">🏆</span><span className="text-[10px]">Rank</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">👤</span>
-            <span className="text-[10px]">Profile</span>
+            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
           </Link>
         </div>
       </div>

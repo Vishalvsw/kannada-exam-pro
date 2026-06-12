@@ -9,7 +9,7 @@ export default function CurrentAffairsPage() {
   const [filteredAffairs, setFilteredAffairs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState(''); // Empty = show all
+  const [selectedDate, setSelectedDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
 
   useEffect(() => {
@@ -42,7 +42,6 @@ export default function CurrentAffairsPage() {
   const filterAffairs = () => {
     let filtered = [...currentAffairs];
     
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(affair => 
         affair.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,7 +49,6 @@ export default function CurrentAffairsPage() {
       );
     }
     
-    // Filter by date (only if a date is selected)
     if (selectedDate) {
       filtered = filtered.filter(affair => {
         const affairDate = affair.date ? new Date(affair.date).toISOString().split('T')[0] : '';
@@ -61,14 +59,13 @@ export default function CurrentAffairsPage() {
     setFilteredAffairs(filtered);
   };
 
-  // Get unique dates for filter dropdown
   const uniqueDates = [...new Set(currentAffairs.map(a => a.date))].filter(date => date).sort().reverse();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* Header - Same as Notes page (Green theme) */}
+      {/* Header - Green Theme */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col items-center text-center">
@@ -85,8 +82,8 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Search Bar - Same as Notes page */}
-      <div className="max-w-4xl mx-auto px-5 mt-4">
+      {/* Search Bar */}
+      <div className="max-w-6xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-lg p-3">
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xl">🔍</span>
@@ -106,8 +103,8 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Date Filter - Optional */}
-      <div className="max-w-4xl mx-auto px-5 mt-3">
+      {/* Date Filter */}
+      <div className="max-w-6xl mx-auto px-5 mt-3">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
@@ -118,45 +115,31 @@ export default function CurrentAffairsPage() {
             <span className="text-xs">▼</span>
           </button>
           {selectedDate && (
-            <button
-              onClick={() => setSelectedDate('')}
-              className="text-xs text-red-500 hover:text-red-700"
-            >
+            <button onClick={() => setSelectedDate('')} className="text-xs text-red-500 hover:text-red-700">
               Clear Date
             </button>
           )}
           {currentAffairs.length > 0 && (
             <span className="text-xs text-gray-400 bg-white px-3 py-1.5 rounded-lg shadow-sm">
-              📊 Total: {currentAffairs.length} | Showing: {filteredAffairs.length}
+              📊 Total: {currentAffairs.length}
             </span>
           )}
         </div>
 
-        {/* Date Filter Dropdown */}
         {showDateFilter && (
           <div className="mt-2 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => {
-                  setSelectedDate('');
-                  setShowDateFilter(false);
-                }}
-                className={`px-3 py-1 rounded-full text-xs transition ${
-                  !selectedDate ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                onClick={() => { setSelectedDate(''); setShowDateFilter(false); }}
+                className={`px-3 py-1 rounded-full text-xs transition ${!selectedDate ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}
               >
                 All Dates
               </button>
               {uniqueDates.map(date => (
                 <button
                   key={date}
-                  onClick={() => {
-                    setSelectedDate(date);
-                    setShowDateFilter(false);
-                  }}
-                  className={`px-3 py-1 rounded-full text-xs transition ${
-                    selectedDate === date ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  onClick={() => { setSelectedDate(date); setShowDateFilter(false); }}
+                  className={`px-3 py-1 rounded-full text-xs transition ${selectedDate === date ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}
                 >
                   {new Date(date).toLocaleDateString()}
                 </button>
@@ -166,7 +149,7 @@ export default function CurrentAffairsPage() {
         )}
       </div>
 
-      {/* Content Section - Same grid layout as Notes */}
+      {/* Content Section */}
       <div className="max-w-6xl mx-auto px-5 py-6">
         {loading ? (
           <div className="text-center py-12">
@@ -220,53 +203,34 @@ export default function CurrentAffairsPage() {
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">No Current Affairs Found</h3>
             <p className="text-gray-500 text-sm">
-              {searchTerm || selectedDate 
-                ? 'Try changing your search or clear the date filter'
-                : 'Current affairs will appear here once added.'}
+              {searchTerm || selectedDate ? 'Try changing your search or clear the date filter' : 'Current affairs will appear here once added.'}
             </p>
-            {(searchTerm || selectedDate) && (
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedDate('');
-                }}
-                className="mt-4 text-green-600 text-sm underline"
-              >
-                Clear All Filters
-              </button>
-            )}
           </div>
         )}
       </div>
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
-      {/* Bottom Navigation - Same as Notes page */}
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🏠</span>
-            <span className="text-[10px]">Home</span>
+            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
           </Link>
           <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🎯</span>
-            <span className="text-[10px]">Quiz</span>
+            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
           </Link>
           <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">📖</span>
-            <span className="text-[10px]">Study</span>
+            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
           </Link>
           <Link href="/current-affairs" className="flex flex-col items-center text-green-600">
-            <span className="text-xl">📰</span>
-            <span className="text-[10px]">Current</span>
+            <span className="text-xl">📰</span><span className="text-[10px]">Current</span>
           </Link>
           <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🏆</span>
-            <span className="text-[10px]">Rank</span>
+            <span className="text-xl">🏆</span><span className="text-[10px]">Rank</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">👤</span>
-            <span className="text-[10px]">Profile</span>
+            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
           </Link>
         </div>
       </div>
