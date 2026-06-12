@@ -6,13 +6,11 @@ import AdSpace from '@/components/AdSpace';
 import Image from 'next/image';
 
 export default function Home() {
-  
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [topUsers, setTopUsers] = useState([]);
   const [user, setUser] = useState(null);
   const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
 
-  // Updated sliding logos with better sizing
   const slidingLogos = [
     { image: '/logos/police.png', name: 'Police', color: 'from-blue-500 to-blue-600', fallback: '👮' },
     { image: '/logos/defence.jpg', name: 'Defence', color: 'from-green-500 to-green-600', fallback: '🛡️' },
@@ -34,7 +32,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ FIXED: Handle API responses correctly
   const fetchData = async () => {
     try {
       const [questionsRes, usersRes] = await Promise.all([
@@ -45,20 +42,18 @@ export default function Home() {
       const questions = await questionsRes.json();
       const users = await usersRes.json();
       
-      // Fix: Check if questions is an array
+      // Handle empty/null responses
       const questionsArray = Array.isArray(questions) ? questions : [];
       setTotalQuestions(questionsArray.length);
       
-      // Fix: Handle different API response formats
+      // Handle different response formats
       let usersArray = [];
       if (Array.isArray(users)) {
         usersArray = users;
       } else if (users && Array.isArray(users.users)) {
         usersArray = users.users;
-      } else if (users && Array.isArray(users.data)) {
-        usersArray = users.data;
-      } else if (users && typeof users === 'object') {
-        usersArray = [users];
+      } else if (users && users.success && Array.isArray(users.users)) {
+        usersArray = users.users;
       }
       
       setTopUsers(usersArray.slice(0, 5));
@@ -78,7 +73,6 @@ export default function Home() {
     { title: 'Leaderboard', icon: '🏆', color: 'from-yellow-500 to-yellow-600', href: '/leaderboard', desc: 'Top Winners' },
   ];
 
-  // Calculate max score for bar chart
   const maxScore = topUsers.length > 0 ? Math.max(...topUsers.map(u => u.score || 0)) : 100;
 
   return (
@@ -92,7 +86,6 @@ export default function Home() {
           <p className="text-blue-100 text-sm mt-1">KAS | PSI | PDO | FDA | SDA</p>
         </div>
         
-        {/* Sliding Logos */}
         <div className="flex justify-center">
           <div className="bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 animate-slide-left inline-block shadow-xl">
             <div className="flex items-center justify-center gap-3">
@@ -116,7 +109,6 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Logo Indicators */}
         <div className="flex justify-center gap-2 mt-4">
           {slidingLogos.map((_, idx) => (
             <div 
@@ -129,7 +121,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* User Welcome Card */}
       {user && (
         <div className="px-5 -mt-4">
           <div className="bg-white rounded-2xl shadow-lg p-4 flex items-center justify-between">
@@ -157,7 +148,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Category Cards */}
       <div className="px-5 mt-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {categories.map((cat, idx) => (
@@ -176,13 +166,28 @@ export default function Home() {
 
       <AdSpace type="inArticle" className="mx-4 my-6" />
 
-      {/* Top Performers - HORIZONTAL BAR CHART */}
+      {/* Show message when no data */}
+      {topUsers.length === 0 && (
+        <div className="px-5 mt-6">
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-8 text-center">
+            <span className="text-5xl mb-3 block">🏆</span>
+            <h3 className="text-lg font-semibold text-gray-800">No Winners Yet!</h3>
+            <p className="text-sm text-gray-500 mt-2">Be the first to take the quiz and win!</p>
+            <Link href="/quiz">
+              <button className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
+                Start Quiz Now 🎯
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {topUsers.length > 0 && (
         <div className="px-5 mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              🏆 Karnataka Winner's
-              <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top 5</span>
+              🏆 Top Performers
+              <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top {topUsers.length}</span>
             </h2>
             <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
           </div>
@@ -245,7 +250,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* WhatsApp & Instagram */}
       <div className="px-5 mt-8 mb-4 text-center">
         <p className="text-sm text-gray-500">For Daily Quiz and Updates</p>
         <p className="text-xs text-gray-400 mb-3">Join More Channels</p>
@@ -277,7 +281,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Login Link */}
       {!user && (
         <div className="text-center mt-4">
           <Link href="/login" className="text-xs text-gray-400 hover:text-blue-500 transition">
