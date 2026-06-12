@@ -6,294 +6,149 @@ import AdSpace from '@/components/AdSpace';
 
 export default function CurrentAffairsPage() {
   const [affairs, setAffairs] = useState([]);
-  const [allAffairs, setAllAffairs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
-  }, []);
-
-  useEffect(() => {
-    if (selectedDate) {
-      fetchCurrentAffairs();
-    }
+    fetchCurrentAffairs();
   }, [selectedDate]);
 
   const fetchCurrentAffairs = async () => {
-    setLoading(true);
     try {
-      const res = await fetch('/api/current-affairs');
-      const data = await res.json();
-      setAllAffairs(Array.isArray(data) ? data : []);
-      let filtered = Array.isArray(data) ? data.filter(a => a.date === selectedDate) : [];
-      setAffairs(filtered);
+      setLoading(true);
+      const response = await fetch('/api/current-affairs');
+      const data = await response.json();
+      
+      console.log('Fetched current affairs:', data);
+      
+      if (Array.isArray(data)) {
+        setAffairs(data);
+        setError(null);
+      } else if (data.error) {
+        setError(data.error);
+        setAffairs([]);
+      } else {
+        setAffairs([]);
+      }
     } catch (error) {
-      console.error('Error fetching affairs:', error);
+      console.error('Error fetching current affairs:', error);
+      setError(error.message);
       setAffairs([]);
-      setAllAffairs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const handleDateSelect = (day) => {
-    const newDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    setSelectedDate(newDate);
-    setCalendarOpen(false);
-  };
-
-  const changeMonth = (direction) => {
-    if (direction === 'prev') {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
-      } else {
-        setCurrentMonth(currentMonth - 1);
-      }
-    } else {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
-      } else {
-        setCurrentMonth(currentMonth + 1);
-      }
-    }
-  };
-
   const filteredAffairs = affairs.filter(affair => {
-    const matchesSearch = searchTerm === '' || 
-                          affair.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          affair.content?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const affairDate = affair.date ? new Date(affair.date).toISOString().split('T')[0] : '';
+    return affairDate === selectedDate;
   });
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Select a date';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
-
-      {/* Header - Green */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 pt-6 pb-8">
-        <div className="max-w-md mx-auto text-center">
-          <div className="text-5xl mb-2 animate-bounce">📰</div>
+      
+      {/* Header */}
+      <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-5 pt-8 pb-6">
+        <div className="text-center">
+          <div className="text-5xl mb-2">📰</div>
           <h1 className="text-2xl font-bold">Current Affairs</h1>
-          <p className="text-green-100 text-sm mt-1">Daily updates for competitive exams</p>
+          <p className="text-orange-100 text-xs mt-1">Daily updates for competitive exams</p>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="max-w-md mx-auto px-4 -mt-4">
-        <div className="bg-white rounded-xl shadow-lg p-3">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-xl">🔍</span>
-            <input
-              type="text"
-              placeholder="Search current affairs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 outline-none text-sm"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600">
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Date Picker - Green */}
+      {/* Date Picker */}
       <div className="max-w-md mx-auto px-4 mt-4">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 text-white">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs opacity-90">Selected Date</p>
-                <p className="text-lg font-semibold">{formatDate(selectedDate)}</p>
-              </div>
-              <button 
-                onClick={() => setCalendarOpen(!calendarOpen)}
-                className="bg-white/20 px-3 py-1 rounded-lg text-sm"
-              >
-                {calendarOpen ? 'Close 📅' : 'Change Date 📅'}
-              </button>
-            </div>
+        <div className="bg-white rounded-xl shadow-md p-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+          />
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="max-w-md mx-auto px-4 mt-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <p className="text-red-600 text-sm">⚠️ {error}</p>
+            <button onClick={fetchCurrentAffairs} className="mt-2 text-sm text-red-600 underline">Try Again</button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="text-center py-12">
+          <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full mx-auto"></div>
+          <p className="mt-2 text-gray-500">Loading current affairs...</p>
+        </div>
+      )}
+
+      {/* Current Affairs List */}
+      {!loading && !error && (
+        <div className="max-w-md mx-auto px-4 mt-4 mb-20">
+          <div className="bg-orange-50 rounded-xl p-3 mb-4">
+            <p className="text-center text-sm text-orange-800">
+              📅 {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           </div>
 
-          {calendarOpen && (
-            <div className="p-4 border-t">
-              <div className="flex justify-between items-center mb-4">
-                <button onClick={() => changeMonth('prev')} className="w-8 h-8 rounded-full hover:bg-gray-100">◀</button>
-                <h3 className="font-semibold text-gray-800">
-                  {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} {currentYear}
-                </h3>
-                <button onClick={() => changeMonth('next')} className="w-8 h-8 rounded-full hover:bg-gray-100">▶</button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 text-center text-sm mb-2">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                  <div key={day} className="text-gray-500 font-semibold text-xs py-2">{day}</div>
-                ))}
-              </div>
-              
-              <div className="grid grid-cols-7 gap-1 text-center text-sm">
-                {Array(getFirstDayOfMonth(currentYear, currentMonth)).fill().map((_, i) => (
-                  <div key={`empty-${i}`} className="p-2"></div>
-                ))}
-                {Array(getDaysInMonth(currentYear, currentMonth)).fill().map((_, i) => {
-                  const day = i + 1;
-                  const isToday = day === new Date().getDate() && 
-                                  currentMonth === new Date().getMonth() && 
-                                  currentYear === new Date().getFullYear();
-                  return (
-                    <button
-                      key={day}
-                      onClick={() => handleDateSelect(day)}
-                      className={`p-2 rounded-lg hover:bg-green-100 transition ${
-                        isToday ? 'bg-green-100 text-green-600 font-bold' : 'text-gray-700'
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  );
-                })}
-              </div>
-              
+          {filteredAffairs.length > 0 ? (
+            <div className="space-y-4">
+              {filteredAffairs.map((affair, idx) => (
+                <div key={affair._id || idx} className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white text-xl">
+                      📰
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-800 text-lg">{affair.title || 'Current Affairs'}</h3>
+                      <p className="text-gray-600 text-sm mt-2">{affair.content || affair.description || 'No description available'}</p>
+                      {affair.source && (
+                        <p className="text-xs text-gray-400 mt-2">Source: {affair.source}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-xl shadow-md">
+              <div className="text-6xl mb-3">📭</div>
+              <p className="text-gray-600 font-medium">No current affairs for this date</p>
+              <p className="text-xs text-gray-400 mt-1">Check back later for updates</p>
               <button
-                onClick={() => {
-                  const today = new Date();
-                  setCurrentMonth(today.getMonth());
-                  setCurrentYear(today.getFullYear());
-                  setSelectedDate(today.toISOString().split('T')[0]);
-                  setCalendarOpen(false);
-                }}
-                className="w-full mt-4 text-center text-xs text-green-600 py-2 border-t hover:bg-green-50 transition"
+                onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                className="mt-4 text-orange-600 text-sm underline"
               >
-                📅 Go to Today
+                Go to Today
               </button>
             </div>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Results Header */}
-      <div className="max-w-md mx-auto px-4 mt-4">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold text-gray-800">📅 {formatDate(selectedDate)}</h2>
-          <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-            {filteredAffairs.length} {filteredAffairs.length === 1 ? 'update' : 'updates'}
-          </p>
-        </div>
-
-        {/* Content - List View Only with Green Border */}
-        {loading ? (
-          <div className="space-y-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : filteredAffairs.length > 0 ? (
-          <div className="space-y-3">
-            {filteredAffairs.map((affair, idx) => (
-              <div key={affair._id || idx} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
-                <div className="border-l-4 border-green-500 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 text-sm leading-relaxed">
-                        {affair.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
-                          📅 {affair.date}
-                        </span>
-                      </div>
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-green-600 text-xs font-medium hover:text-green-700 transition inline-flex items-center gap-1">
-                          <span>📖</span> Read More
-                        </summary>
-                        <p className="text-xs text-gray-600 mt-2 p-3 bg-gray-50 rounded-lg leading-relaxed">
-                          {affair.content}
-                        </p>
-                      </details>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-            <div className="text-6xl mb-3">📰</div>
-            <p className="text-gray-600 font-medium">No current affairs for this date</p>
-            <button 
-              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} 
-              className="mt-4 text-sm text-green-600 underline hover:text-green-700"
-            >
-              📅 Go to Today
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Daily Quiz Link - Green */}
-      <div className="max-w-md mx-auto px-4 mt-6">
-        <Link href="/quiz">
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-4 text-white text-center hover:shadow-lg transition transform hover:scale-105">
-            <p className="font-semibold">📝 Take Daily Quiz</p>
-          </div>
-        </Link>
-      </div>
-
-      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
-
-      {/* Bottom Navigation - Green active */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg z-50">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
             <span className="text-xl">🏠</span><span className="text-xs">Home</span>
           </Link>
-          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">🎯</span><span className="text-xs">Quiz</span>
-          </Link>
-          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
-            <span className="text-xl">📝</span><span className="text-xs">Notes</span>
-          </Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-green-600">
+          <Link href="/current-affairs" className="flex flex-col items-center text-orange-600">
             <span className="text-xl">📰</span><span className="text-xs">Current</span>
           </Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
+            <span className="text-xl">🎯</span><span className="text-xs">Test</span>
+          </Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
             <span className="text-xl">🏆</span><span className="text-xs">Rank</span>
           </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-orange-600 transition">
             <span className="text-xl">👤</span><span className="text-xs">Profile</span>
           </Link>
         </div>
