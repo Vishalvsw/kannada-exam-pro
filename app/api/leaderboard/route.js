@@ -6,19 +6,14 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db();
     
-    // Get users with scores, sorted by score descending
+    // Get all users with scores, sorted by score
     let users = await db.collection('users')
-      .find({ score: { $gt: 0 } })
+      .find({})
       .sort({ score: -1 })
       .limit(50)
       .toArray();
     
-    // If no users with scores, return empty array
-    if (!users || users.length === 0) {
-      return NextResponse.json([]);
-    }
-    
-    // Format user data for leaderboard
+    // Format the users for leaderboard display
     const formattedUsers = users.map(user => ({
       _id: user._id,
       name: user.name || 'Anonymous User',
@@ -30,9 +25,11 @@ export async function GET() {
       lastQuizDate: user.lastQuizDate
     }));
     
+    // Always return an array (empty if no users)
     return NextResponse.json(formattedUsers);
   } catch (error) {
     console.error('Leaderboard error:', error);
+    // Return empty array instead of error
     return NextResponse.json([]);
   }
 }

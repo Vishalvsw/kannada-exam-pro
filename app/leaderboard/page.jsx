@@ -12,6 +12,7 @@ export default function LeaderboardPage() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [error, setError] = useState(null);
+  const [addingDemo, setAddingDemo] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -44,6 +45,38 @@ export default function LeaderboardPage() {
       setUsers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addDemoUser = async () => {
+    setAddingDemo(true);
+    try {
+      const demoUsers = [
+        { name: "Rahul Sharma", instagramId: "rahul_sharma", score: 1250, totalQuizzesTaken: 15 },
+        { name: "Priya Patel", instagramId: "priya_patel", score: 1180, totalQuizzesTaken: 12 },
+        { name: "Amit Kumar", instagramId: "amit_kumar", score: 1090, totalQuizzesTaken: 10 },
+        { name: "Sneha Reddy", instagramId: "sneha_r", score: 980, totalQuizzesTaken: 9 },
+        { name: "Vikram Singh", instagramId: "vikram_s", score: 850, totalQuizzesTaken: 8 },
+        { name: "Kavya Joshi", instagramId: "kavya_j", score: 720, totalQuizzesTaken: 7 },
+        { name: "Manjunath K", instagramId: "manju_k", score: 650, totalQuizzesTaken: 6 },
+        { name: "Anusha S", instagramId: "anusha_s", score: 580, totalQuizzesTaken: 5 },
+      ];
+      
+      for (const user of demoUsers) {
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        });
+      }
+      
+      await fetchLeaderboard();
+      alert('Demo users added successfully!');
+    } catch (error) {
+      console.error('Error adding demo users:', error);
+      alert('Error adding demo users');
+    } finally {
+      setAddingDemo(false);
     }
   };
 
@@ -98,9 +131,16 @@ export default function LeaderboardPage() {
                 {totalParticipants} Active Participants
                 {lastUpdated && <span> · Updated {lastUpdated.toLocaleTimeString()}</span>}
               </p>
-              <button onClick={() => fetchLeaderboard()} className="mt-2 text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">
-                🔄 Refresh Now
-              </button>
+              <div className="flex gap-2 justify-center mt-2">
+                <button onClick={() => fetchLeaderboard()} className="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition">
+                  🔄 Refresh Now
+                </button>
+                {totalParticipants === 0 && (
+                  <button onClick={addDemoUser} disabled={addingDemo} className="text-xs bg-yellow-500/80 px-3 py-1 rounded-full hover:bg-yellow-500 transition">
+                    {addingDemo ? 'Adding...' : '➕ Add Demo Users'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -235,11 +275,26 @@ export default function LeaderboardPage() {
           </div>
         </div>
       ) : (
-        <div className="max-w-4xl mx-auto px-5 py-12 text-center bg-white rounded-2xl shadow-sm mx-5">
-          <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No Rankings Yet</h3>
-          <p className="text-gray-500 text-sm">Be the first to take a quiz and appear on the leaderboard!</p>
-          <Link href="/quiz"><button className="mt-4 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">Take First Quiz →</button></Link>
+        <div className="max-w-4xl mx-auto px-5 py-12">
+          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+            <div className="text-6xl mb-4">🏆</div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">No Rankings Yet</h3>
+            <p className="text-gray-500 text-sm">Be the first to take a quiz and appear on the leaderboard!</p>
+            <div className="flex gap-3 justify-center mt-4">
+              <Link href="/quiz">
+                <button className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
+                  Take First Quiz →
+                </button>
+              </Link>
+              <button 
+                onClick={addDemoUser} 
+                disabled={addingDemo}
+                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300 transition"
+              >
+                {addingDemo ? 'Adding...' : '📊 Add Demo Data'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
