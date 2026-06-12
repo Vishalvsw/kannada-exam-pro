@@ -8,18 +8,9 @@ export async function GET(request, { params }) {
     const client = await clientPromise;
     const db = client.db();
     
-    // Try multiple collection names
-    let affair = null;
-    const possibleNames = ['currentaffairs', 'currentAffairs', 'current_affairs'];
-    
-    for (const name of possibleNames) {
-      try {
-        affair = await db.collection(name).findOne({ _id: new ObjectId(id) });
-        if (affair) break;
-      } catch (err) {
-        continue;
-      }
-    }
+    const affair = await db.collection('currentaffairs').findOne({
+      _id: new ObjectId(id)
+    });
     
     if (!affair) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

@@ -149,7 +149,7 @@ export default function CurrentAffairsPage() {
         )}
       </div>
 
-      {/* Content Section */}
+      {/* Content Section with Read More Link */}
       <div className="max-w-6xl mx-auto px-5 py-6">
         {loading ? (
           <div className="text-center py-12">
@@ -182,17 +182,14 @@ export default function CurrentAffairsPage() {
                     <span className="text-[10px] text-gray-400">
                       📅 {affair.date ? new Date(affair.date).toLocaleDateString() : 'No date'}
                     </span>
-                    <details className="group relative">
-                      <summary className="cursor-pointer text-green-600 text-xs font-semibold hover:text-green-700 transition flex items-center gap-1">
-                        <span>Read More</span>
-                        <svg className="w-3 h-3 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <Link href={`/current-affairs/${affair._id}`}>
+                      <span className="text-green-600 text-xs font-semibold flex items-center gap-1 cursor-pointer hover:gap-2 transition-all">
+                        Read More
+                        <svg className="w-3 h-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                      </summary>
-                      <div className="absolute bottom-full left-0 mb-2 w-64 bg-gray-800 text-white text-xs rounded-lg p-2 shadow-xl z-10 hidden group-open:block">
-                        <p className="leading-relaxed">{affair.content}</p>
-                      </div>
-                    </details>
+                      </span>
+                    </Link>
                   </div>
                 </div>
               </div>
