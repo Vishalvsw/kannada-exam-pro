@@ -9,7 +9,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [quizResults, setQuizResults] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalScore: 0,
     totalQuizzes: 0,
@@ -37,95 +36,73 @@ export default function ProfilePage() {
   }, [router]);
 
   const fetchUserResults = async (currentUser) => {
-  try {
-    const response = await fetch('/api/quiz-results');
+    try {
+      const response = await fetch('/api/quiz-results');
 
-    // Check API response
-    if (!response.ok) {
-      throw new Error('Failed to fetch quiz results');
+      if (!response.ok) {
+        throw new Error('Failed to fetch quiz results');
+      }
+
+      const allResults = await response.json();
+
+      if (!Array.isArray(allResults)) {
+        console.error('Invalid API response');
+        return;
+      }
+
+      const normalize = (v) => (v || '').toString().trim().toLowerCase();
+
+      const userResults = allResults.filter((r) => {
+        return normalize(r.userEmail) === normalize(currentUser.email);
+      });
+
+      if (userResults.length > 0) {
+        setQuizResults(userResults);
+      }
+
+      let totalScore = 0;
+      let totalQuestions = 0;
+      let totalCorrect = 0;
+      let bestScore = 0;
+      let totalPercentage = 0;
+
+      userResults.forEach((result) => {
+        totalScore += result.score || 0;
+        totalQuestions += result.totalQuestions || 0;
+        totalCorrect += result.correctCount || result.score || 0;
+        bestScore = Math.max(bestScore, result.score || 0);
+        totalPercentage += result.percentage || 0;
+      });
+
+      const totalWrong = totalQuestions - totalCorrect;
+
+      const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
+
+      const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
+
+      setStats((prev) => ({
+        ...prev,
+        totalScore,
+        totalQuizzes: userResults.length,
+        correctAnswers: totalCorrect,
+        wrongAnswers: totalWrong,
+        accuracy,
+        bestScore,
+        averagePercentage: avgPercentage,
+      }));
+    } catch (error) {
+      console.error('Error fetching user results:', error);
     }
-
-    const allResults = await response.json();
-
-    console.log('Current User:', currentUser);
-    console.log('All Results:', allResults);
-
-    // Ensure API returned array
-    if (!Array.isArray(allResults)) {
-      console.error('Invalid API response');
-      return;
-    }
-
-    const normalize = (v) =>
-      (v || '').toString().trim().toLowerCase();
-
-    const userResults = allResults.filter((r) => {
-      return (
-        normalize(r.userEmail) === normalize(currentUser.email)
-      );
-    });
-
-    // IMPORTANT: don't overwrite existing data with empty array
-    if (userResults.length > 0) {
-      setQuizResults(userResults);
-    }
-    
-
-    let totalScore = 0;
-    let totalQuestions = 0;
-    let totalCorrect = 0;
-    let bestScore = 0;
-    let totalPercentage = 0;
-
-    userResults.forEach((result) => {
-      totalScore += result.score || 0;
-      totalQuestions += result.totalQuestions || 0;
-      totalCorrect += result.correctCount || result.score || 0;
-      bestScore = Math.max(bestScore, result.score || 0);
-      totalPercentage += result.percentage || 0;
-    });
-
-    const totalWrong = totalQuestions - totalCorrect;
-
-    const accuracy =
-      totalQuestions > 0
-        ? ((totalCorrect / totalQuestions) * 100).toFixed(1)
-        : 0;
-
-    const avgPercentage =
-      userResults.length > 0
-        ? (totalPercentage / userResults.length).toFixed(1)
-        : 0;
-
-    setStats((prev) => ({
-      ...prev,
-      totalScore,
-      totalQuizzes: userResults.length,
-      correctAnswers: totalCorrect,
-      wrongAnswers: totalWrong,
-      accuracy,
-      bestScore,
-      averagePercentage: avgPercentage,
-    }));
-  } catch (error) {
-    console.error('Error fetching user results:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const fetchUserRank = async (currentUser) => {
     try {
       const response = await fetch('/api/leaderboard');
       const leaderboard = await response.json();
-      const normalize = (value) =>
-  (value || '').toString().trim().toLowerCase();
+      const normalize = (value) => (value || '').toString().trim().toLowerCase();
 
-    const rank =
-      leaderboard.findIndex(
-        (u) =>
-          normalize(u.instagramId) ===
-          normalize(currentUser.instagramId)
+      const rank = leaderboard.findIndex(
+        (u) => normalize(u.instagramId) === normalize(currentUser.instagramId)
       ) + 1;
       setStats(prev => ({ ...prev, rank: rank || 0 }));
     } catch (error) {
@@ -139,7 +116,6 @@ export default function ProfilePage() {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
       
-      // Update in users list
       const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
       const userIndex = existingUsers.findIndex(u => u.instagramId === user.instagramId);
       if (userIndex !== -1) {
@@ -150,30 +126,24 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Top Ad */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
 
       {/* Profile Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-12">
+      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-12">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="relative">
               <img 
-                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=120`} 
+                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=22c55e&color=fff&size=120`} 
                 className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover" 
                 alt={user.name}
+                onError={(e) => {
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=22c55e&color=fff&size=120`;
+                }}
               />
               <div className="absolute bottom-0 right-0 bg-green-500 rounded-full w-4 h-4 border-2 border-white"></div>
             </div>
@@ -191,7 +161,7 @@ export default function ProfilePage() {
                   ✏️ Edit
                 </button>
               </div>
-              <p className="text-blue-100 text-sm mt-1">{user.email}</p>
+              <p className="text-green-100 text-sm mt-1">{user.email}</p>
               <div className="flex gap-3 mt-3 justify-center md:justify-start">
                 <div className="bg-white/20 rounded-lg px-3 py-1 text-center">
                   <p className="text-xs">Member since</p>
@@ -205,7 +175,7 @@ export default function ProfilePage() {
             </div>
             <div className="md:ml-auto">
               <Link href="/quiz">
-                <button className="bg-white text-blue-600 px-6 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition transform hover:scale-105">
+                <button className="bg-white text-green-600 px-6 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition transform hover:scale-105">
                   🎯 Take Quiz
                 </button>
               </Link>
@@ -305,28 +275,27 @@ export default function ProfilePage() {
             <div className="text-center py-8">
               <div className="text-5xl mb-3">📝</div>
               <p className="text-gray-500">No quiz attempts yet</p>
-              <Link href="/quiz" className="inline-block mt-3 text-blue-600 text-sm font-semibold hover:underline">
+              <Link href="/quiz" className="inline-block mt-3 text-green-600 text-sm font-semibold hover:underline">
                 Take your first quiz →
               </Link>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {quizResults.map((quiz, idx) => (
-                <div key={quiz.id} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
+                <div key={quiz.id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
                       <p className="text-xs text-gray-500">{new Date(quiz.date).toLocaleDateString()} at {new Date(quiz.date).toLocaleTimeString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-blue-600">{quiz.score}/{quiz.totalQuestions}</p>
+                      <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
                       <p className="text-xs text-gray-500">{quiz.percentage}%</p>
                     </div>
                   </div>
                   <div className="flex gap-3 mt-2 text-xs">
                     <span className="text-green-600">✓ {quiz.correctCount || quiz.score} correct</span>
                     <span className="text-red-600">✗ {quiz.wrongCount || quiz.totalQuestions - quiz.score} wrong</span>
-                    <span className="text-gray-500">⏱️ {quiz.timeFormatted}</span>
                   </div>
                 </div>
               ))}
@@ -337,7 +306,7 @@ export default function ProfilePage() {
 
       {/* Action Buttons */}
       <div className="max-w-4xl mx-auto px-5 mt-6 flex gap-3">
-        <Link href="/quiz" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold text-center hover:shadow-lg transition transform hover:scale-105">
+        <Link href="/quiz" className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-semibold text-center hover:shadow-lg transition transform hover:scale-105">
           🎯 Take New Quiz
         </Link>
         <Link href="/leaderboard" className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold text-center hover:bg-gray-300 transition">
@@ -345,8 +314,31 @@ export default function ProfilePage() {
         </Link>
       </div>
 
-      {/* Bottom Ad */}
-      <AdSpace type="banner" className="mx-4 mt-6" />
+      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
+        <div className="flex justify-around max-w-md mx-auto">
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
+          </Link>
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
+          </Link>
+          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
+          </Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+            <span className="text-xl">📰</span><span className="text-[10px]">Current</span>
+          </Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+            <span className="text-xl">🏆</span><span className="text-[10px]">Rank</span>
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center text-green-600">
+            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
+          </Link>
+        </div>
+      </div>
 
       {/* Edit Instagram Modal */}
       {showEditModal && (
@@ -364,14 +356,14 @@ export default function ProfilePage() {
                   type="text"
                   value={newInstagramId}
                   onChange={(e) => setNewInstagramId(e.target.value.replace('@', ''))}
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="username"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">This will be visible on leaderboard</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={handleUpdateInstagram} className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Save Changes</button>
+              <button onClick={handleUpdateInstagram} className="flex-1 bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">Save Changes</button>
               <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300">Cancel</button>
             </div>
           </div>
