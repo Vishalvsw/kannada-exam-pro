@@ -6,22 +6,11 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    let questions = [];
-    const possibleNames = ['qaquestions', 'qaQuestions', 'qaoquestions', 'qaoQuestions'];
+    // Use the correct collection with 50 questions
+    const collection = db.collection('qaquestions');
+    const questions = await collection.find({}).sort({ createdAt: -1 }).toArray();
     
-    for (const name of possibleNames) {
-      try {
-        const collection = db.collection(name);
-        const count = await collection.countDocuments();
-        if (count > 0) {
-          questions = await collection.find({}).sort({ createdAt: -1 }).toArray();
-          console.log(`Found ${questions.length} Q&A in collection: ${name}`);
-          break;
-        }
-      } catch (err) {
-        console.log(`Collection ${name} not accessible`);
-      }
-    }
+    console.log(`Public Q&A: Found ${questions.length} questions`);
     
     return NextResponse.json(questions);
   } catch (error) {
@@ -39,17 +28,19 @@ export async function POST(request) {
     const collection = db.collection('qaquestions');
     
     const newQuestion = {
-      ...body,
+      question: body.question,
+      question_en: body.question_en || '',
+      answer: body.answer,
+      answer_en: body.answer_en || '',
+      category: body.category || 'General',
+      important: body.important || false,
       createdAt: new Date(),
       updatedAt: new Date()
     };
     
     const result = await collection.insertOne(newQuestion);
-    console.log(`Added new Q&A with ID: ${result.insertedId}`);
-    
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (error) {
-    console.error('Q&A POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
