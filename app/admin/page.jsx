@@ -8,7 +8,6 @@ export default function AdminPanel() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [admin, setAdmin] = useState(null);
-  const [loading, setLoading] = useState(true);
   
   // Data states
   const [questions, setQuestions] = useState([]);
@@ -40,7 +39,7 @@ export default function AdminPanel() {
     setAdmin(JSON.parse(adminData));
   }, [router]);
 
-  // Fetch data with cache busting
+  // Fetch data with cache busting - no loading state
   const fetchData = useCallback(async () => {
     const timestamp = Date.now();
     try {
@@ -80,8 +79,6 @@ export default function AdminPanel() {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
     }
   }, [activeTab, refreshKey]);
 
@@ -260,202 +257,197 @@ export default function AdminPanel() {
 
       {/* Toast Message */}
       {message && (
-        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg animate-slide-in ${message.type === 'success' ? 'bg-green-500 text-white' : message.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${message.type === 'success' ? 'bg-green-500 text-white' : message.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
           {message.text}
         </div>
       )}
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs - No loading on tab click */}
       <div className="bg-white shadow-md sticky top-0 z-40">
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap gap-1 py-2 overflow-x-auto">
-            <button onClick={() => { setActiveTab('dashboard'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📊 Dashboard</button>
-            <button onClick={() => { setActiveTab('questions'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'questions' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>❓ Quiz Questions ({questions.length})</button>
-            <button onClick={() => { setActiveTab('qa-questions'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'qa-questions' ? 'bg-green-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📝 Q&A Bank ({qaQuestions.length})</button>
-            <button onClick={() => { setActiveTab('notes'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
-            <button onClick={() => { setActiveTab('current-affairs'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
-            <button onClick={() => { setActiveTab('users'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
-            <button onClick={() => { setActiveTab('results'); setLoading(true); }} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({quizResults.length})</button>
+            <button onClick={() => setActiveTab('dashboard')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📊 Dashboard</button>
+            <button onClick={() => setActiveTab('questions')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'questions' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>❓ Quiz Questions ({questions.length})</button>
+            <button onClick={() => setActiveTab('qa-questions')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'qa-questions' ? 'bg-green-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📝 Q&A Bank ({qaQuestions.length})</button>
+            <button onClick={() => setActiveTab('notes')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
+            <button onClick={() => setActiveTab('current-affairs')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
+            <button onClick={() => setActiveTab('users')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
+            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({quizResults.length})</button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - No loading spinner */}
       <div className="container mx-auto px-6 py-8">
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-          </div>
-        ) : (
-          <>
-            {/* Dashboard */}
-            {activeTab === 'dashboard' && (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-blue-100">Quiz Questions</p><p className="text-4xl font-bold">{questions.length}</p></div><div className="text-5xl">❓</div></div></div>
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-green-100">Q&A Bank</p><p className="text-4xl font-bold">{qaQuestions.length}</p></div><div className="text-5xl">📝</div></div></div>
-                  <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
-                  <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{quizResults.length}</p></div><div className="text-5xl">📊</div></div></div>
+        {/* Dashboard */}
+        {activeTab === 'dashboard' && (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-blue-100">Quiz Questions</p><p className="text-4xl font-bold">{questions.length}</p></div><div className="text-5xl">❓</div></div></div>
+              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-green-100">Q&A Bank</p><p className="text-4xl font-bold">{qaQuestions.length}</p></div><div className="text-5xl">📝</div></div></div>
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
+              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{quizResults.length}</p></div><div className="text-5xl">📊</div></div></div>
+            </div>
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">⚡ Quick Actions</h3>
+                <div className="space-y-3">
+                  <button onClick={() => { setActiveTab('questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-blue-50 text-blue-600 p-3 rounded-lg text-left hover:bg-blue-100 transition">➕ Add Quiz Question</button>
+                  <button onClick={() => { setActiveTab('qa-questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-green-50 text-green-600 p-3 rounded-lg text-left hover:bg-green-100 transition">📝 Add Q&A Question</button>
+                  <button onClick={() => { setActiveTab('notes'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-emerald-50 text-emerald-600 p-3 rounded-lg text-left hover:bg-emerald-100 transition">📚 Add Study Note</button>
+                  <button onClick={() => { setActiveTab('current-affairs'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-orange-50 text-orange-600 p-3 rounded-lg text-left hover:bg-orange-100 transition">📰 Add Current Affairs</button>
                 </div>
-                <div className="grid lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">⚡ Quick Actions</h3>
-                    <div className="space-y-3">
-                      <button onClick={() => { setActiveTab('questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-blue-50 text-blue-600 p-3 rounded-lg text-left hover:bg-blue-100 transition">➕ Add Quiz Question</button>
-                      <button onClick={() => { setActiveTab('qa-questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-green-50 text-green-600 p-3 rounded-lg text-left hover:bg-green-100 transition">📝 Add Q&A Question</button>
-                      <button onClick={() => { setActiveTab('notes'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-emerald-50 text-emerald-600 p-3 rounded-lg text-left hover:bg-emerald-100 transition">📚 Add Study Note</button>
-                      <button onClick={() => { setActiveTab('current-affairs'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-orange-50 text-orange-600 p-3 rounded-lg text-left hover:bg-orange-100 transition">📰 Add Current Affairs</button>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">📊 Content Stats</h3>
+                <div className="space-y-3"><div className="flex justify-between"><span>Total Content Items</span><span className="font-bold">{questions.length + qaQuestions.length + notes.length + currentAffairs.length}</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min((questions.length + qaQuestions.length + notes.length + currentAffairs.length) / 2, 100)}%` }}></div></div>
+                <div className="flex justify-between"><span>Q&A Completion</span><span className="font-bold">{qaQuestions.length} / 50+</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(qaQuestions.length, 100)}%` }}></div></div></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quiz Questions Management */}
+        {activeTab === 'questions' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">➕ Add Question</button>
+              <div className="flex gap-2">
+                <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">🔄 Refresh</button>
+                <p className="text-sm text-gray-500 py-2">Total: {questions.length} questions</p>
+              </div>
+            </div>
+            {questions.length === 0 ? (
+              <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">❓</div><p className="text-gray-500">No questions yet. Click "Add Question" to create one.</p></div>
+            ) : (
+              <div className="space-y-4">
+                {questions.map((q, idx) => (
+                  <div key={q._id} className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+                    <div className="flex justify-between">
+                      <div className="flex-1">
+                        <div className="flex gap-2 mb-2">
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">#{idx + 1}</span>
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">{q.category}</span>
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">{q.difficulty}</span>
+                        </div>
+                        <h3 className="font-semibold mb-2">{q.question}</h3>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="p-1 bg-gray-50 rounded">A) {q.options?.[0]}</div>
+                          <div className="p-1 bg-gray-50 rounded">B) {q.options?.[1]}</div>
+                          <div className="p-1 bg-gray-50 rounded">C) {q.options?.[2]}</div>
+                          <div className="p-1 bg-gray-50 rounded">D) {q.options?.[3]}</div>
+                        </div>
+                        <p className="text-green-600 text-sm mt-2">✓ Correct Answer: {q.answer}</p>
+                        {q.explanation && <div className="mt-3 p-3 bg-blue-50 rounded-lg"><p className="text-xs font-semibold text-blue-800 mb-1">📖 Explanation:</p><p className="text-sm text-blue-700">{q.explanation}</p></div>}
+                      </div>
+                      <div className="flex flex-col gap-2 ml-4">
+                        <button onClick={() => { setEditingItem(q); setFormData(q); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">✏️ Edit</button>
+                        <button onClick={() => { setExplanationQuestion(q); setExplanationText(q.explanation || ''); setShowExplanationModal(true); }} className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600">📖 Explanation</button>
+                        <button onClick={() => handleDelete(q._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">🗑️ Delete</button>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">📊 Content Stats</h3>
-                    <div className="space-y-3"><div className="flex justify-between"><span>Total Content Items</span><span className="font-bold">{questions.length + qaQuestions.length + notes.length + currentAffairs.length}</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min((questions.length + qaQuestions.length + notes.length + currentAffairs.length) / 2, 100)}%` }}></div></div>
-                    <div className="flex justify-between"><span>Q&A Completion</span><span className="font-bold">{qaQuestions.length} / 50+</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(qaQuestions.length, 100)}%` }}></div></div></div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Quiz Questions Management */}
-            {activeTab === 'questions' && (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">➕ Add Question</button>
-                  <div className="flex gap-2">
-                    <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">🔄 Refresh</button>
-                    <p className="text-sm text-gray-500 py-2">Total: {questions.length} questions</p>
-                  </div>
-                </div>
-                {questions.length === 0 ? (
-                  <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">❓</div><p className="text-gray-500">No questions yet. Click "Add Question" to create one.</p></div>
-                ) : (
-                  <div className="space-y-4">
-                    {questions.map((q, idx) => (
-                      <div key={q._id} className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
-                        <div className="flex justify-between">
-                          <div className="flex-1">
-                            <div className="flex gap-2 mb-2">
-                              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">#{idx + 1}</span>
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">{q.category}</span>
-                              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">{q.difficulty}</span>
-                            </div>
-                            <h3 className="font-semibold mb-2">{q.question}</h3>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="p-1 bg-gray-50 rounded">A) {q.options?.[0]}</div>
-                              <div className="p-1 bg-gray-50 rounded">B) {q.options?.[1]}</div>
-                              <div className="p-1 bg-gray-50 rounded">C) {q.options?.[2]}</div>
-                              <div className="p-1 bg-gray-50 rounded">D) {q.options?.[3]}</div>
-                            </div>
-                            <p className="text-green-600 text-sm mt-2">✓ Correct Answer: {q.answer}</p>
-                            {q.explanation && <div className="mt-3 p-3 bg-blue-50 rounded-lg"><p className="text-xs font-semibold text-blue-800 mb-1">📖 Explanation:</p><p className="text-sm text-blue-700">{q.explanation}</p></div>}
-                          </div>
-                          <div className="flex flex-col gap-2 ml-4">
-                            <button onClick={() => { setEditingItem(q); setFormData(q); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">✏️ Edit</button>
-                            <button onClick={() => { setExplanationQuestion(q); setExplanationText(q.explanation || ''); setShowExplanationModal(true); }} className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600">📖 Explanation</button>
-                            <button onClick={() => handleDelete(q._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">🗑️ Delete</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Q&A Bank Management - Similar pattern for other tabs */}
-            {activeTab === 'qa-questions' && (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">➕ Add Q&A Question</button>
-                  <div className="flex gap-2">
-                    <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">🔄 Refresh</button>
-                    <p className="text-sm text-gray-500 py-2">Total: {qaQuestions.length} Q&A pairs</p>
-                  </div>
-                </div>
-                {qaQuestions.length === 0 ? (
-                  <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">📝</div><p className="text-gray-500">No Q&A questions yet. Click "Add Q&A Question" to create one.</p></div>
-                ) : (
-                  <div className="space-y-4">
-                    {qaQuestions.map((qa, idx) => (
-                      <div key={qa._id} className="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
-                        <div className="flex justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-sm font-bold text-green-600">#{idx + 1}</span>
-                              {qa.important && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">⭐ Important</span>}
-                              <span className="text-xs bg-gray-100 px-2 py-1 rounded">{qa.category}</span>
-                            </div>
-                            <p className="font-semibold text-gray-800">❓ {qa.question || qa.question_en}</p>
-                            <details className="mt-2">
-                              <summary className="cursor-pointer text-green-600 text-sm font-medium">📖 Show Answer</summary>
-                              <div className="bg-green-50 rounded-lg p-3 mt-2"><p className="text-sm text-green-700">✓ {qa.answer || qa.answer_en}</p></div>
-                            </details>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingItem(qa); setFormData(qa); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button>
-                            <button onClick={() => handleDelete(qa._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Add other tabs similarly (notes, current-affairs, users, results) */}
-            {activeTab === 'notes' && (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">➕ Add Note</button>
-                  <div className="flex gap-2">
-                    <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Refresh</button>
-                    <p className="text-sm text-gray-500 py-2">Total: {notes.length} notes</p>
-                  </div>
-                </div>
-                {notes.map(note => (
-                  <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{note.title}</h3><p className="text-sm text-gray-500">{note.category}</p><p className="text-gray-600 mt-2 line-clamp-2">{note.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
                 ))}
               </div>
             )}
+          </div>
+        )}
 
-            {activeTab === 'current-affairs' && (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">➕ Add Current Affairs</button>
-                  <div className="flex gap-2">
-                    <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Refresh</button>
-                    <p className="text-sm text-gray-500 py-2">Total: {currentAffairs.length} items</p>
+        {/* Q&A Bank Management */}
+        {activeTab === 'qa-questions' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">➕ Add Q&A Question</button>
+              <div className="flex gap-2">
+                <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">🔄 Refresh</button>
+                <p className="text-sm text-gray-500 py-2">Total: {qaQuestions.length} Q&A pairs</p>
+              </div>
+            </div>
+            {qaQuestions.length === 0 ? (
+              <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">📝</div><p className="text-gray-500">No Q&A questions yet. Click "Add Q&A Question" to create one.</p></div>
+            ) : (
+              <div className="space-y-4">
+                {qaQuestions.map((qa, idx) => (
+                  <div key={qa._id} className="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
+                    <div className="flex justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-bold text-green-600">#{idx + 1}</span>
+                          {qa.important && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">⭐ Important</span>}
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">{qa.category}</span>
+                        </div>
+                        <p className="font-semibold text-gray-800">❓ {qa.question || qa.question_en}</p>
+                        <details className="mt-2">
+                          <summary className="cursor-pointer text-green-600 text-sm font-medium">📖 Show Answer</summary>
+                          <div className="bg-green-50 rounded-lg p-3 mt-2"><p className="text-sm text-green-700">✓ {qa.answer || qa.answer_en}</p></div>
+                        </details>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setEditingItem(qa); setFormData(qa); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button>
+                        <button onClick={() => handleDelete(qa._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                {currentAffairs.map(ca => (
-                  <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{ca.title}</h3><p className="text-sm text-gray-500">{ca.date} | {ca.category}</p><p className="text-gray-600 mt-2 line-clamp-2">{ca.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
                 ))}
               </div>
             )}
+          </div>
+        )}
 
-            {activeTab === 'users' && (
-              <div className="bg-white rounded-xl shadow overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Instagram</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quizzes</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Joined</th></tr></thead>
-                    <tbody>{users.map(user => (<tr key={user._id} className="hover:bg-gray-50"><td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.profileImage} className="w-10 h-10 rounded-full" /><div><p className="font-medium">{user.name}</p></div></div></td><td className="px-6 py-4">@{user.instagramId}</td><td className="px-6 py-4 font-semibold text-blue-600">{user.score || 0}</td><td className="px-6 py-4">{user.totalQuizzesTaken || 0}</td><td className="px-6 py-4 text-sm">{new Date(user.createdAt).toLocaleDateString()}</td></tr>))}</tbody>
-                  </table>
-                </div>
+        {/* Notes Management */}
+        {activeTab === 'notes' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">➕ Add Note</button>
+              <div className="flex gap-2">
+                <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Refresh</button>
+                <p className="text-sm text-gray-500 py-2">Total: {notes.length} notes</p>
               </div>
-            )}
+            </div>
+            {notes.map(note => (
+              <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{note.title}</h3><p className="text-sm text-gray-500">{note.category}</p><p className="text-gray-600 mt-2 line-clamp-2">{note.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+            ))}
+          </div>
+        )}
 
-            {activeTab === 'results' && (
-              <div className="bg-white rounded-xl shadow overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Percentage</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th></tr></thead>
-                    <tbody>{quizResults.map(result => (<tr key={result._id} className="hover:bg-gray-50"><td className="px-4 py-3">{result.userName}</td><td className="px-4 py-3">@{result.instagramId}</td><td className="px-4 py-3 font-bold text-blue-600">{result.score}/{result.totalQuestions}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${result.percentage >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{result.percentage}%</span></td><td className="px-4 py-3 text-sm">{new Date(result.date || result.createdAt).toLocaleDateString()}</td></tr>))}</tbody>
-                  </table>
-                </div>
+        {/* Current Affairs Management */}
+        {activeTab === 'current-affairs' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">➕ Add Current Affairs</button>
+              <div className="flex gap-2">
+                <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Refresh</button>
+                <p className="text-sm text-gray-500 py-2">Total: {currentAffairs.length} items</p>
               </div>
-            )}
-          </>
+            </div>
+            {currentAffairs.map(ca => (
+              <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{ca.title}</h3><p className="text-sm text-gray-500">{ca.date} | {ca.category}</p><p className="text-gray-600 mt-2 line-clamp-2">{ca.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+            ))}
+          </div>
+        )}
+
+        {/* Users Management */}
+        {activeTab === 'users' && (
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Instagram</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quizzes</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Joined</th></tr></thead>
+                <tbody>{users.map(user => (<tr key={user._id} className="hover:bg-gray-50"><td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.profileImage} className="w-10 h-10 rounded-full" /><div><p className="font-medium">{user.name}</p></div></div></td><td className="px-6 py-4">@{user.instagramId}</td><td className="px-6 py-4 font-semibold text-blue-600">{user.score || 0}</td><td className="px-6 py-4">{user.totalQuizzesTaken || 0}</td><td className="px-6 py-4 text-sm">{new Date(user.createdAt).toLocaleDateString()}</td>}</tr>))}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Quiz Results */}
+        {activeTab === 'results' && (
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Percentage</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th></tr></thead>
+                <tbody>{quizResults.map(result => (<tr key={result._id} className="hover:bg-gray-50"><td className="px-4 py-3">{result.userName}</td><td className="px-4 py-3">@{result.instagramId}</td><td className="px-4 py-3 font-bold text-blue-600">{result.score}/{result.totalQuestions}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${result.percentage >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{result.percentage}%</span></td><td className="px-4 py-3 text-sm">{new Date(result.date || result.createdAt).toLocaleDateString()}</td>}</tr>))}</tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 
