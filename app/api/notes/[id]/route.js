@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
@@ -17,7 +16,7 @@ export async function GET(request, { params }) {
     
     return NextResponse.json(note);
   } catch (error) {
-    console.error('Note detail API Error:', error);
+    console.error('Note detail error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -6,11 +6,20 @@ export async function GET(request, { params }) {
   try {
     const { id } = params;
     const client = await clientPromise;
-    const db = client.db();
+    const db = client.db("kannada_exam_pro");
     
-    const affair = await db.collection('currentaffairs').findOne({
-      _id: new ObjectId(id)
-    });
+    let affair = null;
+    const collections = ['currentaffairs', 'currentAffairs'];
+    
+    for (const collectionName of collections) {
+      try {
+        const collection = db.collection(collectionName);
+        affair = await collection.findOne({ _id: new ObjectId(id) });
+        if (affair) break;
+      } catch (err) {
+        console.log(`Not found in ${collectionName}`);
+      }
+    }
     
     if (!affair) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -18,7 +27,7 @@ export async function GET(request, { params }) {
     
     return NextResponse.json(affair);
   } catch (error) {
-    console.error('Error fetching current affair:', error);
+    console.error('Current Affair detail error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
