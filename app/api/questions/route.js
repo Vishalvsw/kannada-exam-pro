@@ -4,7 +4,6 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(request) {
   try {
-    // Get query parameters
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 0;
     const category = searchParams.get('category');
@@ -12,13 +11,11 @@ export async function GET(request) {
     const client = await clientPromise;
     const db = client.db();
     
-    // Build query
     let query = {};
     if (category) {
       query.category = category;
     }
     
-    // Get questions
     let questionsQuery = db.collection('questions').find(query);
     
     if (limit > 0) {
@@ -37,19 +34,17 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    console.log('Public POST - Received question data:', body);
+    console.log('POST - Received question data:', body);
     
     const client = await clientPromise;
     const db = client.db();
     
-    // Validate required fields
     if (!body.question) {
       return NextResponse.json({ 
         error: 'Missing required field: question' 
       }, { status: 400 });
     }
     
-    // Format the question properly
     const newQuestion = {
       question: body.question,
       options: body.options || [],
@@ -62,7 +57,7 @@ export async function POST(request) {
     };
     
     const result = await db.collection('questions').insertOne(newQuestion);
-    console.log('Public - Question saved with ID:', result.insertedId);
+    console.log('Question saved with ID:', result.insertedId);
     
     return NextResponse.json({ 
       success: true, 
@@ -81,7 +76,7 @@ export async function PUT(request) {
     const { id, ...updateData } = body;
     
     if (!id) {
-      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Question ID is required' }, { status: 400 });
     }
     
     const client = await clientPromise;
@@ -109,7 +104,7 @@ export async function DELETE(request) {
     const id = searchParams.get('id');
     
     if (!id) {
-      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Question ID is required' }, { status: 400 });
     }
     
     const client = await clientPromise;

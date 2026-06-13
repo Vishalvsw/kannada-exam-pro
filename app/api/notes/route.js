@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function GET() {
   try {
@@ -32,6 +33,59 @@ export async function POST(request) {
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (error) {
     console.error('Notes POST error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { id, ...updateData } = body;
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Note ID is required' }, { status: 400 });
+    }
+    
+    const client = await clientPromise;
+    const db = client.db("kannada_exam_pro");
+    
+    const result = await db.collection('notes').updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...updateData, updatedAt: new Date() } }
+    );
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Notes PUT error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Note ID is required' }, { status: 400 });
+    }
+    
+    const client = await clientPromise;
+    const db = client.db("kannada_exam_pro");
+    
+    const result = await db.collection('notes').deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Notes DELETE error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

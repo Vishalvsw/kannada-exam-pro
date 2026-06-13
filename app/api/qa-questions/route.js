@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function GET() {
   try {
@@ -40,6 +41,61 @@ export async function POST(request) {
     
     const result = await collection.insertOne(newQuestion);
     return NextResponse.json({ success: true, id: result.insertedId });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { id, ...updateData } = body;
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Question ID is required' }, { status: 400 });
+    }
+    
+    const client = await clientPromise;
+    const db = client.db("kannada_exam_pro");
+    
+    const collection = db.collection('qaquestions');
+    
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...updateData, updatedAt: new Date() } }
+    );
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Question ID is required' }, { status: 400 });
+    }
+
+    const client = await clientPromise;
+    const db = client.db("kannada_exam_pro");
+    
+    const collection = db.collection('qaquestions');
+    
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
