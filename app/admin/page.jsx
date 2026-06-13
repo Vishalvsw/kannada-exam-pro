@@ -39,7 +39,7 @@ export default function AdminPanel() {
     setAdmin(JSON.parse(adminData));
   }, [router]);
 
-  // Fetch data with cache busting - no loading state
+  // Fetch data with cache busting
   const fetchData = useCallback(async () => {
     const timestamp = Date.now();
     try {
@@ -262,7 +262,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Navigation Tabs - No loading on tab click */}
+      {/* Navigation Tabs */}
       <div className="bg-white shadow-md sticky top-0 z-40">
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap gap-1 py-2 overflow-x-auto">
@@ -277,7 +277,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Main Content - No loading spinner */}
+      {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         {/* Dashboard */}
         {activeTab === 'dashboard' && (
@@ -431,8 +431,31 @@ export default function AdminPanel() {
           <div className="bg-white rounded-xl shadow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Instagram</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quizzes</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Joined</th></tr></thead>
-                <tbody>{users.map(user => (<tr key={user._id} className="hover:bg-gray-50"><td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.profileImage} className="w-10 h-10 rounded-full" /><div><p className="font-medium">{user.name}</p></div></div></td><td className="px-6 py-4">@{user.instagramId}</td><td className="px-6 py-4 font-semibold text-blue-600">{user.score || 0}</td><td className="px-6 py-4">{user.totalQuizzesTaken || 0}</td><td className="px-6 py-4 text-sm">{new Date(user.createdAt).toLocaleDateString()}</td>}</tr>))}</tbody>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quizzes</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(user => (
+                    <tr key={user._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img src={user.profileImage} className="w-10 h-10 rounded-full" alt={user.name} />
+                          <div><p className="font-medium">{user.name}</p></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">@{user.instagramId}</td>
+                      <td className="px-6 py-4 font-semibold text-blue-600">{user.score || 0}</td>
+                      <td className="px-6 py-4">{user.totalQuizzesTaken || 0}</td>
+                      <td className="px-6 py-4 text-sm">{new Date(user.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           </div>
@@ -443,8 +466,26 @@ export default function AdminPanel() {
           <div className="bg-white rounded-xl shadow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50"><tr><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Percentage</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th></tr></thead>
-                <tbody>{quizResults.map(result => (<tr key={result._id} className="hover:bg-gray-50"><td className="px-4 py-3">{result.userName}</td><td className="px-4 py-3">@{result.instagramId}</td><td className="px-4 py-3 font-bold text-blue-600">{result.score}/{result.totalQuestions}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${result.percentage >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{result.percentage}%</span></td><td className="px-4 py-3 text-sm">{new Date(result.date || result.createdAt).toLocaleDateString()}</td>}</tr>))}</tbody>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Percentage</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quizResults.map(result => (
+                    <tr key={result._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">{result.userName}</td>
+                      <td className="px-4 py-3">@{result.instagramId}</td>
+                      <td className="px-4 py-3 font-bold text-blue-600">{result.score}/{result.totalQuestions}</td>
+                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${result.percentage >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{result.percentage}%</span></td>
+                      <td className="px-4 py-3 text-sm">{new Date(result.date || result.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           </div>
@@ -481,9 +522,19 @@ export default function AdminPanel() {
                 <h2 className="text-2xl font-bold">📖 Edit Explanation</h2>
                 <button onClick={() => { setShowExplanationModal(false); setExplanationQuestion(null); }} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
               </div>
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-sm font-semibold text-gray-700">Question:</p><p className="text-gray-800 mt-1">{explanationQuestion.question}</p><p className="text-sm text-green-600 mt-2">✓ Correct Answer: {explanationQuestion.answer}</p></div>
-              <div className="mb-4"><label className="block text-sm font-medium mb-2">Explanation</label><textarea className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" rows="6" value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder="Explain why this answer is correct..." /></div>
-              <div className="flex gap-3 pt-4"><button onClick={handleUpdateExplanation} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">💾 Save Explanation</button><button onClick={() => { setShowExplanationModal(false); setExplanationQuestion(null); }} className="flex-1 px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button></div>
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm font-semibold text-gray-700">Question:</p>
+                <p className="text-gray-800 mt-1">{explanationQuestion.question}</p>
+                <p className="text-sm text-green-600 mt-2">✓ Correct Answer: {explanationQuestion.answer}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Explanation</label>
+                <textarea className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" rows="6" value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder="Explain why this answer is correct..." />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button onClick={handleUpdateExplanation} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">💾 Save Explanation</button>
+                <button onClick={() => { setShowExplanationModal(false); setExplanationQuestion(null); }} className="flex-1 px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
