@@ -5,30 +5,18 @@ import { ObjectId } from 'mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db();
+    const db = client.db("kannada_exam_pro");
     
-    // Try all possible collection names
-    let questions = [];
-    const possibleNames = ['qaoquestions', 'qaQuestions', 'qaquestions', 'qaoQuestions'];
+    // Use the correct collection name: qaquestions (from your screenshot)
+    const collection = db.collection('qaquestions');
+    const questions = await collection.find({}).sort({ createdAt: -1 }).toArray();
     
-    for (const name of possibleNames) {
-      try {
-        const collection = db.collection(name);
-        const count = await collection.countDocuments();
-        if (count > 0) {
-          questions = await collection.find({}).toArray();
-          console.log(`Found ${questions.length} Q&A questions in collection: ${name}`);
-          break;
-        }
-      } catch (err) {
-        console.log(`Collection ${name} not found or empty`);
-      }
-    }
+    console.log(`Admin Q&A: Found ${questions.length} questions in qaquestions`);
     
     return NextResponse.json(questions);
   } catch (error) {
-    console.error('Admin Q&A error:', error);
-    return NextResponse.json([]);
+    console.error('Admin Q&A GET error:', error);
+    return NextResponse.json([], { status: 500 });
   }
 }
 
@@ -36,17 +24,27 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const client = await clientPromise;
-    const db = client.db();
-    // Use the existing collection name from database
-    const collection = db.collection('qaoquestions');
-    const result = await collection.insertOne({
-      ...body,
+    const db = client.db("kannada_exam_pro");
+    
+    const collection = db.collection('qaquestions');
+    
+    const newQuestion = {
+      question: body.question,
+      question_en: body.question_en || '',
+      answer: body.answer,
+      answer_en: body.answer_en || '',
+      category: body.category || 'General',
+      important: body.important || false,
       createdAt: new Date(),
       updatedAt: new Date()
-    });
-    return NextResponse.json(result);
+    };
+    
+    const result = await collection.insertOne(newQuestion);
+    console.log(`Admin Q&A: Added new question with ID: ${result.insertedId}`);
+    
+    return NextResponse.json({ success: true, id: result.insertedId, question: newQuestion });
   } catch (error) {
-    console.error('POST error:', error);
+    console.error('Admin Q&A POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -55,28 +53,55 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+    
     const client = await clientPromise;
-    const db = client.db();
-    const result = await db.collection('qaoquestions').deleteOne({ _id: new ObjectId(id) });
-    return NextResponse.json(result);
+    const db = client.db("kannada_exam_pro");
+    const collection = db.collection('qaquestions');
+    
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    
+    console.log(`Admin Q&A: Deleted question with ID: ${id}`);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('DELETE error:', error);
+    console.error('Admin Q&A DELETE error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function PUT(request) {
   try {
-    const { id, ...data } = await request.json();
+    const body = await request.json();
+    const { id, ...updateData } = body;
+    
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+    
     const client = await clientPromise;
-    const db = client.db();
-    const result = await db.collection('qaoquestions').updateOne(
+    const db = client.db("kannada_exam_pro");
+    const collection = db.collection('qaquestions');
+    
+    const result = await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { ...data, updatedAt: new Date() } }
+      { $set: { ...updateData, updatedAt: new Date() } }
     );
-    return NextResponse.json(result);
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    
+    console.log(`Admin Q&A: Updated question with ID: ${id}`);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('PUT error:', error);
+    console.error('Admin Q&A PUT error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
