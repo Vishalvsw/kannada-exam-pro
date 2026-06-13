@@ -9,7 +9,6 @@ export async function GET() {
     
     const notes = await db.collection('notes').find({}).sort({ createdAt: -1 }).toArray();
     
-    console.log(`Notes API: Found ${notes.length} notes`);
     return NextResponse.json(notes);
   } catch (error) {
     console.error('Notes GET error:', error);
@@ -30,7 +29,12 @@ export async function POST(request) {
     };
     
     const result = await db.collection('notes').insertOne(newNote);
-    return NextResponse.json({ success: true, id: result.insertedId });
+    
+    return NextResponse.json({
+      success: true,
+      id: result.insertedId,
+      note: newNote
+    });
   } catch (error) {
     console.error('Notes POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
