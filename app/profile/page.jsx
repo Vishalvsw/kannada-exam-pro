@@ -32,7 +32,7 @@ export default function ProfilePage() {
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
     
-    // Load data in background - don't block UI
+    // Load data in background
     loadUserData(currentUser);
   }, [router]);
 
@@ -87,7 +87,7 @@ export default function ProfilePage() {
       setDataLoaded(true);
     } catch (error) {
       console.error('Error:', error);
-      setDataLoaded(true); // Still mark as loaded even on error
+      setDataLoaded(true);
     }
   };
 
@@ -116,7 +116,6 @@ export default function ProfilePage() {
         setUser(updatedUser);
         setMessage({ text: '✅ Instagram ID updated!', type: 'success' });
         setTimeout(() => setMessage(null), 2000);
-        // Refresh data
         loadUserData(updatedUser);
       } else {
         setMessage({ text: '❌ Update failed', type: 'error' });
@@ -129,7 +128,7 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  // Show user immediately, data loads in background
+  // Show loading only on initial load
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
@@ -137,6 +136,8 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  const showPlaceholders = !dataLoaded;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
@@ -148,7 +149,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Profile Header - Shows immediately */}
+      {/* Profile Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 pt-8 pb-12">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6">
@@ -176,7 +177,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="bg-white/20 rounded-lg px-3 py-1 text-center">
                   <p className="text-xs">Global Rank</p>
-                  <p className="text-sm font-semibold">#{stats.rank || '—'}</p>
+                  <p className="text-sm font-semibold">{showPlaceholders ? '—' : `#${stats.rank}`}</p>
                 </div>
               </div>
             </div>
@@ -191,25 +192,25 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Cards - Shows with data or placeholders */}
+      {/* Stats Cards */}
       <div className="max-w-4xl mx-auto px-5 -mt-6">
         <div className="bg-white rounded-2xl shadow-xl p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-xl">
               <p className="text-gray-500 text-xs">Total Score</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.totalScore}</p>
+              <p className="text-2xl font-bold text-blue-600">{showPlaceholders ? '—' : stats.totalScore}</p>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-xl">
               <p className="text-gray-500 text-xs">Quizzes Taken</p>
-              <p className="text-2xl font-bold text-green-600">{stats.totalQuizzes}</p>
+              <p className="text-2xl font-bold text-green-600">{showPlaceholders ? '—' : stats.totalQuizzes}</p>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-xl">
               <p className="text-gray-500 text-xs">Correct Answers</p>
-              <p className="text-xl font-bold text-purple-600">{stats.correctAnswers}</p>
+              <p className="text-xl font-bold text-purple-600">{showPlaceholders ? '—' : stats.correctAnswers}</p>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-xl">
               <p className="text-gray-500 text-xs">Accuracy</p>
-              <p className="text-xl font-bold text-orange-600">{stats.accuracy}%</p>
+              <p className="text-xl font-bold text-orange-600">{showPlaceholders ? '—' : stats.accuracy}%</p>
             </div>
           </div>
         </div>
@@ -224,17 +225,17 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-yellow-50 rounded-xl">
               <p className="text-gray-500 text-xs">Best Score</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.bestScore}</p>
+              <p className="text-2xl font-bold text-yellow-600">{showPlaceholders ? '—' : stats.bestScore}</p>
             </div>
             <div className="text-center p-3 bg-indigo-50 rounded-xl">
               <p className="text-gray-500 text-xs">Global Rank</p>
-              <p className="text-2xl font-bold text-indigo-600">#{stats.rank}</p>
+              <p className="text-2xl font-bold text-indigo-600">{showPlaceholders ? '—' : `#${stats.rank}`}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Quizzes - Shows after data loads */}
+      {/* Recent Quizzes */}
       <div className="max-w-4xl mx-auto px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
