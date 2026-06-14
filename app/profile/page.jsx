@@ -21,7 +21,6 @@ export default function ProfilePage() {
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -32,14 +31,11 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
-    
-    // Load all data in parallel for speed
-    loadAllData(currentUser);
+    loadUserData(currentUser);
   }, [router]);
 
-  const loadAllData = async (currentUser) => {
+  const loadUserData = async (currentUser) => {
     try {
-      // Fetch both APIs in parallel
       const [resultsRes, leaderboardRes] = await Promise.all([
         fetch(`/api/quiz-results?_t=${Date.now()}`),
         fetch(`/api/leaderboard?_t=${Date.now()}`)
@@ -48,23 +44,15 @@ export default function ProfilePage() {
       const allResults = await resultsRes.json();
       const leaderboard = await leaderboardRes.json();
       
-      // Filter user results by email OR instagramId
-      const userResults = Array.isArray(allResults) ? allResults.filter((r) => {
-        const matchEmail = r.userEmail && r.userEmail.toLowerCase() === currentUser.email?.toLowerCase();
-        const matchInstagram = r.instagramId && r.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase();
-        return matchEmail || matchInstagram;
-      }) : [];
+      const userResults = allResults.filter(r => 
+        (r.userEmail && r.userEmail.toLowerCase() === currentUser.email?.toLowerCase()) ||
+        (r.instagramId && r.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase())
+      );
       
       setQuizResults(userResults);
       
-      // Calculate stats
-      let totalScore = 0;
-      let totalQuestions = 0;
-      let totalCorrect = 0;
-      let bestScore = 0;
-      let totalPercentage = 0;
-      
-      userResults.forEach((result) => {
+      let totalScore = 0, totalQuestions = 0, totalCorrect = 0, bestScore = 0, totalPercentage = 0;
+      userResults.forEach(result => {
         totalScore += result.score || 0;
         totalQuestions += result.totalQuestions || 0;
         totalCorrect += result.correctCount || result.score || 0;
@@ -75,27 +63,15 @@ export default function ProfilePage() {
       const totalWrong = totalQuestions - totalCorrect;
       const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
-      
-      // Get rank
-      const rank = leaderboard.findIndex((u) => 
-        u.instagramId && u.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase()
-      ) + 1;
+      const rank = leaderboard.findIndex(u => u.instagramId?.toLowerCase() === currentUser.instagramId?.toLowerCase()) + 1;
       
       setStats({
-        totalScore,
-        totalQuizzes: userResults.length,
-        correctAnswers: totalCorrect,
-        wrongAnswers: totalWrong,
-        accuracy: Math.min(accuracy, 100),
-        bestScore,
-        averagePercentage: Math.min(avgPercentage, 100),
-        rank: rank || 0
+        totalScore, totalQuizzes: userResults.length, correctAnswers: totalCorrect,
+        wrongAnswers: totalWrong, accuracy: Math.min(accuracy, 100), bestScore,
+        averagePercentage: Math.min(avgPercentage, 100), rank: rank || 0
       });
-      
     } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error:', error);
     }
   };
 
@@ -111,25 +87,16 @@ export default function ProfilePage() {
             newInstagramId: newInstagramId.replace('@', '')
           })
         });
-        
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        loadAllData(updatedUser);
-      } catch (error) {
-        console.error('Error:', error);
-      }
+        loadUserData(updatedUser);
+      } catch (error) { console.error('Error:', error); }
     }
     setShowEditModal(false);
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -141,21 +108,17 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-4">
               <img
-                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3B82F6&color=fff&size=120`}
+                src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3B82F6&color=fff&size=120`}
                 className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover"
                 alt={user.name}
-                onError={(e) => {
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3B82F6&color=fff&size=120`;
-                }}
+                onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3B82F6&color=fff&size=120`; }}
               />
               <div className="absolute bottom-1 right-1 bg-green-500 rounded-full w-4 h-4 border-2 border-white"></div>
             </div>
             <h1 className="text-2xl font-bold">{user.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-lg">@{user.instagramId}</span>
-              <button onClick={() => setShowEditModal(true)} className="text-sm bg-white/20 px-2 py-1 rounded-lg hover:bg-white/30 transition">
-                ✏️ Edit
-              </button>
+              <button onClick={() => setShowEditModal(true)} className="text-sm bg-white/20 px-2 py-1 rounded-lg hover:bg-white/30 transition">✏️ Edit</button>
             </div>
             <p className="text-blue-100 text-sm mt-1">{user.email}</p>
             <div className="flex gap-3 mt-3">
@@ -169,9 +132,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <Link href="/quiz">
-              <button className="mt-4 bg-white text-blue-600 px-6 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition transform hover:scale-105">
-                🎯 Take Quiz
-              </button>
+              <button className="mt-4 bg-white text-blue-600 px-6 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition transform hover:scale-105">🎯 Take Quiz</button>
             </Link>
           </div>
         </div>
@@ -232,7 +193,7 @@ export default function ProfilePage() {
                 <span className="font-semibold text-blue-600">{stats.totalScore} pts</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalScore / 10, 100)}%` }}></div>
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" style={{ width: `${Math.min((stats.totalScore / 10) || 0, 100)}%` }}></div>
               </div>
             </div>
             <div>
@@ -241,7 +202,7 @@ export default function ProfilePage() {
                 <span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalQuizzes * 5, 100)}%` }}></div>
+                <div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style={{ width: `${Math.min((stats.totalQuizzes * 5) || 0, 100)}%` }}></div>
               </div>
             </div>
             <div>
@@ -250,7 +211,7 @@ export default function ProfilePage() {
                 <span className="font-semibold text-orange-600">{stats.accuracy}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy || 0}%` }}></div>
               </div>
             </div>
           </div>
@@ -261,21 +222,11 @@ export default function ProfilePage() {
       <div className="px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold mb-4">📋 Quiz History</h3>
-          {loading ? (
-            <div className="space-y-3">
-              {[1,2,3].map(i => (
-                <div key={i} className="border-b pb-3">
-                  <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          ) : quizResults.length === 0 ? (
+          {quizResults.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-5xl mb-3">📝</div>
               <p className="text-gray-500">No quiz attempts yet</p>
-              <Link href="/quiz" className="inline-block mt-3 text-blue-600 text-sm font-semibold hover:underline">
-                Take your first quiz →
-              </Link>
+              <Link href="/quiz" className="inline-block mt-3 text-blue-600 text-sm font-semibold hover:underline">Take your first quiz →</Link>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -325,37 +276,19 @@ export default function ProfilePage() {
 
       {/* Action Buttons */}
       <div className="px-5 mt-6 flex gap-3 pb-8">
-        <Link href="/quiz" className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-700 transition">
-          🎯 Take New Quiz
-        </Link>
-        <Link href="/leaderboard" className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold text-center hover:bg-gray-300 transition">
-          🏆 View Leaderboard
-        </Link>
+        <Link href="/quiz" className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-700 transition">🎯 Take New Quiz</Link>
+        <Link href="/leaderboard" className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold text-center hover:bg-gray-300 transition">🏆 View Leaderboard</Link>
       </div>
-
-      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
-          </Link>
-          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
-          </Link>
-          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
-          </Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">📰</span><span className="text-[10px]">Current</span>
-          </Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🏆</span><span className="text-[10px]">Rank</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center text-blue-600">
-            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
-          </Link>
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition"><span className="text-xl">🏠</span><span className="text-[10px]">Home</span></Link>
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition"><span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span></Link>
+          <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition"><span className="text-xl">📖</span><span className="text-[10px]">Study</span></Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition"><span className="text-xl">📰</span><span className="text-[10px]">Current</span></Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition"><span className="text-xl">🏆</span><span className="text-[10px]">Rank</span></Link>
+          <Link href="/profile" className="flex flex-col items-center text-blue-600"><span className="text-xl">👤</span><span className="text-[10px]">Profile</span></Link>
         </div>
       </div>
 
@@ -377,13 +310,14 @@ export default function ProfilePage() {
                   onChange={(e) => setNewInstagramId(e.target.value.replace('@', ''))}
                   className="w-full pl-8 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="username"
+                  autoFocus
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">This will be visible on leaderboard</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={handleUpdateInstagram} className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Save</button>
-              <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300">Cancel</button>
+              <button onClick={handleUpdateInstagram} className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Changes</button>
+              <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition">Cancel</button>
             </div>
           </div>
         </div>
