@@ -3,16 +3,15 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
-import { LeaderboardSkeleton } from '@/components/Skeleton';
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -24,12 +23,34 @@ export default function LeaderboardPage() {
         console.error('Error parsing user:', e);
       }
     }
+    
+    // Load cached data instantly
+    const cachedLeaderboard = localStorage.getItem('cachedLeaderboard');
+    if (cachedLeaderboard) {
+      try {
+        const cached = JSON.parse(cachedLeaderboard);
+        setUsers(cached.users || []);
+        setTotalParticipants(cached.total || 0);
+        setLastUpdated(cached.timestamp ? new Date(cached.timestamp) : null);
+      } catch(e) {}
+    }
+    
+    // Fetch fresh data
     fetchLeaderboard();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchLeaderboard(true);
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async (silent = false) => {
+    if (!silent) setRefreshing(true);
     try {
-      const response = await fetch(`/api/leaderboard?_=${Date.now()}`);
+      const timestamp = Date.now();
+      const response = await fetch(`/api/leaderboard?t=${timestamp}`);
       const data = await response.json();
       
       let allUsers = [];
@@ -39,22 +60,24 @@ export default function LeaderboardPage() {
         allUsers = data.users;
       }
       
-      // Filter users with scores > 0
       const usersWithScores = allUsers.filter(user => (user.score || 0) > 0);
-      
-      // Sort by score descending
       const sortedUsers = usersWithScores.sort((a, b) => (b.score || 0) - (a.score || 0));
       
       setUsers(sortedUsers);
       setTotalParticipants(sortedUsers.length);
       setLastUpdated(new Date());
       setError(null);
+      
+      localStorage.setItem('cachedLeaderboard', JSON.stringify({
+        users: sortedUsers,
+        total: sortedUsers.length,
+        timestamp: Date.now()
+      }));
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
-      setError(error.message);
-      setUsers([]);
+      if (!silent) setError(error.message);
     } finally {
-      setLoading(false);
+      if (!silent) setRefreshing(false);
     }
   };
 
@@ -92,19 +115,13 @@ export default function LeaderboardPage() {
   }) + 1;
 
   const handleManualRefresh = () => {
-    setLoading(true);
-    fetchLeaderboard();
+    fetchLeaderboard(false);
   };
-
-  if (loading) {
-    return <LeaderboardSkeleton />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
-      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">
         <div className="text-center">
           <div className="text-5xl mb-2 animate-bounce">🏆</div>
@@ -115,24 +132,23 @@ export default function LeaderboardPage() {
           </p>
           <button 
             onClick={handleManualRefresh}
-            className="mt-2 text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition"
+            disabled={refreshing}
+            className="mt-2 text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition disabled:opacity-50"
           >
-            🔄 Refresh Now
+            {refreshing ? '🔄 Refreshing...' : '🔄 Refresh Now'}
           </button>
         </div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="max-w-md mx-auto px-4 mt-4">
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
             <p className="text-xs text-red-600">⚠️ {error}</p>
-            <button onClick={fetchLeaderboard} className="text-xs text-red-600 underline mt-1">Try Again</button>
+            <button onClick={() => fetchLeaderboard(false)} className="text-xs text-red-600 underline mt-1">Try Again</button>
           </div>
         </div>
       )}
 
-      {/* Your Rank Card */}
       {currentUser && currentUserRank > 0 && currentUserRank <= sortedFilteredUsers.length && (
         <div className="max-w-md mx-auto px-4 mt-4">
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200 shadow-lg">
@@ -155,7 +171,6 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-100 rounded-lg p-1">
           {tabs.map(tab => (
@@ -175,60 +190,49 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      {/* Top 3 Podium */}
-      {!loading && topThree.length >= 3 && (
+      {topThree.length >= 1 && (
         <div className="max-w-md mx-auto px-4 mt-8">
           <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <h3 className="text-center text-sm font-bold text-gray-600 mb-6">🏆 Top Performers 🏆</h3>
             <div className="flex justify-center items-end gap-2">
-              {/* 2nd Place */}
-              <div className="text-center w-24">
-                <div className="relative">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-r from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-3xl ring-2 ring-gray-400 shadow-md">
-                    🥈
-                  </div>
+              {topThree[1] && (
+                <div className="text-center w-24">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-r from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-3xl ring-2 ring-gray-400 shadow-md">🥈</div>
+                  <p className="font-bold text-gray-800 text-sm mt-2 truncate">{topThree[1]?.name?.split(' ')[0] || 'User'}</p>
+                  <p className="text-xs text-gray-500 truncate">@{topThree[1]?.instagramId}</p>
+                  <p className="text-xl font-bold text-gray-700 mt-1">{topThree[1]?.score || 0}</p>
+                  <div className="mt-2 h-16 bg-gradient-to-t from-gray-200 to-gray-100 rounded-t-lg w-full"></div>
+                  <p className="text-xs text-gray-400 mt-1 font-semibold">2nd Place</p>
                 </div>
-                <p className="font-bold text-gray-800 text-sm mt-2 truncate">{topThree[1]?.name?.split(' ')[0] || 'User'}</p>
-                <p className="text-xs text-gray-500 truncate">@{topThree[1]?.instagramId}</p>
-                <p className="text-xl font-bold text-gray-700 mt-1">{topThree[1]?.score || 0}</p>
-                <div className="mt-2 h-16 bg-gradient-to-t from-gray-200 to-gray-100 rounded-t-lg w-full"></div>
-                <p className="text-xs text-gray-400 mt-1 font-semibold">2nd Place</p>
-              </div>
+              )}
 
-              {/* 1st Place */}
-              <div className="text-center w-28 -mt-6">
-                <div className="relative">
-                  <div className="w-20 h-20 mx-auto bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center text-4xl ring-4 ring-yellow-400 shadow-lg animate-pulse">
-                    👑
-                  </div>
+              {topThree[0] && (
+                <div className="text-center w-28 -mt-6">
+                  <div className="w-20 h-20 mx-auto bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center text-4xl ring-4 ring-yellow-400 shadow-lg animate-pulse">👑</div>
+                  <p className="font-bold text-gray-800 text-base mt-2 truncate">{topThree[0]?.name || 'Champion'}</p>
+                  <p className="text-xs text-gray-500 truncate">@{topThree[0]?.instagramId}</p>
+                  <p className="text-2xl font-bold text-yellow-600 mt-1">{topThree[0]?.score || 0}</p>
+                  <div className="mt-2 h-20 bg-gradient-to-t from-yellow-200 to-yellow-100 rounded-t-lg w-full"></div>
+                  <p className="text-xs text-yellow-600 font-bold mt-1">🏆 CHAMPION 🏆</p>
                 </div>
-                <p className="font-bold text-gray-800 text-base mt-2 truncate">{topThree[0]?.name || 'Champion'}</p>
-                <p className="text-xs text-gray-500 truncate">@{topThree[0]?.instagramId}</p>
-                <p className="text-2xl font-bold text-yellow-600 mt-1">{topThree[0]?.score || 0}</p>
-                <div className="mt-2 h-20 bg-gradient-to-t from-yellow-200 to-yellow-100 rounded-t-lg w-full"></div>
-                <p className="text-xs text-yellow-600 font-bold mt-1">🏆 CHAMPION 🏆</p>
-              </div>
+              )}
 
-              {/* 3rd Place */}
-              <div className="text-center w-24">
-                <div className="relative">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-3xl ring-2 ring-orange-500 shadow-md">
-                    🥉
-                  </div>
+              {topThree[2] && (
+                <div className="text-center w-24">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-3xl ring-2 ring-orange-500 shadow-md">🥉</div>
+                  <p className="font-bold text-gray-800 text-sm mt-2 truncate">{topThree[2]?.name?.split(' ')[0] || 'User'}</p>
+                  <p className="text-xs text-gray-500 truncate">@{topThree[2]?.instagramId}</p>
+                  <p className="text-xl font-bold text-orange-600 mt-1">{topThree[2]?.score || 0}</p>
+                  <div className="mt-2 h-12 bg-gradient-to-t from-orange-200 to-orange-100 rounded-t-lg w-full"></div>
+                  <p className="text-xs text-gray-400 mt-1 font-semibold">3rd Place</p>
                 </div>
-                <p className="font-bold text-gray-800 text-sm mt-2 truncate">{topThree[2]?.name?.split(' ')[0] || 'User'}</p>
-                <p className="text-xs text-gray-500 truncate">@{topThree[2]?.instagramId}</p>
-                <p className="text-xl font-bold text-orange-600 mt-1">{topThree[2]?.score || 0}</p>
-                <div className="mt-2 h-12 bg-gradient-to-t from-orange-200 to-orange-100 rounded-t-lg w-full"></div>
-                <p className="text-xs text-gray-400 mt-1 font-semibold">3rd Place</p>
-              </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Top 10 List */}
-      {!loading && topTen.length > 0 && (
+      {topTen.length > 0 && (
         <div className="max-w-md mx-auto px-4 mt-6">
           <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
             <span className="text-purple-600">⭐</span> Top 10 Rankers
@@ -239,26 +243,11 @@ export default function LeaderboardPage() {
               const rank = idx + 1;
               const isCurrentUser = (user.instagramId || '').toLowerCase() === (currentUser?.instagramId || '').toLowerCase();
               return (
-                <div 
-                  key={user._id || idx} 
-                  className={`px-4 py-3 flex items-center justify-between border-b border-gray-100 last:border-0 transition-all ${
-                    isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'
-                  }`}
-                >
+                <div key={user._id || idx} className={`px-4 py-3 flex items-center justify-between border-b border-gray-100 last:border-0 transition-all ${isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md ${
-                      rank === 1 ? 'bg-yellow-500' : 
-                      rank === 2 ? 'bg-gray-500' : 
-                      rank === 3 ? 'bg-orange-500' : 
-                      'bg-purple-500'
-                    }`}>
-                      {rank}
-                    </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md ${rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-500' : rank === 3 ? 'bg-orange-500' : 'bg-purple-500'}`}>{rank}</div>
                     <div>
-                      <p className="font-semibold text-gray-800 text-sm">
-                        {user.name || 'Anonymous'}
-                        {isCurrentUser && <span className="ml-1 text-xs text-purple-600 font-bold">(You)</span>}
-                      </p>
+                      <p className="font-semibold text-gray-800 text-sm">{user.name || 'Anonymous'}{isCurrentUser && <span className="ml-1 text-xs text-purple-600 font-bold">(You)</span>}</p>
                       <p className="text-xs text-gray-400">@{user.instagramId}</p>
                     </div>
                   </div>
@@ -273,8 +262,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Remaining Users */}
-      {!loading && remainingUsers.length > 0 && (
+      {remainingUsers.length > 0 && (
         <div className="max-w-md mx-auto px-4 mt-6 mb-20">
           <details className="group">
             <summary className="cursor-pointer text-sm font-semibold text-gray-600 bg-gray-100 px-4 py-2 rounded-lg inline-flex items-center gap-2 hover:bg-gray-200 transition">
@@ -288,21 +276,11 @@ export default function LeaderboardPage() {
                 const rank = idx + 11;
                 const isCurrentUser = (user.instagramId || '').toLowerCase() === (currentUser?.instagramId || '').toLowerCase();
                 return (
-                  <div 
-                    key={user._id || idx} 
-                    className={`px-4 py-2 flex items-center justify-between border-b border-gray-100 last:border-0 ${
-                      isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'
-                    }`}
-                  >
+                  <div key={user._id || idx} className={`px-4 py-2 flex items-center justify-between border-b border-gray-100 last:border-0 ${isCurrentUser ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs">
-                        {rank}
-                      </div>
+                      <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs">{rank}</div>
                       <div>
-                        <p className="font-medium text-gray-700 text-sm">
-                          {user.name || 'Anonymous'}
-                          {isCurrentUser && <span className="ml-1 text-xs text-purple-600">(You)</span>}
-                        </p>
+                        <p className="font-medium text-gray-700 text-sm">{user.name || 'Anonymous'}{isCurrentUser && <span className="ml-1 text-xs text-purple-600">(You)</span>}</p>
                         <p className="text-xs text-gray-400">@{user.instagramId}</p>
                       </div>
                     </div>
@@ -317,37 +295,22 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {!loading && sortedFilteredUsers.length === 0 && !error && (
+      {sortedFilteredUsers.length === 0 && !error && (
         <div className="max-w-md mx-auto px-4 mt-12 text-center">
           <div className="text-6xl mb-3">🏆</div>
           <p className="text-gray-600 font-medium">No rankings yet</p>
           <p className="text-xs text-gray-400 mt-1">Be the first to take a quiz!</p>
-          <Link href="/quiz">
-            <button className="mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
-              Take First Quiz →
-            </button>
-          </Link>
+          <Link href="/quiz"><button className="mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">Take First Quiz →</button></Link>
         </div>
       )}
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg z-50">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
-            <span className="text-xl">🏠</span><span className="text-xs">Home</span>
-          </Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
-            <span className="text-xl">📰</span><span className="text-xs">Current</span>
-          </Link>
-          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
-            <span className="text-xl">🎯</span><span className="text-xs">Test</span>
-          </Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-purple-600">
-            <span className="text-xl">🏆</span><span className="text-xs">Rank</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
-            <span className="text-xl">👤</span><span className="text-xs">Profile</span>
-          </Link>
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">🏠</span><span className="text-xs">Home</span></Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">📰</span><span className="text-xs">Current</span></Link>
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">🎯</span><span className="text-xs">Test</span></Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-purple-600"><span className="text-xl">🏆</span><span className="text-xs">Rank</span></Link>
+          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">👤</span><span className="text-xs">Profile</span></Link>
         </div>
       </div>
     </div>
