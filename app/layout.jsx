@@ -37,3 +37,7 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+      {/* Preload critical assets */}
+      <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      <link rel="dns-prefetch" href="https://api.vercel.com" />
+      <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
