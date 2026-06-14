@@ -21,6 +21,7 @@ export default function ProfilePage() {
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -31,34 +32,19 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
-    
-    // Load cached data instantly
-    const cachedStats = localStorage.getItem(`profileStats_${currentUser.instagramId}`);
-    if (cachedStats) {
-      try {
-        const parsed = JSON.parse(cachedStats);
-        setStats(prev => ({ ...prev, ...parsed }));
-      } catch(e) {}
-    }
-    
-    // Fetch fresh data in background
     loadUserData(currentUser);
   }, [router]);
 
   const loadUserData = async (currentUser) => {
     try {
+      // Fetch only user-specific data with limit
       const [resultsRes, leaderboardRes] = await Promise.all([
-        fetch(`/api/quiz-results?_t=${Date.now()}`),
+        fetch(`/api/quiz-results?userId=${currentUser.instagramId}&limit=50&_t=${Date.now()}`),
         fetch(`/api/leaderboard?_t=${Date.now()}`)
       ]);
       
-      const allResults = await resultsRes.json();
+      const userResults = await resultsRes.json();
       const leaderboard = await leaderboardRes.json();
-      
-      const userResults = allResults.filter(r => 
-        (r.userEmail && r.userEmail.toLowerCase() === currentUser.email?.toLowerCase()) ||
-        (r.instagramId && r.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase())
-      );
       
       setQuizResults(userResults);
       
@@ -76,16 +62,15 @@ export default function ProfilePage() {
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
       const rank = leaderboard.findIndex(u => u.instagramId?.toLowerCase() === currentUser.instagramId?.toLowerCase()) + 1;
       
-      const newStats = {
+      setStats({
         totalScore, totalQuizzes: userResults.length, correctAnswers: totalCorrect,
         wrongAnswers: totalWrong, accuracy: Math.min(accuracy, 100), bestScore,
         averagePercentage: Math.min(avgPercentage, 100), rank: rank || 0
-      };
-      
-      setStats(newStats);
-      localStorage.setItem(`profileStats_${currentUser.instagramId}`, JSON.stringify(newStats));
+      });
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,16 +89,19 @@ export default function ProfilePage() {
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        
-        // Clear cached stats for old Instagram ID
-        localStorage.removeItem(`profileStats_${user.instagramId}`);
         loadUserData(updatedUser);
       } catch (error) { console.error('Error:', error); }
     }
     setShowEditModal(false);
   };
 
-  if (!user) return null;
+  if (!user || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -238,7 +226,7 @@ export default function ProfilePage() {
       {/* Quiz History */}
       <div className="px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
-          <h3 className="text-lg font-bold mb-4">📋 Quiz History</h3>
+          <h3 className="text-lg font-bold mb-4">📋 Recent Quizzes</h3>
           {quizResults.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-5xl mb-3">📝</div>
@@ -265,27 +253,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
-              {quizResults.length > 10 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs text-blue-600 hover:underline">View all {quizResults.length} quizzes</summary>
-                  <div className="mt-2 space-y-3">
-                    {quizResults.slice(10).map((quiz, idx) => (
-                      <div key={quiz._id || idx} className="border-b pb-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 11)}</p>
-                            <p className="text-xs text-gray-500">{new Date(quiz.date || quiz.createdAt).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
-                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
             </div>
           )}
         </div>

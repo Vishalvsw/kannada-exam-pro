@@ -1,12 +1,30 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const limit = parseInt(searchParams.get('limit')) || 50;
+    
     const client = await clientPromise;
     const db = client.db();
-    const results = await db.collection('quizresults').find({}).sort({ date: -1 }).toArray();
-    return NextResponse.json(results);
+    
+    let query = {};
+    if (userId) {
+      query = { $or: [{ userId }, { instagramId: userId }] };
+    }
+    
+    // ONLY fetch last 50 results, not all 4615!
+    const results = await db.collection('quizresults')
+      .find(query)
+      .sort({ date: -1 })
+      .limit(limit)
+      .toArray();
+    
+    return NextResponse.json(results, {
+      headers: { 'Cache-Control': 'public, max-age=60' }
+    });
   } catch (error) {
     console.error('GET quiz results error:', error);
     return NextResponse.json([]);
@@ -20,7 +38,6 @@ export async function POST(request) {
     const db = client.db();
     
     const quizResult = {
-      userId: body.userId,
       userName: body.userName,
       userEmail: body.userEmail,
       instagramId: body.instagramId,
@@ -29,62 +46,29 @@ export async function POST(request) {
       percentage: body.percentage,
       correctCount: body.correctCount,
       wrongCount: body.wrongCount,
-      timeTaken: body.timeTaken,
       timeFormatted: body.timeFormatted,
-      answers: body.answers || [],
       date: new Date(),
       createdAt: new Date()
     };
     
     const result = await db.collection('quizresults').insertOne(quizResult);
-    console.log(`✅ Quiz result saved for: ${body.userName} (${body.instagramId})`);
     
-    // CRITICAL: Update user's lastQuizDate and score
+    // Update user's score in background (don't wait)
     if (body.instagramId) {
-      // First, find if user exists
-      let user = await db.collection('users').findOne({ instagramId: body.instagramId });
-      
-      // If user not found by instagramId, try by email
-      if (!user && body.userEmail) {
-        user = await db.collection('users').findOne({ email: body.userEmail });
-      }
-      
+      const user = await db.collection('users').findOne({ instagramId: body.instagramId });
       if (user) {
-        const newTotalScore = (user.score || 0) + (body.score || 0);
-        const newQuizzesTaken = (user.totalQuizzesTaken || 0) + 1;
-        
+        const newScore = (user.score || 0) + (body.score || 0);
+        const newQuizzes = (user.totalQuizzesTaken || 0) + 1;
         await db.collection('users').updateOne(
           { _id: user._id },
-          { 
-            $set: { 
-              score: newTotalScore,
-              totalQuizzesTaken: newQuizzesTaken,
-              lastQuizDate: new Date(),  // ← This is critical!
-              updatedAt: new Date()
-            }
-          }
+          { $set: { score: newScore, totalQuizzesTaken: newQuizzes, lastQuizDate: new Date() } }
         );
-        console.log(`✅ Updated user ${body.instagramId}: score=${newTotalScore}, lastQuizDate=${new Date().toISOString()}`);
-      } else {
-        // Create new user if doesn't exist
-        const newUser = {
-          name: body.userName,
-          instagramId: body.instagramId,
-          email: body.userEmail,
-          score: body.score || 0,
-          totalQuizzesTaken: 1,
-          lastQuizDate: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        await db.collection('users').insertOne(newUser);
-        console.log(`✅ Created new user: ${body.instagramId}`);
       }
     }
     
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (error) {
-    console.error('POST quiz results error:', error);
+    console.error('POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
