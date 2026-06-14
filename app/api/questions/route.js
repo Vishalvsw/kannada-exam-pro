@@ -9,6 +9,7 @@ export async function GET() {
     const questions = await db.collection("questions").find({}).toArray();
     return NextResponse.json(questions);
   } catch (error) {
+    console.error('GET Error:', error);
     return NextResponse.json([]);
   }
 }
@@ -20,8 +21,14 @@ export async function POST(request) {
     const db = client.db("kannada_exam_pro");
     
     const newQuestion = {
-      ...body,
-      createdAt: new Date()
+      question: body.question,
+      options: body.options || [],
+      answer: body.answer,
+      explanation: body.explanation || '',
+      category: body.category || 'General',
+      difficulty: body.difficulty || 'medium',
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     const result = await db.collection("questions").insertOne(newQuestion);
@@ -33,24 +40,39 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
     const body = await request.json();
+    console.log('PUT Request Body:', body);
     
-    if (!id) {
-      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    // Get ID from body (id or _id)
+    const questionId = body.id || body._id;
+    
+    if (!questionId) {
+      return NextResponse.json({ error: 'Question ID required' }, { status: 400 });
+    }
+    
+    // Validate ObjectId
+    if (!ObjectId.isValid(questionId)) {
+      return NextResponse.json({ error: 'Invalid question ID format' }, { status: 400 });
     }
     
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    await db.collection("questions").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { ...body, updatedAt: new Date() } }
+    // Remove id fields from update data
+    const { id, _id, ...updateData } = body;
+    
+    const result = await db.collection("questions").updateOne(
+      { _id: new ObjectId(questionId) },
+      { $set: { ...updateData, updatedAt: new Date() } }
     );
     
-    return NextResponse.json({ success: true });
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true, modified: result.modifiedCount });
   } catch (error) {
+    console.error('PUT Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -61,16 +83,25 @@ export async function DELETE(request) {
     const id = searchParams.get('id');
     
     if (!id) {
-      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Question ID required' }, { status: 400 });
+    }
+    
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid question ID format' }, { status: 400 });
     }
     
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    await db.collection("questions").deleteOne({ _id: new ObjectId(id) });
+    const result = await db.collection("questions").deleteOne({ _id: new ObjectId(id) });
     
-    return NextResponse.json({ success: true });
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true, deleted: result.deletedCount });
   } catch (error) {
+    console.error('DELETE Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
