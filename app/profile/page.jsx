@@ -32,7 +32,6 @@ export default function ProfilePage() {
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
     
-    // Load data in background - no loading state
     fetchUserResults(currentUser);
     fetchUserRank(currentUser);
   }, [router]);
@@ -72,8 +71,7 @@ export default function ProfilePage() {
       const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
 
-      setStats((prev) => ({
-        ...prev,
+      setStats({
         totalScore,
         totalQuizzes: userResults.length,
         correctAnswers: totalCorrect,
@@ -81,7 +79,8 @@ export default function ProfilePage() {
         accuracy: Math.min(accuracy, 100),
         bestScore,
         averagePercentage: Math.min(avgPercentage, 100),
-      }));
+        rank: stats.rank
+      });
     } catch (error) {
       console.error('Error fetching user results:', error);
     }
@@ -122,10 +121,12 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  // No loading - just show content immediately
   if (!user) {
-    router.push('/login');
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   return (
@@ -326,7 +327,7 @@ export default function ProfilePage() {
             <span className="text-xs">Current</span>
           </Link>
           <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">���</span>
+            <span className="text-xl">🏆</span>
             <span className="text-xs">Rank</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-blue-600">
