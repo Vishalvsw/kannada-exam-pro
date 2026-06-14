@@ -21,7 +21,7 @@ export default function ProfilePage() {
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -33,13 +33,13 @@ export default function ProfilePage() {
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
     
-    // Load fresh data immediately
-    loadUserData(currentUser);
+    // Load all data in parallel for speed
+    loadAllData(currentUser);
   }, [router]);
 
-  const loadUserData = async (currentUser) => {
+  const loadAllData = async (currentUser) => {
     try {
-      // Fetch all data in parallel
+      // Fetch both APIs in parallel
       const [resultsRes, leaderboardRes] = await Promise.all([
         fetch(`/api/quiz-results?_t=${Date.now()}`),
         fetch(`/api/leaderboard?_t=${Date.now()}`)
@@ -48,7 +48,7 @@ export default function ProfilePage() {
       const allResults = await resultsRes.json();
       const leaderboard = await leaderboardRes.json();
       
-      // Filter by email OR instagramId (case insensitive)
+      // Filter user results by email OR instagramId
       const userResults = Array.isArray(allResults) ? allResults.filter((r) => {
         const matchEmail = r.userEmail && r.userEmail.toLowerCase() === currentUser.email?.toLowerCase();
         const matchInstagram = r.instagramId && r.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase();
@@ -92,11 +92,10 @@ export default function ProfilePage() {
         rank: rank || 0
       });
       
-      setDataLoaded(true);
-      
     } catch (error) {
       console.error('Error loading user data:', error);
-      setDataLoaded(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,7 +115,7 @@ export default function ProfilePage() {
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        loadUserData(updatedUser);
+        loadAllData(updatedUser);
       } catch (error) {
         console.error('Error:', error);
       }
@@ -202,11 +201,67 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Quick Stats Row */}
+      <div className="px-5 mt-4">
+        <div className="bg-white rounded-2xl shadow-md p-4">
+          <div className="flex justify-around">
+            <div className="text-center">
+              <p className="text-gray-500 text-xs">Best Score</p>
+              <p className="text-xl font-bold text-yellow-600">{stats.bestScore}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-500 text-xs">Avg Score</p>
+              <p className="text-xl font-bold text-indigo-600">{stats.averagePercentage}%</p>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-500 text-xs">Wrong Answers</p>
+              <p className="text-xl font-bold text-red-600">{stats.wrongAnswers}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Section */}
+      <div className="px-5 mt-6">
+        <div className="bg-white rounded-2xl shadow-md p-5">
+          <h3 className="text-lg font-bold mb-4">📊 Your Progress</h3>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Overall Score</span>
+                <span className="font-semibold text-blue-600">{stats.totalScore} pts</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalScore / 10, 100)}%` }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Quiz Completion</span>
+                <span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalQuizzes * 5, 100)}%` }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Accuracy Rate</span>
+                <span className="font-semibold text-orange-600">{stats.accuracy}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Quiz History */}
       <div className="px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold mb-4">📋 Quiz History</h3>
-          {!dataLoaded ? (
+          {loading ? (
             <div className="space-y-3">
               {[1,2,3].map(i => (
                 <div key={i} className="border-b pb-3">
@@ -242,6 +297,27 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
+              {quizResults.length > 10 && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs text-blue-600 hover:underline">View all {quizResults.length} quizzes</summary>
+                  <div className="mt-2 space-y-3">
+                    {quizResults.slice(10).map((quiz, idx) => (
+                      <div key={quiz._id || idx} className="border-b pb-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 11)}</p>
+                            <p className="text-xs text-gray-500">{new Date(quiz.date || quiz.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
+                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           )}
         </div>
