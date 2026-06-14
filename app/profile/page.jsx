@@ -32,6 +32,16 @@ export default function ProfilePage() {
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
     
+    // Load stats from localStorage first (instant)
+    const savedStats = localStorage.getItem(`userStats_${currentUser.instagramId}`);
+    if (savedStats) {
+      try {
+        const parsedStats = JSON.parse(savedStats);
+        setStats(prev => ({ ...prev, ...parsedStats }));
+      } catch(e) {}
+    }
+    
+    // Then fetch fresh data from API (background)
     fetchUserResults(currentUser);
     fetchUserRank(currentUser);
   }, [router]);
@@ -71,7 +81,7 @@ export default function ProfilePage() {
       const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
 
-      setStats({
+      const newStats = {
         totalScore,
         totalQuizzes: userResults.length,
         correctAnswers: totalCorrect,
@@ -79,8 +89,12 @@ export default function ProfilePage() {
         accuracy: Math.min(accuracy, 100),
         bestScore,
         averagePercentage: Math.min(avgPercentage, 100),
-        rank: stats.rank
-      });
+      };
+      
+      setStats(prev => ({ ...prev, ...newStats }));
+      
+      // Save to localStorage for next time
+      localStorage.setItem(`userStats_${currentUser.instagramId}`, JSON.stringify(newStats));
     } catch (error) {
       console.error('Error fetching user results:', error);
     }
@@ -92,8 +106,16 @@ export default function ProfilePage() {
       const leaderboard = await response.json();
       const rank = leaderboard.findIndex((u) => u.instagramId === currentUser.instagramId) + 1;
       setStats(prev => ({ ...prev, rank: rank || 0 }));
+      
+      // Save rank to localStorage
+      localStorage.setItem(`userRank_${currentUser.instagramId}`, rank || 0);
     } catch (error) {
       console.error('Error fetching rank:', error);
+      // Try to get rank from localStorage
+      const savedRank = localStorage.getItem(`userRank_${currentUser.instagramId}`);
+      if (savedRank) {
+        setStats(prev => ({ ...prev, rank: parseInt(savedRank) || 0 }));
+      }
     }
   };
 
@@ -175,7 +197,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Show data instantly */}
       <div className="px-5 -mt-6">
         <div className="bg-white rounded-2xl shadow-xl p-5">
           <div className="grid grid-cols-2 gap-4">
@@ -273,7 +295,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {quizResults.map((quiz, idx) => (
+              {quizResults.slice(0, 10).map((quiz, idx) => (
                 <div key={quiz._id || idx} className="border-b pb-3 last:border-0">
                   <div className="flex justify-between items-center">
                     <div>
@@ -292,6 +314,27 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
+              {quizResults.length > 10 && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs text-blue-600 hover:underline">View all {quizResults.length} quizzes</summary>
+                  <div className="mt-2 space-y-3">
+                    {quizResults.slice(10).map((quiz, idx) => (
+                      <div key={quiz._id || idx} className="border-b pb-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 11)}</p>
+                            <p className="text-xs text-gray-500">{new Date(quiz.createdAt || quiz.date).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-blue-600">{quiz.score}/{quiz.totalQuestions}</p>
+                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           )}
         </div>
