@@ -33,39 +33,37 @@ export default function ProfilePage() {
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
     
-    // Load from localStorage instantly
-    const savedStats = localStorage.getItem(`userStats_${currentUser.instagramId}`);
-    if (savedStats) {
-      try {
-        const parsedStats = JSON.parse(savedStats);
-        setStats(prev => ({ ...prev, ...parsedStats }));
-      } catch(e) {}
-    }
-    
-    // Fetch fresh data in background
-    Promise.all([
-      fetchUserResults(currentUser),
-      fetchUserRank(currentUser)
-    ]).finally(() => setDataLoaded(true));
+    // Load fresh data immediately
+    loadUserData(currentUser);
   }, [router]);
 
-  const fetchUserResults = async (currentUser) => {
+  const loadUserData = async (currentUser) => {
     try {
-      const response = await fetch(`/api/quiz-results?_t=${Date.now()}`);
-      const allResults = await response.json();
-
-      if (!Array.isArray(allResults)) return;
-
-      const userResults = allResults.filter((r) => r.userEmail === currentUser.email);
-
+      // Fetch all data in parallel
+      const [resultsRes, leaderboardRes] = await Promise.all([
+        fetch(`/api/quiz-results?_t=${Date.now()}`),
+        fetch(`/api/leaderboard?_t=${Date.now()}`)
+      ]);
+      
+      const allResults = await resultsRes.json();
+      const leaderboard = await leaderboardRes.json();
+      
+      // Filter by email OR instagramId (case insensitive)
+      const userResults = Array.isArray(allResults) ? allResults.filter((r) => {
+        const matchEmail = r.userEmail && r.userEmail.toLowerCase() === currentUser.email?.toLowerCase();
+        const matchInstagram = r.instagramId && r.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase();
+        return matchEmail || matchInstagram;
+      }) : [];
+      
       setQuizResults(userResults);
-
+      
+      // Calculate stats
       let totalScore = 0;
       let totalQuestions = 0;
       let totalCorrect = 0;
       let bestScore = 0;
       let totalPercentage = 0;
-
+      
       userResults.forEach((result) => {
         totalScore += result.score || 0;
         totalQuestions += result.totalQuestions || 0;
@@ -73,12 +71,17 @@ export default function ProfilePage() {
         bestScore = Math.max(bestScore, result.score || 0);
         totalPercentage += result.percentage || 0;
       });
-
+      
       const totalWrong = totalQuestions - totalCorrect;
       const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
-
-      const newStats = {
+      
+      // Get rank
+      const rank = leaderboard.findIndex((u) => 
+        u.instagramId && u.instagramId.toLowerCase() === currentUser.instagramId?.toLowerCase()
+      ) + 1;
+      
+      setStats({
         totalScore,
         totalQuizzes: userResults.length,
         correctAnswers: totalCorrect,
@@ -86,25 +89,14 @@ export default function ProfilePage() {
         accuracy: Math.min(accuracy, 100),
         bestScore,
         averagePercentage: Math.min(avgPercentage, 100),
-      };
+        rank: rank || 0
+      });
       
-      setStats(prev => ({ ...prev, ...newStats }));
-      localStorage.setItem(`userStats_${currentUser.instagramId}`, JSON.stringify(newStats));
+      setDataLoaded(true);
+      
     } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const fetchUserRank = async (currentUser) => {
-    try {
-      const response = await fetch(`/api/leaderboard?_t=${Date.now()}`);
-      const leaderboard = await response.json();
-      const rank = leaderboard.findIndex((u) => u.instagramId === currentUser.instagramId) + 1;
-      setStats(prev => ({ ...prev, rank: rank || 0 }));
-      localStorage.setItem(`userRank_${currentUser.instagramId}`, rank || 0);
-    } catch (error) {
-      const savedRank = localStorage.getItem(`userRank_${currentUser.instagramId}`);
-      if (savedRank) setStats(prev => ({ ...prev, rank: parseInt(savedRank) || 0 }));
+      console.error('Error loading user data:', error);
+      setDataLoaded(true);
     }
   };
 
@@ -124,7 +116,7 @@ export default function ProfilePage() {
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        fetchUserRank(updatedUser);
+        loadUserData(updatedUser);
       } catch (error) {
         console.error('Error:', error);
       }
@@ -210,67 +202,11 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Quick Stats Row */}
-      <div className="px-5 mt-4">
-        <div className="bg-white rounded-2xl shadow-md p-4">
-          <div className="flex justify-around">
-            <div className="text-center">
-              <p className="text-gray-500 text-xs">Best Score</p>
-              <p className="text-xl font-bold text-yellow-600">{stats.bestScore}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs">Avg Score</p>
-              <p className="text-xl font-bold text-indigo-600">{stats.averagePercentage}%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs">Wrong Answers</p>
-              <p className="text-xl font-bold text-red-600">{stats.wrongAnswers}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress Section */}
-      <div className="px-5 mt-6">
-        <div className="bg-white rounded-2xl shadow-md p-5">
-          <h3 className="text-lg font-bold mb-4">📊 Your Progress</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Overall Score</span>
-                <span className="font-semibold text-blue-600">{stats.totalScore} pts</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalScore / 10, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Quiz Completion</span>
-                <span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalQuizzes * 5, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Accuracy Rate</span>
-                <span className="font-semibold text-orange-600">{stats.accuracy}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Quiz History */}
       <div className="px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold mb-4">📋 Quiz History</h3>
-          {!dataLoaded && quizResults.length === 0 ? (
+          {!dataLoaded ? (
             <div className="space-y-3">
               {[1,2,3].map(i => (
                 <div key={i} className="border-b pb-3">
@@ -288,12 +224,12 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {quizResults.slice(0, 5).map((quiz, idx) => (
+              {quizResults.slice(0, 10).map((quiz, idx) => (
                 <div key={quiz._id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
-                      <p className="text-xs text-gray-500">{new Date(quiz.createdAt || quiz.date).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-500">{new Date(quiz.date || quiz.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
@@ -306,27 +242,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
-              {quizResults.length > 5 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs text-blue-600 hover:underline">View all {quizResults.length} quizzes</summary>
-                  <div className="mt-2 space-y-3">
-                    {quizResults.slice(5).map((quiz, idx) => (
-                      <div key={quiz._id || idx} className="border-b pb-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 6)}</p>
-                            <p className="text-xs text-gray-500">{new Date(quiz.createdAt || quiz.date).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
-                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
             </div>
           )}
         </div>
@@ -341,6 +256,8 @@ export default function ProfilePage() {
           🏆 View Leaderboard
         </Link>
       </div>
+
+      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
