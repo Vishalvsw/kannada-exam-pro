@@ -9,7 +9,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [quizResults, setQuizResults] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalScore: 0,
     totalQuizzes: 0,
@@ -32,6 +31,8 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
+    
+    // Load data in background - no loading state
     fetchUserResults(currentUser);
     fetchUserRank(currentUser);
   }, [router]);
@@ -83,8 +84,6 @@ export default function ProfilePage() {
       }));
     } catch (error) {
       console.error('Error fetching user results:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -102,7 +101,6 @@ export default function ProfilePage() {
   const handleUpdateInstagram = async () => {
     if (newInstagramId && newInstagramId !== user.instagramId) {
       try {
-        // Update in database
         await fetch('/api/users/update-instagram', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -113,7 +111,6 @@ export default function ProfilePage() {
           })
         });
         
-        // Update local storage
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
@@ -125,15 +122,11 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
+  // No loading - just show content immediately
+  if (!user) {
+    router.push('/login');
+    return null;
   }
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -198,7 +191,7 @@ export default function ProfilePage() {
             <div className="text-center p-4 bg-purple-50 rounded-xl">
               <p className="text-gray-500 text-xs">Correct Answers</p>
               <p className="text-2xl font-bold text-purple-600">{stats.correctAnswers}</p>
-              <p className="text-xs text-gray-400 mt-1">out of {stats.correctAnswers + stats.wrongAnswers}</p>
+              <p className="text-xs text-gray-400 mt-1">correct</p>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-xl">
               <p className="text-gray-500 text-xs">Accuracy</p>
@@ -333,7 +326,7 @@ export default function ProfilePage() {
             <span className="text-xs">Current</span>
           </Link>
           <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">üèÜ</span>
+            <span className="text-xl">ÌøÜ</span>
             <span className="text-xs">Rank</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-blue-600">
