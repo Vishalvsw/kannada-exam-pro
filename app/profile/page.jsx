@@ -326,7 +326,7 @@ export default function ProfilePage() {
             <span className="text-xs">Current</span>
           </Link>
           <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">í¿†</span>
+            <span className="text-xl">ï¿½ï¿½ï¿½</span>
             <span className="text-xs">Rank</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-blue-600">
