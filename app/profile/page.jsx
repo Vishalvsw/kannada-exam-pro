@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
@@ -8,17 +8,15 @@ import AdSpace from '@/components/AdSpace';
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [quizResults, setQuizResults] = useState([]);
   const [stats, setStats] = useState({
     totalScore: 0,
     totalQuizzes: 0,
     correctAnswers: 0,
-    wrongAnswers: 0,
     accuracy: 0,
     bestScore: 0,
-    averagePercentage: 0,
     rank: 0
   });
+  const [recentQuizzes, setRecentQuizzes] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
   const [message, setMessage] = useState(null);
@@ -33,85 +31,69 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
-    
-    // Load data in parallel for faster loading
-    Promise.all([
-      fetchUserData(currentUser),
-      fetchUserRank(currentUser)
-    ]).finally(() => setLoading(false));
+    loadUserData(currentUser);
   }, [router]);
 
-  const fetchUserData = async (currentUser) => {
+  const loadUserData = async (currentUser) => {
     try {
-      // Fetch leaderboard and quiz results in parallel
+      // Fetch all data in parallel for speed
       const [leaderboardRes, resultsRes] = await Promise.all([
-        fetch('/api/leaderboard'),
-        fetch('/api/quiz-results')
+        fetch(`/api/leaderboard?_=${Date.now()}`),
+        fetch(`/api/quiz-results?_=${Date.now()}`)
       ]);
       
       const leaderboard = await leaderboardRes.json();
       const allResults = await resultsRes.json();
       
-      // Find user in leaderboard
       const normalize = (v) => (v || '').toString().trim().toLowerCase();
+      
+      // Find user in leaderboard
       const userLeaderboard = leaderboard.find(
         (u) => normalize(u.instagramId) === normalize(currentUser.instagramId)
       );
       
-      // Filter quiz results
+      // Filter user's quiz results
       const userResults = Array.isArray(allResults) ? allResults.filter((r) => {
         return normalize(r.userEmail) === normalize(currentUser.email) ||
                normalize(r.instagramId) === normalize(currentUser.instagramId);
       }) : [];
-      
-      setQuizResults(userResults);
       
       // Calculate stats
       let totalScore = 0;
       let totalQuestions = 0;
       let totalCorrect = 0;
       let bestScore = 0;
-      let totalPercentage = 0;
       
       userResults.forEach((result) => {
         totalScore += result.score || 0;
         totalQuestions += result.totalQuestions || 0;
         totalCorrect += result.correctCount || result.score || 0;
         bestScore = Math.max(bestScore, result.score || 0);
-        totalPercentage += result.percentage || 0;
       });
       
-      const totalWrong = totalQuestions - totalCorrect;
       const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
-      const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
+      
+      // Calculate rank
+      const rank = leaderboard.findIndex(
+        (u) => normalize(u.instagramId) === normalize(currentUser.instagramId)
+      ) + 1;
       
       setStats({
         totalScore: userLeaderboard?.score || totalScore,
         totalQuizzes: userResults.length,
         correctAnswers: totalCorrect,
-        wrongAnswers: totalWrong,
         accuracy,
         bestScore,
-        averagePercentage: avgPercentage,
-        rank: 0
+        rank: rank || 0
       });
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
-
-  const fetchUserRank = async (currentUser) => {
-    try {
-      const response = await fetch('/api/leaderboard');
-      const leaderboard = await response.json();
-      const normalize = (value) => (value || '').toString().trim().toLowerCase();
       
-      const rank = leaderboard.findIndex(
-        (u) => normalize(u.instagramId) === normalize(currentUser.instagramId)
-      ) + 1;
-      setStats(prev => ({ ...prev, rank: rank || 0 }));
+      // Set recent quizzes (last 5)
+      setRecentQuizzes(userResults.slice(0, 5));
+      
     } catch (error) {
-      console.error('Error fetching rank:', error);
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,11 +121,12 @@ export default function ProfilePage() {
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
         setMessage({ text: '✅ Instagram ID updated!', type: 'success' });
-        setTimeout(() => setMessage(null), 3000);
         
-        // Refresh data without full page reload
-        fetchUserData(updatedUser);
-        fetchUserRank(updatedUser);
+        // Reload data
+        setTimeout(() => {
+          loadUserData(updatedUser);
+          setMessage(null);
+        }, 1000);
       } else {
         setMessage({ text: '❌ Update failed', type: 'error' });
         setTimeout(() => setMessage(null), 3000);
@@ -155,8 +138,7 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  // Show loading only on first load
-  if (loading && !user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
@@ -170,28 +152,25 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
 
       {/* Toast Message */}
       {message && (
-        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg animate-slide-in ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
           {message.text}
         </div>
       )}
 
-      {/* Profile Header - No loading, shows immediately */}
+      {/* Profile Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-12">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="relative">
               <img 
-                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=22c55e&color=fff&size=120`} 
+                src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=22c55e&color=fff&size=120`} 
                 className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover" 
                 alt={user.name}
-                onError={(e) => {
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=22c55e&color=fff&size=120`;
-                }}
               />
               <div className="absolute bottom-0 right-0 bg-green-500 rounded-full w-4 h-4 border-2 border-white"></div>
             </div>
@@ -232,7 +211,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Cards - Shows immediately with data as it loads */}
+      {/* Stats Cards */}
       <div className="max-w-4xl mx-auto px-5 -mt-6">
         <div className="bg-white rounded-2xl shadow-xl p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -256,44 +235,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Progress Section */}
-      <div className="max-w-4xl mx-auto px-5 mt-6">
-        <div className="bg-white rounded-2xl shadow-md p-5">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="text-2xl">📊</span> Your Progress
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Overall Score</span>
-                <span className="font-semibold text-blue-600">{stats.totalScore} pts</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalScore / 10, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Quiz Completion</span>
-                <span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalQuizzes * 5, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Accuracy Rate</span>
-                <span className="font-semibold text-orange-600">{stats.accuracy}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Best Performance */}
       <div className="max-w-4xl mx-auto px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
@@ -306,20 +247,20 @@ export default function ProfilePage() {
               <p className="text-2xl font-bold text-yellow-600">{stats.bestScore}</p>
             </div>
             <div className="text-center p-3 bg-indigo-50 rounded-xl">
-              <p className="text-gray-500 text-xs">Average Score</p>
-              <p className="text-2xl font-bold text-indigo-600">{stats.averagePercentage}%</p>
+              <p className="text-gray-500 text-xs">Global Rank</p>
+              <p className="text-2xl font-bold text-indigo-600">#{stats.rank}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quiz History - Lazy loaded */}
+      {/* Recent Quizzes */}
       <div className="max-w-4xl mx-auto px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="text-2xl">📋</span> Quiz History
+            <span className="text-2xl">📋</span> Recent Quizzes
           </h3>
-          {quizResults.length === 0 ? (
+          {recentQuizzes.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-5xl mb-3">📝</div>
               <p className="text-gray-500">No quiz attempts yet</p>
@@ -328,12 +269,12 @@ export default function ProfilePage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {quizResults.slice(0, 10).map((quiz, idx) => (
+            <div className="space-y-3">
+              {recentQuizzes.map((quiz, idx) => (
                 <div key={quiz._id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
+                      <p className="font-semibold text-gray-800">Quiz #{recentQuizzes.length - idx}</p>
                       <p className="text-xs text-gray-500">{new Date(quiz.date).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
@@ -347,26 +288,12 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
-              {quizResults.length > 10 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-sm text-green-600 hover:underline">View all {quizResults.length} quizzes</summary>
-                  <div className="mt-2 space-y-3">
-                    {quizResults.slice(10).map((quiz, idx) => (
-                      <div key={quiz._id || idx} className="border-b pb-3 hover:bg-gray-50 p-2 rounded-lg transition">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 11)}</p>
-                            <p className="text-xs text-gray-500">{new Date(quiz.date).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
-                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
+              {stats.totalQuizzes > 5 && (
+                <div className="text-center pt-2">
+                  <Link href="/quiz-history" className="text-sm text-green-600 hover:underline">
+                    View all {stats.totalQuizzes} quizzes →
+                  </Link>
+                </div>
               )}
             </div>
           )}
@@ -438,22 +365,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
