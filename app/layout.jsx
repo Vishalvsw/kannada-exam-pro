@@ -4,6 +4,7 @@ import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
+import Script from 'next/script';
 import './globals.css';
 
 export default function RootLayout({ children }) {
@@ -16,28 +17,27 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#3B82F6" />
         <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
         
-        {/* AdSense - using regular script to avoid data-nscript warning */}
-        <script
-          async
+        {/* DNS Prefetch for faster external connections */}
+        <link rel="dns-prefetch" href="https://api.vercel.com" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        
+        {/* AdSense Script */}
+        <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3976598981288611"
-          crossOrigin="anonymous"
           strategy="afterInteractive"
-        ></script>
+          crossOrigin="anonymous"
+        />
       </head>
       <body suppressHydrationWarning>
         <ClientOnly>
-            <DemoAuthProvider>
-              <ResponsiveNav>
-                {children}
-              </ResponsiveNav>
-              <Footer />
-            </DemoAuthProvider>
+          <DemoAuthProvider>
+            <ResponsiveNav>
+              {children}
+            </ResponsiveNav>
+            <Footer />
+          </DemoAuthProvider>
         </ClientOnly>
       </body>
     </html>
   );
 }
-      {/* Preload critical assets */}
-      <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-      <link rel="dns-prefetch" href="https://api.vercel.com" />
-      <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
