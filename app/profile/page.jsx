@@ -9,6 +9,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [quizResults, setQuizResults] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalScore: 0,
     totalQuizzes: 0,
@@ -32,43 +33,35 @@ export default function ProfilePage() {
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
     
-    // Load stats from localStorage first (instant)
-    const savedStats = localStorage.getItem(`userStats_${currentUser.instagramId}`);
-    if (savedStats) {
-      try {
-        const parsedStats = JSON.parse(savedStats);
-        setStats(prev => ({ ...prev, ...parsedStats }));
-      } catch(e) {}
-    }
-    
-    // Then fetch fresh data from API (background)
-    fetchUserResults(currentUser);
-    fetchUserRank(currentUser);
+    // Load data
+    loadUserData(currentUser);
   }, [router]);
 
-  const fetchUserResults = async (currentUser) => {
+  const loadUserData = async (currentUser) => {
     try {
-      const response = await fetch('/api/quiz-results');
-      if (!response.ok) throw new Error('Failed to fetch quiz results');
-      const allResults = await response.json();
-
-      if (!Array.isArray(allResults)) {
-        console.error('Invalid API response');
-        return;
-      }
-
-      const userResults = allResults.filter((r) => r.userEmail === currentUser.email);
-
-      if (userResults.length > 0) {
-        setQuizResults(userResults);
-      }
-
+      // Fetch all data in parallel
+      const [resultsRes, leaderboardRes] = await Promise.all([
+        fetch(`/api/quiz-results?_t=${Date.now()}`),
+        fetch(`/api/leaderboard?_t=${Date.now()}`)
+      ]);
+      
+      const allResults = await resultsRes.json();
+      const leaderboard = await leaderboardRes.json();
+      
+      // Filter user's results by email or instagramId
+      const userResults = Array.isArray(allResults) ? allResults.filter((r) => {
+        return r.userEmail === currentUser.email || r.instagramId === currentUser.instagramId;
+      }) : [];
+      
+      setQuizResults(userResults);
+      
+      // Calculate stats
       let totalScore = 0;
       let totalQuestions = 0;
       let totalCorrect = 0;
       let bestScore = 0;
       let totalPercentage = 0;
-
+      
       userResults.forEach((result) => {
         totalScore += result.score || 0;
         totalQuestions += result.totalQuestions || 0;
@@ -76,12 +69,15 @@ export default function ProfilePage() {
         bestScore = Math.max(bestScore, result.score || 0);
         totalPercentage += result.percentage || 0;
       });
-
+      
       const totalWrong = totalQuestions - totalCorrect;
       const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
-
-      const newStats = {
+      
+      // Get rank
+      const rank = leaderboard.findIndex((u) => u.instagramId === currentUser.instagramId) + 1;
+      
+      setStats({
         totalScore,
         totalQuizzes: userResults.length,
         correctAnswers: totalCorrect,
@@ -89,33 +85,13 @@ export default function ProfilePage() {
         accuracy: Math.min(accuracy, 100),
         bestScore,
         averagePercentage: Math.min(avgPercentage, 100),
-      };
+        rank: rank || 0
+      });
       
-      setStats(prev => ({ ...prev, ...newStats }));
-      
-      // Save to localStorage for next time
-      localStorage.setItem(`userStats_${currentUser.instagramId}`, JSON.stringify(newStats));
     } catch (error) {
-      console.error('Error fetching user results:', error);
-    }
-  };
-
-  const fetchUserRank = async (currentUser) => {
-    try {
-      const response = await fetch('/api/leaderboard');
-      const leaderboard = await response.json();
-      const rank = leaderboard.findIndex((u) => u.instagramId === currentUser.instagramId) + 1;
-      setStats(prev => ({ ...prev, rank: rank || 0 }));
-      
-      // Save rank to localStorage
-      localStorage.setItem(`userRank_${currentUser.instagramId}`, rank || 0);
-    } catch (error) {
-      console.error('Error fetching rank:', error);
-      // Try to get rank from localStorage
-      const savedRank = localStorage.getItem(`userRank_${currentUser.instagramId}`);
-      if (savedRank) {
-        setStats(prev => ({ ...prev, rank: parseInt(savedRank) || 0 }));
-      }
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,7 +111,7 @@ export default function ProfilePage() {
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        fetchUserRank(updatedUser);
+        loadUserData(updatedUser);
       } catch (error) {
         console.error('Error updating Instagram ID:', error);
       }
@@ -143,13 +119,15 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -197,35 +175,31 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Cards - Show data instantly */}
+      {/* Stats Cards */}
       <div className="px-5 -mt-6">
         <div className="bg-white rounded-2xl shadow-xl p-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-xl">
               <p className="text-gray-500 text-xs">Total Score</p>
               <p className="text-2xl font-bold text-blue-600">{stats.totalScore}</p>
-              <p className="text-xs text-gray-400 mt-1">points</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-xl">
               <p className="text-gray-500 text-xs">Quizzes Taken</p>
               <p className="text-2xl font-bold text-green-600">{stats.totalQuizzes}</p>
-              <p className="text-xs text-gray-400 mt-1">attempts</p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-xl">
               <p className="text-gray-500 text-xs">Correct Answers</p>
               <p className="text-2xl font-bold text-purple-600">{stats.correctAnswers}</p>
-              <p className="text-xs text-gray-400 mt-1">correct</p>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-xl">
               <p className="text-gray-500 text-xs">Accuracy</p>
               <p className="text-2xl font-bold text-orange-600">{stats.accuracy}%</p>
-              <p className="text-xs text-gray-400 mt-1">correct rate</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Stats Row */}
+      {/* Quick Stats */}
       <div className="px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-md p-4">
           <div className="flex justify-around">
@@ -240,42 +214,6 @@ export default function ProfilePage() {
             <div className="text-center">
               <p className="text-gray-500 text-xs">Wrong Answers</p>
               <p className="text-xl font-bold text-red-600">{stats.wrongAnswers}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress Section */}
-      <div className="px-5 mt-6">
-        <div className="bg-white rounded-2xl shadow-md p-5">
-          <h3 className="text-lg font-bold mb-4">📊 Your Progress</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Overall Score</span>
-                <span className="font-semibold text-blue-600">{stats.totalScore} pts</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalScore / 10, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Quiz Completion</span>
-                <span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(stats.totalQuizzes * 5, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Accuracy Rate</span>
-                <span className="font-semibold text-orange-600">{stats.accuracy}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy}%` }}></div>
-              </div>
             </div>
           </div>
         </div>
@@ -296,45 +234,23 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {quizResults.slice(0, 10).map((quiz, idx) => (
-                <div key={quiz._id || idx} className="border-b pb-3 last:border-0">
+                <div key={quiz._id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
-                      <p className="text-xs text-gray-500">{new Date(quiz.createdAt || quiz.date).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-500">{new Date(quiz.date || quiz.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-blue-600">{quiz.score}/{quiz.totalQuestions}</p>
+                      <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
                       <p className="text-xs text-gray-500">{quiz.percentage}%</p>
                     </div>
                   </div>
                   <div className="flex gap-3 mt-2 text-xs">
                     <span className="text-green-600">✓ {quiz.correctCount || quiz.score} correct</span>
                     <span className="text-red-600">✗ {quiz.wrongCount || quiz.totalQuestions - quiz.score} wrong</span>
-                    <span className="text-gray-500">⏱️ {quiz.timeFormatted}</span>
                   </div>
                 </div>
               ))}
-              {quizResults.length > 10 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs text-blue-600 hover:underline">View all {quizResults.length} quizzes</summary>
-                  <div className="mt-2 space-y-3">
-                    {quizResults.slice(10).map((quiz, idx) => (
-                      <div key={quiz._id || idx} className="border-b pb-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 11)}</p>
-                            <p className="text-xs text-gray-500">{new Date(quiz.createdAt || quiz.date).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-blue-600">{quiz.score}/{quiz.totalQuestions}</p>
-                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
             </div>
           )}
         </div>
@@ -350,37 +266,33 @@ export default function ProfilePage() {
         </Link>
       </div>
 
+      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
+
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🏠</span>
-            <span className="text-xs">Home</span>
+            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
           </Link>
           <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🎯</span>
-            <span className="text-xs">Quiz</span>
+            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
           </Link>
           <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">📚</span>
-            <span className="text-xs">Study</span>
+            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
           </Link>
           <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">📰</span>
-            <span className="text-xs">Current</span>
+            <span className="text-xl">📰</span><span className="text-[10px]">Current</span>
           </Link>
           <Link href="/leaderboard" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🏆</span>
-            <span className="text-xs">Rank</span>
+            <span className="text-xl">🏆</span><span className="text-[10px]">Rank</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-blue-600">
-            <span className="text-xl">👤</span>
-            <span className="text-xs">Profile</span>
+            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
           </Link>
         </div>
       </div>
 
-      {/* Edit Instagram Modal */}
+      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
