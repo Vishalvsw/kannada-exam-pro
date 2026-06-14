@@ -9,6 +9,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [quizResults, setQuizResults] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalScore: 0,
     totalQuizzes: 0,
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -31,67 +33,75 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
-    fetchUserResults(currentUser);
+    fetchUserData(currentUser);
     fetchUserRank(currentUser);
   }, [router]);
 
-  const fetchUserResults = async (currentUser) => {
+  const fetchUserData = async (currentUser) => {
     try {
-      const response = await fetch('/api/quiz-results');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch quiz results');
+      setLoading(true);
+      // Fetch latest user data from database
+      const response = await fetch(`/api/users?email=${currentUser.email}`);
+      const users = await response.json();
+      
+      let dbUser = null;
+      if (Array.isArray(users)) {
+        dbUser = users.find(u => u.email === currentUser.email);
       }
-
-      const allResults = await response.json();
-
-      if (!Array.isArray(allResults)) {
-        console.error('Invalid API response');
-        return;
+      
+      if (dbUser) {
+        // Update localStorage with latest database data
+        const updatedUser = { ...currentUser, ...dbUser };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
       }
-
-      const normalize = (v) => (v || '').toString().trim().toLowerCase();
-
-      const userResults = allResults.filter((r) => {
-        return normalize(r.userEmail) === normalize(currentUser.email);
-      });
-
-      if (userResults.length > 0) {
+      
+      // Fetch quiz results
+      const resultsResponse = await fetch('/api/quiz-results');
+      const allResults = await resultsResponse.json();
+      
+      if (Array.isArray(allResults)) {
+        const normalize = (v) => (v || '').toString().trim().toLowerCase();
+        const userResults = allResults.filter((r) => {
+          return normalize(r.userEmail) === normalize(currentUser.email) ||
+                 normalize(r.instagramId) === normalize(currentUser.instagramId);
+        });
+        
         setQuizResults(userResults);
+        
+        let totalScore = 0;
+        let totalQuestions = 0;
+        let totalCorrect = 0;
+        let bestScore = 0;
+        let totalPercentage = 0;
+        
+        userResults.forEach((result) => {
+          totalScore += result.score || 0;
+          totalQuestions += result.totalQuestions || 0;
+          totalCorrect += result.correctCount || result.score || 0;
+          bestScore = Math.max(bestScore, result.score || 0);
+          totalPercentage += result.percentage || 0;
+        });
+        
+        const totalWrong = totalQuestions - totalCorrect;
+        const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
+        const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
+        
+        setStats((prev) => ({
+          ...prev,
+          totalScore,
+          totalQuizzes: userResults.length,
+          correctAnswers: totalCorrect,
+          wrongAnswers: totalWrong,
+          accuracy,
+          bestScore,
+          averagePercentage: avgPercentage,
+        }));
       }
-
-      let totalScore = 0;
-      let totalQuestions = 0;
-      let totalCorrect = 0;
-      let bestScore = 0;
-      let totalPercentage = 0;
-
-      userResults.forEach((result) => {
-        totalScore += result.score || 0;
-        totalQuestions += result.totalQuestions || 0;
-        totalCorrect += result.correctCount || result.score || 0;
-        bestScore = Math.max(bestScore, result.score || 0);
-        totalPercentage += result.percentage || 0;
-      });
-
-      const totalWrong = totalQuestions - totalCorrect;
-
-      const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
-
-      const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
-
-      setStats((prev) => ({
-        ...prev,
-        totalScore,
-        totalQuizzes: userResults.length,
-        correctAnswers: totalCorrect,
-        wrongAnswers: totalWrong,
-        accuracy,
-        bestScore,
-        averagePercentage: avgPercentage,
-      }));
     } catch (error) {
-      console.error('Error fetching user results:', error);
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,7 +110,7 @@ export default function ProfilePage() {
       const response = await fetch('/api/leaderboard');
       const leaderboard = await response.json();
       const normalize = (value) => (value || '').toString().trim().toLowerCase();
-
+      
       const rank = leaderboard.findIndex(
         (u) => normalize(u.instagramId) === normalize(currentUser.instagramId)
       ) + 1;
@@ -110,27 +120,78 @@ export default function ProfilePage() {
     }
   };
 
-  const handleUpdateInstagram = () => {
-    if (newInstagramId && newInstagramId !== user.instagramId) {
-      const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      
-      const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const userIndex = existingUsers.findIndex(u => u.instagramId === user.instagramId);
-      if (userIndex !== -1) {
-        existingUsers[userIndex] = updatedUser;
-        localStorage.setItem('users', JSON.stringify(existingUsers));
-      }
+  const handleUpdateInstagram = async () => {
+    if (!newInstagramId || newInstagramId === user.instagramId) {
+      setShowEditModal(false);
+      return;
     }
+    
+    try {
+      const response = await fetch('/api/users/update-instagram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          oldInstagramId: user.instagramId,
+          newInstagramId: newInstagramId.replace('@', '')
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update localStorage
+        const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        setMessage({ text: '✅ Instagram ID updated successfully!', type: 'success' });
+        setTimeout(() => setMessage(null), 3000);
+        
+        // Refresh data
+        fetchUserData(updatedUser);
+        fetchUserRank(updatedUser);
+      } else {
+        setMessage({ text: '❌ Failed to update Instagram ID', type: 'error' });
+        setTimeout(() => setMessage(null), 3000);
+      }
+    } catch (error) {
+      console.error('Error updating Instagram ID:', error);
+      setMessage({ text: '❌ Error updating Instagram ID', type: 'error' });
+      setTimeout(() => setMessage(null), 3000);
+    }
+    
     setShowEditModal(false);
   };
+
+  const showToast = (text, type) => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
+
+      {/* Toast Message */}
+      {message && (
+        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+          {message.text}
+        </div>
+      )}
 
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-12">
@@ -282,7 +343,7 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {quizResults.map((quiz, idx) => (
-                <div key={quiz.id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
+                <div key={quiz._id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
