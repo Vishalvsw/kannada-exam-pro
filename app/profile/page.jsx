@@ -9,7 +9,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [quizResults, setQuizResults] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalScore: 0,
     totalQuizzes: 0,
@@ -23,6 +22,7 @@ export default function ProfilePage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -33,75 +33,70 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
-    fetchUserData(currentUser);
-    fetchUserRank(currentUser);
+    
+    // Load data in parallel for faster loading
+    Promise.all([
+      fetchUserData(currentUser),
+      fetchUserRank(currentUser)
+    ]).finally(() => setLoading(false));
   }, [router]);
 
   const fetchUserData = async (currentUser) => {
     try {
-      setLoading(true);
-      // Fetch latest user data from database
-      const response = await fetch(`/api/users?email=${currentUser.email}`);
-      const users = await response.json();
+      // Fetch leaderboard and quiz results in parallel
+      const [leaderboardRes, resultsRes] = await Promise.all([
+        fetch('/api/leaderboard'),
+        fetch('/api/quiz-results')
+      ]);
       
-      let dbUser = null;
-      if (Array.isArray(users)) {
-        dbUser = users.find(u => u.email === currentUser.email);
-      }
+      const leaderboard = await leaderboardRes.json();
+      const allResults = await resultsRes.json();
       
-      if (dbUser) {
-        // Update localStorage with latest database data
-        const updatedUser = { ...currentUser, ...dbUser };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      }
+      // Find user in leaderboard
+      const normalize = (v) => (v || '').toString().trim().toLowerCase();
+      const userLeaderboard = leaderboard.find(
+        (u) => normalize(u.instagramId) === normalize(currentUser.instagramId)
+      );
       
-      // Fetch quiz results
-      const resultsResponse = await fetch('/api/quiz-results');
-      const allResults = await resultsResponse.json();
+      // Filter quiz results
+      const userResults = Array.isArray(allResults) ? allResults.filter((r) => {
+        return normalize(r.userEmail) === normalize(currentUser.email) ||
+               normalize(r.instagramId) === normalize(currentUser.instagramId);
+      }) : [];
       
-      if (Array.isArray(allResults)) {
-        const normalize = (v) => (v || '').toString().trim().toLowerCase();
-        const userResults = allResults.filter((r) => {
-          return normalize(r.userEmail) === normalize(currentUser.email) ||
-                 normalize(r.instagramId) === normalize(currentUser.instagramId);
-        });
-        
-        setQuizResults(userResults);
-        
-        let totalScore = 0;
-        let totalQuestions = 0;
-        let totalCorrect = 0;
-        let bestScore = 0;
-        let totalPercentage = 0;
-        
-        userResults.forEach((result) => {
-          totalScore += result.score || 0;
-          totalQuestions += result.totalQuestions || 0;
-          totalCorrect += result.correctCount || result.score || 0;
-          bestScore = Math.max(bestScore, result.score || 0);
-          totalPercentage += result.percentage || 0;
-        });
-        
-        const totalWrong = totalQuestions - totalCorrect;
-        const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
-        const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
-        
-        setStats((prev) => ({
-          ...prev,
-          totalScore,
-          totalQuizzes: userResults.length,
-          correctAnswers: totalCorrect,
-          wrongAnswers: totalWrong,
-          accuracy,
-          bestScore,
-          averagePercentage: avgPercentage,
-        }));
-      }
+      setQuizResults(userResults);
+      
+      // Calculate stats
+      let totalScore = 0;
+      let totalQuestions = 0;
+      let totalCorrect = 0;
+      let bestScore = 0;
+      let totalPercentage = 0;
+      
+      userResults.forEach((result) => {
+        totalScore += result.score || 0;
+        totalQuestions += result.totalQuestions || 0;
+        totalCorrect += result.correctCount || result.score || 0;
+        bestScore = Math.max(bestScore, result.score || 0);
+        totalPercentage += result.percentage || 0;
+      });
+      
+      const totalWrong = totalQuestions - totalCorrect;
+      const accuracy = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
+      const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
+      
+      setStats({
+        totalScore: userLeaderboard?.score || totalScore,
+        totalQuizzes: userResults.length,
+        correctAnswers: totalCorrect,
+        wrongAnswers: totalWrong,
+        accuracy,
+        bestScore,
+        averagePercentage: avgPercentage,
+        rank: 0
+      });
     } catch (error) {
       console.error('Error fetching user data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -140,36 +135,28 @@ export default function ProfilePage() {
       const data = await response.json();
       
       if (data.success) {
-        // Update localStorage
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
-        
-        setMessage({ text: '✅ Instagram ID updated successfully!', type: 'success' });
+        setMessage({ text: '✅ Instagram ID updated!', type: 'success' });
         setTimeout(() => setMessage(null), 3000);
         
-        // Refresh data
+        // Refresh data without full page reload
         fetchUserData(updatedUser);
         fetchUserRank(updatedUser);
       } else {
-        setMessage({ text: '❌ Failed to update Instagram ID', type: 'error' });
+        setMessage({ text: '❌ Update failed', type: 'error' });
         setTimeout(() => setMessage(null), 3000);
       }
     } catch (error) {
-      console.error('Error updating Instagram ID:', error);
-      setMessage({ text: '❌ Error updating Instagram ID', type: 'error' });
+      setMessage({ text: '❌ Error updating', type: 'error' });
       setTimeout(() => setMessage(null), 3000);
     }
-    
     setShowEditModal(false);
   };
 
-  const showToast = (text, type) => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  if (loading) {
+  // Show loading only on first load
+  if (loading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
@@ -188,12 +175,12 @@ export default function ProfilePage() {
 
       {/* Toast Message */}
       {message && (
-        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+        <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg animate-slide-in ${message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
           {message.text}
         </div>
       )}
 
-      {/* Profile Header */}
+      {/* Profile Header - No loading, shows immediately */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-12">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6">
@@ -245,23 +232,23 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Shows immediately with data as it loads */}
       <div className="max-w-4xl mx-auto px-5 -mt-6">
         <div className="bg-white rounded-2xl shadow-xl p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition">
+            <div className="text-center p-3 bg-blue-50 rounded-xl">
               <p className="text-gray-500 text-xs">Total Score</p>
               <p className="text-2xl font-bold text-blue-600">{stats.totalScore}</p>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-xl hover:bg-green-100 transition">
+            <div className="text-center p-3 bg-green-50 rounded-xl">
               <p className="text-gray-500 text-xs">Quizzes Taken</p>
               <p className="text-2xl font-bold text-green-600">{stats.totalQuizzes}</p>
             </div>
-            <div className="text-center p-3 bg-purple-50 rounded-xl hover:bg-purple-100 transition">
+            <div className="text-center p-3 bg-purple-50 rounded-xl">
               <p className="text-gray-500 text-xs">Correct Answers</p>
               <p className="text-xl font-bold text-purple-600">{stats.correctAnswers}</p>
             </div>
-            <div className="text-center p-3 bg-orange-50 rounded-xl hover:bg-orange-100 transition">
+            <div className="text-center p-3 bg-orange-50 rounded-xl">
               <p className="text-gray-500 text-xs">Accuracy</p>
               <p className="text-xl font-bold text-orange-600">{stats.accuracy}%</p>
             </div>
@@ -326,7 +313,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Quiz History */}
+      {/* Quiz History - Lazy loaded */}
       <div className="max-w-4xl mx-auto px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -342,12 +329,12 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {quizResults.map((quiz, idx) => (
+              {quizResults.slice(0, 10).map((quiz, idx) => (
                 <div key={quiz._id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
-                      <p className="text-xs text-gray-500">{new Date(quiz.date).toLocaleDateString()} at {new Date(quiz.date).toLocaleTimeString()}</p>
+                      <p className="text-xs text-gray-500">{new Date(quiz.date).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
@@ -360,6 +347,27 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
+              {quizResults.length > 10 && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-sm text-green-600 hover:underline">View all {quizResults.length} quizzes</summary>
+                  <div className="mt-2 space-y-3">
+                    {quizResults.slice(10).map((quiz, idx) => (
+                      <div key={quiz._id || idx} className="border-b pb-3 hover:bg-gray-50 p-2 rounded-lg transition">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-semibold text-gray-800">Quiz #{quizResults.length - (idx + 11)}</p>
+                            <p className="text-xs text-gray-500">{new Date(quiz.date).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
+                            <p className="text-xs text-gray-500">{quiz.percentage}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           )}
         </div>
@@ -367,7 +375,7 @@ export default function ProfilePage() {
 
       {/* Action Buttons */}
       <div className="max-w-4xl mx-auto px-5 mt-6 flex gap-3">
-        <Link href="/quiz" className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-semibold text-center hover:shadow-lg transition transform hover:scale-105">
+        <Link href="/quiz" className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-semibold text-center hover:shadow-lg transition">
           🎯 Take New Quiz
         </Link>
         <Link href="/leaderboard" className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold text-center hover:bg-gray-300 transition">
@@ -430,6 +438,22 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
