@@ -31,6 +31,17 @@ export default function ProfilePage() {
     const currentUser = JSON.parse(storedUser);
     setUser(currentUser);
     setNewInstagramId(currentUser.instagramId || '');
+    
+    // Load cached data instantly
+    const cachedStats = localStorage.getItem(`profileStats_${currentUser.instagramId}`);
+    if (cachedStats) {
+      try {
+        const parsed = JSON.parse(cachedStats);
+        setStats(prev => ({ ...prev, ...parsed }));
+      } catch(e) {}
+    }
+    
+    // Fetch fresh data in background
     loadUserData(currentUser);
   }, [router]);
 
@@ -65,11 +76,14 @@ export default function ProfilePage() {
       const avgPercentage = userResults.length > 0 ? (totalPercentage / userResults.length).toFixed(1) : 0;
       const rank = leaderboard.findIndex(u => u.instagramId?.toLowerCase() === currentUser.instagramId?.toLowerCase()) + 1;
       
-      setStats({
+      const newStats = {
         totalScore, totalQuizzes: userResults.length, correctAnswers: totalCorrect,
         wrongAnswers: totalWrong, accuracy: Math.min(accuracy, 100), bestScore,
         averagePercentage: Math.min(avgPercentage, 100), rank: rank || 0
-      });
+      };
+      
+      setStats(newStats);
+      localStorage.setItem(`profileStats_${currentUser.instagramId}`, JSON.stringify(newStats));
     } catch (error) {
       console.error('Error:', error);
     }
@@ -90,6 +104,9 @@ export default function ProfilePage() {
         const updatedUser = { ...user, instagramId: newInstagramId.replace('@', '') };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
+        
+        // Clear cached stats for old Instagram ID
+        localStorage.removeItem(`profileStats_${user.instagramId}`);
         loadUserData(updatedUser);
       } catch (error) { console.error('Error:', error); }
     }
