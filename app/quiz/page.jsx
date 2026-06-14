@@ -13,7 +13,6 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [showReview, setShowReview] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState([]);
   const [userAnswers, setUserAnswers] = useState([]);
   const [user, setUser] = useState(null);
@@ -29,6 +28,7 @@ export default function QuizPage() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [finalTimeTaken, setFinalTimeTaken] = useState('00:00');
+  const [loading, setLoading] = useState(true);
 
   // Live clock
   useEffect(() => {
@@ -55,8 +55,6 @@ export default function QuizPage() {
 
   const checkQuizLockStatus = async (userData) => {
     try {
-      setLoading(true);
-      
       const res = await fetch('/api/questions');
       const serverQuestions = await res.json();
       const serverHash = serverQuestions.map(q => q._id).join(',');
@@ -99,13 +97,13 @@ export default function QuizPage() {
   // Timer effect
   useEffect(() => {
     let timer;
-    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
+    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted && !loading) {
       timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
+    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked && !loading) {
       handleSubmitAnswer();
     }
     return () => clearTimeout(timer);
-  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted]);
+  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted, loading]);
 
   const handleAnswerSelect = (answer) => {
     if (quizLocked || quizCompleted || answeredQuestions[currentQuestion]) return;
@@ -156,7 +154,6 @@ export default function QuizPage() {
       if (answer && questions[idx] && answer === questions[idx].answer) finalScore++;
     });
     
-    // ✅ Calculate FINAL time taken (capture once, not live)
     const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
@@ -268,10 +265,9 @@ export default function QuizPage() {
   const formattedDate = currentDateTime.toLocaleDateString();
 
   // ========== RESULT PAGE ==========
-  if ((quizCompleted && showResults && !showReview && !loading) || (quizLocked && !showReview && !loading)) {
+  if ((quizCompleted && showResults && !showReview) || (quizLocked && !showReview)) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
-    // Use finalTimeTaken from state or localStorage
     const displayTime = finalTimeTaken || '00:00';
     
     return (
@@ -297,7 +293,6 @@ export default function QuizPage() {
 
         <div className="max-w-md mx-auto px-4 py-3">
           
-          {/* Result Box - Date and Time Taken */}
           <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">
             <div className="flex justify-around items-center">
               <div className="text-center">
@@ -370,7 +365,6 @@ export default function QuizPage() {
               </div>
             </div>
           </div>
-
 
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
@@ -487,7 +481,7 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <AdSpace type="banner" className="mx-4 mt-2" />
-#        
+        
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-6 pb-5">
           <div className="text-center">
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
@@ -557,24 +551,13 @@ export default function QuizPage() {
     );
   }
 
-  if (loading) {
+  // Show loading only during initial data fetch
+  if (loading || questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (questions.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-            <span className="text-3xl">⌘</span>
-          </div>
-          <h2 className="text-xl font-bold text-gray-800">No Questions Available</h2>
-          <p className="text-gray-500 text-sm mt-2">Please add questions from admin panel.</p>
-          <Link href="/" className="text-green-600 mt-4 inline-block">← Back to Home</Link>
+          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-gray-500 mt-4">Loading quiz...</p>
         </div>
       </div>
     );
@@ -585,14 +568,14 @@ export default function QuizPage() {
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const isQuestionAnswered = answeredQuestions[currentQuestion];
 
-  // ========== ACTIVE QUIZ PAGE (NO PREVIOUS BUTTON) ==========
+  // ========== ACTIVE QUIZ PAGE ==========
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Date Box - Only Date */}
+        {/* Date Box */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
           <div className="flex justify-center items-center">
             <div className="text-center">
@@ -605,7 +588,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Timer Box - Single Timer (Time Remaining) */}
+        {/* Timer Box */}
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
           <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
@@ -701,7 +684,7 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* Navigation Buttons - NO PREVIOUS BUTTON */}
+        {/* Navigation Buttons */}
         <div className="flex gap-2 mt-2">
           <button 
             onClick={handleSubmitAnswer} 
