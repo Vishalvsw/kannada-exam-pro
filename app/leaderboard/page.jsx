@@ -80,7 +80,7 @@ export default function LeaderboardPage() {
     }
   };
 
-  // FIXED: Proper date filtering based on lastQuizDate
+  // Date filtering based on lastQuizDate
   const filterUsersByTime = (users, period) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -88,10 +88,7 @@ export default function LeaderboardPage() {
     return users.filter(user => {
       if (period === 'all') return true;
       
-      // Get the date from user's last quiz attempt
       let userDate = null;
-      
-      // Try multiple possible date fields
       if (user.lastQuizDate) {
         userDate = new Date(user.lastQuizDate);
       } else if (user.updatedAt) {
@@ -100,33 +97,25 @@ export default function LeaderboardPage() {
         userDate = new Date(user.createdAt);
       }
       
-      // If no date available, include in 'all' only
       if (!userDate || isNaN(userDate.getTime())) {
         return period === 'all';
       }
       
-      // Reset time part for accurate day comparison
       const userDay = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
       const diffDays = Math.floor((today - userDay) / (1000 * 60 * 60 * 24));
       
-      if (period === 'today') {
-        return diffDays === 0;
-      }
-      if (period === 'week') {
-        return diffDays <= 7;
-      }
-      if (period === 'month') {
-        return diffDays <= 30;
-      }
+      if (period === 'today') return diffDays === 0;
+      if (period === 'week') return diffDays <= 7;
+      if (period === 'month') return diffDays <= 30;
       return true;
     });
   };
 
   const tabs = [
-    { id: 'all', label: '🏆 All-Time', icon: '🏆' },
-    { id: 'today', label: '📅 Today', icon: '📅' },
-    { id: 'week', label: '📆 This Week', icon: '📆' },
-    { id: 'month', label: '📊 This Month', icon: '📊' }
+    { id: 'all', label: '🏆 All-Time' },
+    { id: 'today', label: '📅 Today' },
+    { id: 'week', label: '📆 This Week' },
+    { id: 'month', label: '📊 This Month' }
   ];
 
   const filteredUsers = filterUsersByTime(users, activeTab);
@@ -144,11 +133,6 @@ export default function LeaderboardPage() {
   const handleManualRefresh = () => {
     fetchLeaderboard(false);
   };
-
-  // Get counts for each filter
-  const todayCount = filterUsersByTime(users, 'today').length;
-  const weekCount = filterUsersByTime(users, 'week').length;
-  const monthCount = filterUsersByTime(users, 'month').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
@@ -205,46 +189,19 @@ export default function LeaderboardPage() {
 
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`py-2 text-xs font-medium rounded-lg transition-all duration-300 ${
-              activeTab === 'all'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md transform scale-105'
-                : 'text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            🏆 All-Time ({totalParticipants})
-          </button>
-          <button
-            onClick={() => setActiveTab('today')}
-            className={`py-2 text-xs font-medium rounded-lg transition-all duration-300 ${
-              activeTab === 'today'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md transform scale-105'
-                : 'text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            📅 Today ({todayCount})
-          </button>
-          <button
-            onClick={() => setActiveTab('week')}
-            className={`py-2 text-xs font-medium rounded-lg transition-all duration-300 ${
-              activeTab === 'week'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md transform scale-105'
-                : 'text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            📆 This Week ({weekCount})
-          </button>
-          <button
-            onClick={() => setActiveTab('month')}
-            className={`py-2 text-xs font-medium rounded-lg transition-all duration-300 ${
-              activeTab === 'month'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md transform scale-105'
-                : 'text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            📊 This Month ({monthCount})
-          </button>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 text-xs font-medium rounded-lg transition-all duration-300 ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md transform scale-105'
+                  : 'text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -374,6 +331,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-
-
-// 
