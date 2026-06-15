@@ -5,57 +5,50 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'all';
-    const timestamp = searchParams.get('t');
     
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    // Get current date for filtering
-    const now = new Date();
-    let dateFilter = {};
-    
-    switch(filter) {
-      case 'today':
-        const todayStart = new Date(now.setHours(0, 0, 0, 0));
-        dateFilter = { lastQuizDate: { $gte: todayStart } };
-        break;
-      case 'week':
-        const weekAgo = new Date(now.setDate(now.getDate() - 7));
-        dateFilter = { lastQuizDate: { $gte: weekAgo } };
-        break;
-      case 'month':
-        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-        dateFilter = { lastQuizDate: { $gte: monthAgo } };
-        break;
-      default:
-        dateFilter = {};
-    }
-    
-    // Get users with their scores (from users collection first)
+    // Get all users with scores > 0
     let users = await db.collection('users')
-      .find({ score: { $gt: 0 }, ...dateFilter })
+      .find({ score: { $gt: 0 } })
       .sort({ score: -1 })
       .limit(100)
       .toArray();
     
-    // If no users found with date filter, get all users with scores
-    if (users.length === 0 && filter !== 'all') {
-      users = await db.collection('users')
-        .find({ score: { $gt: 0 } })
-        .sort({ score: -1 })
-        .limit(100)
-        .toArray();
+    console.log(`Leaderboard API: Found ${users.length} users with scores > 0`);
+    
+    // Also include users who have quiz results but might not be in users collection
+    const quizResults = await db.collection('quizresults').aggregate([
+      { $group: { _id: "$instagramId", totalScore: { $sum: "$score" }, count: { $sum: 1 } } },
+      { $match: { totalScore: { $gt: 0 } } }
+    ]).toArray();
+    
+    // Merge any missing users from quiz results
+    for (const quizUser of quizResults) {
+      if (quizUser._id && !users.find(u => u.instagramId === quizUser._id)) {
+        users.push({
+          instagramId: quizUser._id,
+          name: quizUser._id,
+          score: quizUser.totalScore,
+          totalQuizzesTaken: quizUser.count,
+          lastQuizDate: new Date()
+        });
+      }
     }
     
-    // Format users for leaderboard
+    // Re-sort after merge
+    users.sort((a, b) => (b.score || 0) - (a.score || 0));
+    
+    // Format users
     const formattedUsers = users.map(user => ({
       _id: user._id,
-      name: user.name || 'Anonymous',
+      name: user.name || user.instagramId || 'Anonymous',
       instagramId: user.instagramId || 'user',
       score: user.score || 0,
       totalQuizzesTaken: user.totalQuizzesTaken || 0,
       lastQuizDate: user.lastQuizDate,
-      profileImage: user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=8b5cf6&color=fff`,
+      profileImage: user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.instagramId || 'User')}&background=8b5cf6&color=fff`,
     }));
     
     return NextResponse.json(formattedUsers, {
