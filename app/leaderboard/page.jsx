@@ -295,13 +295,9 @@ export default function LeaderboardPage() {
             <summary className="cursor-pointer text-sm font-semibold text-gray-600 bg-gray-100 px-4 py-2 rounded-lg inline-flex items-center gap-2 hover:bg-gray-200 transition">
               
 
-              {/*  below 100  only */}
-              {sortedFilteredUsers.length < 100 ? (
-                <span>View Remaining {remainingUsers.length} Rankers</span>
-              ) : (
-                <span>View Remaining Rankers (#{topTen.length + 1} to #{sortedFilteredUsers.length})</span>
-              )}  
-              
+              {/*  100 user data i want show*/}
+              View Remaining {sortedFilteredUsers.length - 10} Rankers
+
              
               <svg className="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
