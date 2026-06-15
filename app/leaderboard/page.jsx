@@ -61,17 +61,20 @@ export default function LeaderboardPage() {
         allUsers = data.users;
       }
       
-      // Show ALL users with scores (NO LIMIT)
+      // Get users with scores > 0
       const usersWithScores = allUsers.filter(user => (user.score || 0) > 0);
       const sortedUsers = usersWithScores.sort((a, b) => (b.score || 0) - (a.score || 0));
       
-      setUsers(sortedUsers);
-      setTotalParticipants(sortedUsers.length);
+      // SHOW ONLY TOP 100 USERS
+      const top100Users = sortedUsers.slice(0, 100);
+      
+      setUsers(top100Users);
+      setTotalParticipants(sortedUsers.length); // Keep total count for display
       setLastUpdated(new Date());
       setError(null);
       
       localStorage.setItem('cachedLeaderboard', JSON.stringify({
-        users: sortedUsers,
+        users: top100Users,
         total: sortedUsers.length,
         timestamp: Date.now()
       }));
@@ -126,7 +129,8 @@ export default function LeaderboardPage() {
   const sortedFilteredUsers = [...filteredUsers].sort((a, b) => (b.score || 0) - (a.score || 0));
   const topThree = sortedFilteredUsers.slice(0, 3);
   const topTen = sortedFilteredUsers.slice(0, 10);
-  const remainingUsers = sortedFilteredUsers.slice(10);
+  // Show only top 100, so remainingUsers is from 11 to 100
+  const remainingUsers = sortedFilteredUsers.slice(10, 100);
   
   const currentUserRank = sortedFilteredUsers.findIndex(u => {
     const userId = (u.instagramId || u.email || '').toString().toLowerCase();
@@ -155,7 +159,7 @@ export default function LeaderboardPage() {
           <div className="text-5xl mb-2 animate-bounce">🏆</div>
           <h1 className="text-2xl font-bold">Leaderboard</h1>
           <p className="text-purple-100 text-xs mt-1">
-            {totalParticipants} Active Participants
+            Top 100 Rankers out of {totalParticipants} Active Participants
             {lastUpdated && <span> · Updated {lastUpdated.toLocaleTimeString()}</span>}
           </p>
           <button 
@@ -293,12 +297,7 @@ export default function LeaderboardPage() {
         <div className="max-w-md mx-auto px-4 mt-6 mb-20">
           <details className="group">
             <summary className="cursor-pointer text-sm font-semibold text-gray-600 bg-gray-100 px-4 py-2 rounded-lg inline-flex items-center gap-2 hover:bg-gray-200 transition">
-              
-
-              {/*  100 user data i want show*/}
-              View Remaining {sortedFilteredUsers.length - 10} Rankers
-
-             
+              <span>📋</span> View More Rankers ({remainingUsers.length} of Top 100)
               <svg className="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
