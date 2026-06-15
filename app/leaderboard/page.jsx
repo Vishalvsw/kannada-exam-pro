@@ -152,6 +152,7 @@ export default function LeaderboardPage() {
         <div className="text-center">
           <div className="text-5xl mb-2 animate-bounce">🏆</div>
           <h1 className="text-2xl font-bold">Leaderboard</h1>
+          <p className="text-sm text-purple-200 mt-1">See how you rank against others!</p>
         </div>
       </div>
 
