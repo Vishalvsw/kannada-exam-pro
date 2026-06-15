@@ -12,6 +12,7 @@ export default function LeaderboardPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -32,6 +33,7 @@ export default function LeaderboardPage() {
         setUsers(cached.users || []);
         setTotalParticipants(cached.total || 0);
         setLastUpdated(cached.timestamp ? new Date(cached.timestamp) : null);
+        setLoading(false);
       } catch(e) {}
     }
     
@@ -59,6 +61,7 @@ export default function LeaderboardPage() {
         allUsers = data.users;
       }
       
+      // Show ALL users with scores (NO LIMIT)
       const usersWithScores = allUsers.filter(user => (user.score || 0) > 0);
       const sortedUsers = usersWithScores.sort((a, b) => (b.score || 0) - (a.score || 0));
       
@@ -77,6 +80,7 @@ export default function LeaderboardPage() {
       if (!silent) setError(error.message);
     } finally {
       if (!silent) setRefreshing(false);
+      setLoading(false);
     }
   };
 
@@ -133,6 +137,14 @@ export default function LeaderboardPage() {
   const handleManualRefresh = () => {
     fetchLeaderboard(false);
   };
+
+  if (loading && users.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
