@@ -129,11 +129,17 @@ export default function LeaderboardPage() {
   const topTen = sortedFilteredUsers.slice(0, 10);
   const remainingUsers = sortedFilteredUsers.slice(10, 100);
   
+  // Calculate user's actual score from quiz results for display
   const currentUserRank = sortedFilteredUsers.findIndex(u => {
     const userId = (u.instagramId || u.email || '').toString().toLowerCase();
     const currentId = (currentUser?.instagramId || currentUser?.email || '').toString().toLowerCase();
     return userId === currentId && userId !== '';
   }) + 1;
+  
+  // Get user's actual score from the leaderboard data
+  const userScore = currentUser ? (sortedFilteredUsers.find(u => 
+    (u.instagramId || u.email || '').toString().toLowerCase() === (currentUser?.instagramId || currentUser?.email || '').toString().toLowerCase()
+  )?.score || currentUser.score || 0) : 0;
 
   const handleManualRefresh = () => {
     fetchLeaderboard(false);
@@ -180,7 +186,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Your Rank Card */}
+      {/* Your Rank Card - Shows Actual Score */}
       {currentUser && currentUserRank > 0 && currentUserRank <= sortedFilteredUsers.length && (
         <div className="max-w-md mx-auto px-4 mt-4">
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200 shadow-lg">
@@ -196,7 +202,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500 font-semibold">Your Score</p>
-                <p className="text-2xl font-bold text-purple-600">{currentUser.score || 0}</p>
+                <p className="text-2xl font-bold text-purple-600">{userScore}</p>
               </div>
             </div>
           </div>
