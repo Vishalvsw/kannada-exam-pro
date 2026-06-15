@@ -61,7 +61,6 @@ export default function LeaderboardPage() {
         allUsers = data.users;
       }
       
-      // Get users with scores > 0
       const usersWithScores = allUsers.filter(user => (user.score || 0) > 0);
       const sortedUsers = usersWithScores.sort((a, b) => (b.score || 0) - (a.score || 0));
       
@@ -69,7 +68,7 @@ export default function LeaderboardPage() {
       const top100Users = sortedUsers.slice(0, 100);
       
       setUsers(top100Users);
-      setTotalParticipants(sortedUsers.length); // Keep total count for display
+      setTotalParticipants(sortedUsers.length);
       setLastUpdated(new Date());
       setError(null);
       
@@ -87,7 +86,6 @@ export default function LeaderboardPage() {
     }
   };
 
-  // Date filtering based on lastQuizDate
   const filterUsersByTime = (users, period) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -129,7 +127,6 @@ export default function LeaderboardPage() {
   const sortedFilteredUsers = [...filteredUsers].sort((a, b) => (b.score || 0) - (a.score || 0));
   const topThree = sortedFilteredUsers.slice(0, 3);
   const topTen = sortedFilteredUsers.slice(0, 10);
-  // Show only top 100, so remainingUsers is from 11 to 100
   const remainingUsers = sortedFilteredUsers.slice(10, 100);
   
   const currentUserRank = sortedFilteredUsers.findIndex(u => {
@@ -154,6 +151,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
+      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">
         <div className="text-center">
           <div className="text-5xl mb-2 animate-bounce">🏆</div>
@@ -172,6 +170,7 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
+      {/* Error Message */}
       {error && (
         <div className="max-w-md mx-auto px-4 mt-4">
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
@@ -181,6 +180,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Your Rank Card */}
       {currentUser && currentUserRank > 0 && currentUserRank <= sortedFilteredUsers.length && (
         <div className="max-w-md mx-auto px-4 mt-4">
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200 shadow-lg">
@@ -203,6 +203,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Tabs */}
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-100 rounded-lg p-1">
           {tabs.map(tab => (
@@ -221,11 +222,13 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
+      {/* Top 3 Podium */}
       {topThree.length >= 1 && (
         <div className="max-w-md mx-auto px-4 mt-8">
           <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <h3 className="text-center text-sm font-bold text-gray-600 mb-6">🏆 Top Performers 🏆</h3>
             <div className="flex justify-center items-end gap-2">
+              {/* 2nd Place */}
               {topThree[1] && (
                 <div className="text-center w-24">
                   <div className="w-16 h-16 mx-auto bg-gradient-to-r from-gray-300 to-gray-400 rounded-full flex items-center justify-center text-3xl ring-2 ring-gray-400 shadow-md">🥈</div>
@@ -237,6 +240,7 @@ export default function LeaderboardPage() {
                 </div>
               )}
 
+              {/* 1st Place */}
               {topThree[0] && (
                 <div className="text-center w-28 -mt-6">
                   <div className="w-20 h-20 mx-auto bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center text-4xl ring-4 ring-yellow-400 shadow-lg animate-pulse">👑</div>
@@ -248,6 +252,7 @@ export default function LeaderboardPage() {
                 </div>
               )}
 
+              {/* 3rd Place */}
               {topThree[2] && (
                 <div className="text-center w-24">
                   <div className="w-16 h-16 mx-auto bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-3xl ring-2 ring-orange-500 shadow-md">🥉</div>
@@ -263,11 +268,11 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Top 10 List */}
       {topTen.length > 0 && (
         <div className="max-w-md mx-auto px-4 mt-6">
           <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
             <span className="text-purple-600">⭐</span> Top 10 Rankers
-            <span className="text-xs text-gray-400 font-normal">({topTen.length} of {sortedFilteredUsers.length})</span>
           </h2>
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {topTen.map((user, idx) => {
@@ -293,6 +298,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* View More Rankers (Ranks 11-100) */}
       {remainingUsers.length > 0 && (
         <div className="max-w-md mx-auto px-4 mt-6 mb-20">
           <details className="group">
@@ -326,22 +332,38 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {/* Empty State */}
       {sortedFilteredUsers.length === 0 && !error && (
         <div className="max-w-md mx-auto px-4 mt-12 text-center">
           <div className="text-6xl mb-3">🏆</div>
           <p className="text-gray-600 font-medium">No rankings yet for this period</p>
           <p className="text-xs text-gray-400 mt-1">Take a quiz to appear on leaderboard!</p>
-          <Link href="/quiz"><button className="mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">Take First Quiz →</button></Link>
+          <Link href="/quiz">
+            <button className="mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
+              Take First Quiz →
+            </button>
+          </Link>
         </div>
       )}
 
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg z-50">
         <div className="flex justify-around max-w-md mx-auto">
-          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">🏠</span><span className="text-xs">Home</span></Link>
-          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">📰</span><span className="text-xs">Current</span></Link>
-          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">🎯</span><span className="text-xs">Test</span></Link>
-          <Link href="/leaderboard" className="flex flex-col items-center text-purple-600"><span className="text-xl">🏆</span><span className="text-xs">Rank</span></Link>
-          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition"><span className="text-xl">👤</span><span className="text-xs">Profile</span></Link>
+          <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">🏠</span><span className="text-xs">Home</span>
+          </Link>
+          <Link href="/current-affairs" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">📰</span><span className="text-xs">Current</span>
+          </Link>
+          <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">🎯</span><span className="text-xs">Test</span>
+          </Link>
+          <Link href="/leaderboard" className="flex flex-col items-center text-purple-600">
+            <span className="text-xl">🏆</span><span className="text-xs">Rank</span>
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-purple-600 transition">
+            <span className="text-xl">👤</span><span className="text-xs">Profile</span>
+          </Link>
         </div>
       </div>
     </div>
