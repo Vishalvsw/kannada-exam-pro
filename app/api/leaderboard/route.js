@@ -3,67 +3,70 @@ import clientPromise from '@/lib/mongodb';
 
 export async function GET(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    const { searchParams } = new URL(request.url);
+    const filter = searchParams.get('filter') || 'all';
+    const timestamp = searchParams.get('t');
     
-    // Get all users with scores > 0
-    const users = await db.collection('users')
-      .find({ score: { $gt: 0 } })
-      .project({ 
-        name: 1, 
-        instagramId: 1, 
-        score: 1, 
-        totalQuizzesTaken: 1, 
-        profileImage: 1,
-        lastQuizDate: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        _id: 1
-      })
+    const client = await clientPromise;
+    const db = client.db("kannada_exam_pro");
+    
+    // Get current date for filtering
+    const now = new Date();
+    let dateFilter = {};
+    
+    switch(filter) {
+      case 'today':
+        const todayStart = new Date(now.setHours(0, 0, 0, 0));
+        dateFilter = { lastQuizDate: { $gte: todayStart } };
+        break;
+      case 'week':
+        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+        dateFilter = { lastQuizDate: { $gte: weekAgo } };
+        break;
+      case 'month':
+        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+        dateFilter = { lastQuizDate: { $gte: monthAgo } };
+        break;
+      default:
+        dateFilter = {};
+    }
+    
+    // Get users with their scores (from users collection first)
+    let users = await db.collection('users')
+      .find({ score: { $gt: 0 }, ...dateFilter })
       .sort({ score: -1 })
       .limit(100)
       .toArray();
     
-    // Ensure every user has a lastQuizDate (use createdAt as fallback)
-    const formattedUsers = users.map(user => ({
-      ...user,
-      lastQuizDate: user.lastQuizDate || user.updatedAt || user.createdAt || new Date()
-    }));
+    // If no users found with date filter, get all users with scores
+    if (users.length === 0 && filter !== 'all') {
+      users = await db.collection('users')
+        .find({ score: { $gt: 0 } })
+        .sort({ score: -1 })
+        .limit(100)
+        .toArray();
+    }
     
-    console.log(`Leaderboard API: Returning ${formattedUsers.length} users with lastQuizDate`);
+    // Format users for leaderboard
+    const formattedUsers = users.map(user => ({
+      _id: user._id,
+      name: user.name || 'Anonymous',
+      instagramId: user.instagramId || 'user',
+      score: user.score || 0,
+      totalQuizzesTaken: user.totalQuizzesTaken || 0,
+      lastQuizDate: user.lastQuizDate,
+      profileImage: user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=8b5cf6&color=fff`,
+    }));
     
     return NextResponse.json(formattedUsers, {
       headers: {
-        'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       }
     });
   } catch (error) {
-    console.error('Leaderboard error:', error);
+    console.error('Leaderboard Error:', error);
     return NextResponse.json([]);
-  }
-}
-
-export async function POST(request) {
-  try {
-    const client = await clientPromise;
-    const db = client.db();
-    
-    const { name, instagramId, score, totalQuizzesTaken, profileImage } = await request.json();
-    
-    const result = await db.collection('users').insertOne({
-      name,
-      instagramId,
-      score,
-      totalQuizzesTaken,
-      profileImage,
-      createdAt: new Date(),
-      lastQuizDate: new Date(),
-      updatedAt: new Date()
-    });
-    
-    return NextResponse.json({ id: result.insertedId });
-  } catch (error) {
-    console.error('Leaderboard POST error:', error);
-    return NextResponse.json({ error: 'Failed to submit leaderboard entry' }, { status: 500 });
   }
 }
