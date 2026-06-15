@@ -7,7 +7,6 @@ import AdSpace from '@/components/AdSpace';
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
-  const [totalParticipants, setTotalParticipants] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [error, setError] = useState(null);
@@ -31,7 +30,6 @@ export default function LeaderboardPage() {
       try {
         const cached = JSON.parse(cachedLeaderboard);
         setUsers(cached.users || []);
-        setTotalParticipants(cached.total || 0);
         setLastUpdated(cached.timestamp ? new Date(cached.timestamp) : null);
         setLoading(false);
       } catch(e) {}
@@ -68,13 +66,11 @@ export default function LeaderboardPage() {
       const top100Users = sortedUsers.slice(0, 100);
       
       setUsers(top100Users);
-      setTotalParticipants(sortedUsers.length);
       setLastUpdated(new Date());
       setError(null);
       
       localStorage.setItem('cachedLeaderboard', JSON.stringify({
         users: top100Users,
-        total: sortedUsers.length,
         timestamp: Date.now()
       }));
     } catch (error) {
@@ -129,21 +125,15 @@ export default function LeaderboardPage() {
   const topTen = sortedFilteredUsers.slice(0, 10);
   const remainingUsers = sortedFilteredUsers.slice(10, 100);
   
-  // Calculate user's actual score from quiz results for display
   const currentUserRank = sortedFilteredUsers.findIndex(u => {
     const userId = (u.instagramId || u.email || '').toString().toLowerCase();
     const currentId = (currentUser?.instagramId || currentUser?.email || '').toString().toLowerCase();
     return userId === currentId && userId !== '';
   }) + 1;
   
-  // Get user's actual score from the leaderboard data
   const userScore = currentUser ? (sortedFilteredUsers.find(u => 
     (u.instagramId || u.email || '').toString().toLowerCase() === (currentUser?.instagramId || currentUser?.email || '').toString().toLowerCase()
   )?.score || currentUser.score || 0) : 0;
-
-  const handleManualRefresh = () => {
-    fetchLeaderboard(false);
-  };
 
   if (loading && users.length === 0) {
     return (
@@ -157,22 +147,11 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
-      {/* Header */}
+      {/* Header - Removed participant count and refresh button */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">
         <div className="text-center">
           <div className="text-5xl mb-2 animate-bounce">🏆</div>
           <h1 className="text-2xl font-bold">Leaderboard</h1>
-          <p className="text-purple-100 text-xs mt-1">
-            Top 100 Rankers out of {totalParticipants} Active Participants
-            {lastUpdated && <span> · Updated {lastUpdated.toLocaleTimeString()}</span>}
-          </p>
-          <button 
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            className="mt-2 text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition disabled:opacity-50"
-          >
-            {refreshing ? '🔄 Refreshing...' : '🔄 Refresh Now'}
-          </button>
         </div>
       </div>
 
@@ -186,7 +165,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Your Rank Card - Shows Actual Score */}
+      {/* Your Rank Card */}
       {currentUser && currentUserRank > 0 && currentUserRank <= sortedFilteredUsers.length && (
         <div className="max-w-md mx-auto px-4 mt-4">
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200 shadow-lg">
