@@ -73,6 +73,18 @@ export default function LeaderboardPage() {
         users: top100Users,
         timestamp: Date.now()
       }));
+
+      // Update current user's data
+      if (currentUser) {
+        const updatedUser = top100Users.find(u => 
+          (u.instagramId || '').toLowerCase() === (currentUser.instagramId || '').toLowerCase()
+        );
+        if (updatedUser) {
+          const mergedUser = { ...currentUser, ...updatedUser };
+          localStorage.setItem('user', JSON.stringify(mergedUser));
+          setCurrentUser(mergedUser);
+        }
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       if (!silent) setError(error.message);
@@ -125,15 +137,38 @@ export default function LeaderboardPage() {
   const topTen = sortedFilteredUsers.slice(0, 10);
   const remainingUsers = sortedFilteredUsers.slice(10, 100);
   
-  const currentUserRank = sortedFilteredUsers.findIndex(u => {
-    const userId = (u.instagramId || u.email || '').toString().toLowerCase();
-    const currentId = (currentUser?.instagramId || currentUser?.email || '').toString().toLowerCase();
-    return userId === currentId && userId !== '';
-  }) + 1;
+  // Find current user's rank and score
+  let currentUserRank = -1;
+  let currentUserScore = 0;
   
-  const userScore = currentUser ? (sortedFilteredUsers.find(u => 
-    (u.instagramId || u.email || '').toString().toLowerCase() === (currentUser?.instagramId || currentUser?.email || '').toString().toLowerCase()
-  )?.score || currentUser.score || 0) : 0;
+  if (currentUser) {
+    const currentUserId = (currentUser.instagramId || '').toString().toLowerCase();
+    
+    // Find user in sorted list
+    const foundIndex = sortedFilteredUsers.findIndex(u => {
+      const userId = (u.instagramId || '').toString().toLowerCase();
+      return userId === currentUserId && userId !== '';
+    });
+    
+    if (foundIndex !== -1) {
+      currentUserRank = foundIndex + 1;
+      currentUserScore = sortedFilteredUsers[foundIndex].score || 0;
+    } else {
+      // User not in top 100, use stored score
+      currentUserScore = currentUser.score || 0;
+    }
+  }
+
+  // Format time
+  const formatTime = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
 
   if (loading && users.length === 0) {
     return (
@@ -147,12 +182,17 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
-      {/* Header - Removed participant count and refresh button */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">
         <div className="text-center">
           <div className="text-5xl mb-2 animate-bounce">🏆</div>
           <h1 className="text-2xl font-bold">Leaderboard</h1>
           <p className="text-sm text-purple-200 mt-1">See how you rank against others!</p>
+          {lastUpdated && (
+            <p className="text-[10px] text-purple-300 mt-2 opacity-75">
+              Updated {formatTime(lastUpdated)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -166,23 +206,42 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {/* Your Rank Card */}
-      {currentUser && currentUserRank > 0 && currentUserRank <= sortedFilteredUsers.length && (
+      {/* ===== YOUR RANK CARD - FIXED ===== */}
+      {currentUser && (
         <div className="max-w-md mx-auto px-4 mt-4">
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-200 shadow-lg">
+          <div className={`rounded-xl p-4 border-2 shadow-lg ${
+            currentUserRank > 0 && currentUserRank <= 100
+              ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200'
+              : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-300'
+          }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                  #{currentUserRank}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ${
+                  currentUserRank === 1 ? 'bg-yellow-500' :
+                  currentUserRank === 2 ? 'bg-gray-500' :
+                  currentUserRank === 3 ? 'bg-orange-500' :
+                  currentUserRank > 0 && currentUserRank <= 100 ? 'bg-purple-600' :
+                  'bg-gray-400'
+                }`}>
+                  {currentUserRank > 0 && currentUserRank <= 100 ? `#${currentUserRank}` : '—'}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold">Your Rank</p>
-                  <p className="font-bold text-gray-800">@{currentUser.instagramId || currentUser.name}</p>
+                  <p className="text-xs font-semibold text-gray-500">Your Rank</p>
+                  <p className="font-bold text-gray-800">
+                    @{currentUser.instagramId || currentUser.name || 'User'}
+                  </p>
+                  {currentUserRank > 100 || currentUserRank === -1 ? (
+                    <p className="text-[10px] text-gray-400">Not in Top 100</p>
+                  ) : currentUserRank <= 100 && currentUserRank > 0 && (
+                    <p className="text-[10px] text-purple-600 font-medium">
+                      Top {currentUserRank <= 10 ? '10' : currentUserRank <= 25 ? '25' : '100'} Ranker!
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-500 font-semibold">Your Score</p>
-                <p className="text-2xl font-bold text-purple-600">{userScore}</p>
+                <p className="text-xs font-semibold text-gray-500">Your Score</p>
+                <p className="text-3xl font-bold text-purple-600">{currentUserScore || currentUser.score || 0}</p>
               </div>
             </div>
           </div>
