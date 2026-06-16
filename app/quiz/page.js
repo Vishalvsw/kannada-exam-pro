@@ -14,7 +14,7 @@ const OrderingQuestion = ({ question, onOrderChange, isAnswered }) => {
   const englishLetters = ['a', 'b', 'c', 'd', 'e'];
 
   useEffect(() => {
-    if (question?.options) {
+    if (question?.options && question.options.length === 5) {
       const initialItems = question.options.map((opt, idx) => ({
         id: englishLetters[idx],
         kannadaLetter: kannadaLetters[idx],
