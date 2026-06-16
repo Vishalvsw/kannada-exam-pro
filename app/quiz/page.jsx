@@ -30,6 +30,12 @@ export default function QuizPage() {
   const [finalTimeTaken, setFinalTimeTaken] = useState('00:00');
   const [loading, setLoading] = useState(true);
 
+  // Helper function for case-insensitive answer comparison
+  const normalizeAnswer = (answer) => {
+    if (!answer) return '';
+    return answer.toString().trim().toLowerCase();
+  };
+
   // Live clock
   useEffect(() => {
     const interval = setInterval(() => setCurrentDateTime(new Date()), 1000);
@@ -63,7 +69,6 @@ export default function QuizPage() {
       const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
       const savedHash = localStorage.getItem(`quizQuestionsHash_${userData?.instagramId}`);
       
-      // Check if saved results exist and hash matches
       if (savedResults && savedHash === serverHash) {
         const parsed = JSON.parse(savedResults);
         setUserAnswers(parsed.userAnswers || []);
@@ -115,7 +120,8 @@ export default function QuizPage() {
     if (!selectedAnswer && !showExplanation) return;
 
     if (!showExplanation && selectedAnswer) {
-      const isCorrect = selectedAnswer === questions[currentQuestion]?.answer;
+      // Use case-insensitive comparison
+      const isCorrect = normalizeAnswer(selectedAnswer) === normalizeAnswer(questions[currentQuestion]?.answer);
       if (isCorrect) setScore(prev => prev + 1);
       
       const newAnswers = [...answers];
@@ -151,7 +157,9 @@ export default function QuizPage() {
   const calculateScore = () => {
     let finalScore = 0;
     answers.forEach((answer, idx) => {
-      if (answer && questions[idx] && answer === questions[idx].answer) finalScore++;
+      if (answer && questions[idx] && normalizeAnswer(answer) === normalizeAnswer(questions[idx].answer)) {
+        finalScore++;
+      }
     });
     
     const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
@@ -174,7 +182,7 @@ export default function QuizPage() {
         if (answers[i] && !finalUserAnswers[i]) {
           finalUserAnswers[i] = {
             selected: answers[i],
-            isCorrect: answers[i] === questions[i]?.answer,
+            isCorrect: normalizeAnswer(answers[i]) === normalizeAnswer(questions[i]?.answer),
             correctAnswer: questions[i]?.answer,
             question: questions[i]?.question,
             options: questions[i]?.options,
@@ -391,7 +399,7 @@ export default function QuizPage() {
                     </div>
                     <p className="text-[11px] font-medium text-gray-700 line-clamp-2">{item.question?.substring(0, 45)}</p>
                     <div className="mt-1 flex items-center gap-1">
-                      <span className="text-[9px] text-gray-400">Ans:</span>
+                      <span className="text-[9px] text-gray-400">Your Ans:</span>
                       <span className={`text-[10px] font-medium ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                         {item.selected}
                       </span>
@@ -516,8 +524,8 @@ export default function QuizPage() {
                     <div className="space-y-1 mb-2">
                       {item.options?.map((opt, optIdx) => {
                         const letter = String.fromCharCode(65 + optIdx);
-                        const isUserAnswer = item.selected === opt;
-                        const isCorrectAnswer = item.correctAnswer === opt;
+                        const isUserAnswer = normalizeAnswer(item.selected) === normalizeAnswer(opt);
+                        const isCorrectAnswer = normalizeAnswer(item.correctAnswer) === normalizeAnswer(opt);
                         let bgClass = 'bg-gray-50';
                         if (isCorrectAnswer) bgClass = 'bg-green-100';
                         if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
@@ -568,14 +576,12 @@ export default function QuizPage() {
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const isQuestionAnswered = answeredQuestions[currentQuestion];
 
-  // ========== ACTIVE QUIZ PAGE ==========
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Date Box */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
           <div className="flex justify-center items-center">
             <div className="text-center">
@@ -588,7 +594,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Timer Box */}
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
           <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
@@ -596,7 +601,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-gray-500">Question {currentQuestion + 1} of {totalQuestions}</span>
@@ -608,7 +612,6 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
-        {/* Question Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-center gap-2">
@@ -627,8 +630,8 @@ export default function QuizPage() {
             {currentQ?.options?.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
               const isSelected = selectedAnswer === opt;
-              const showCorrect = showExplanation && opt === currentQ?.answer;
-              const showWrong = showExplanation && isSelected && opt !== currentQ?.answer;
+              const showCorrect = showExplanation && normalizeAnswer(opt) === normalizeAnswer(currentQ?.answer);
+              const showWrong = showExplanation && isSelected && normalizeAnswer(opt) !== normalizeAnswer(currentQ?.answer);
               const isDisabled = showExplanation || quizLocked || isQuestionAnswered;
               
               let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
@@ -667,7 +670,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Explanation Box */}
         {showExplanation && (
           <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
             <div className="flex gap-2">
@@ -684,7 +686,6 @@ export default function QuizPage() {
           </div>
         )}
 
-        {/* Navigation Buttons */}
         <div className="flex gap-2 mt-2">
           <button 
             onClick={handleSubmitAnswer} 
