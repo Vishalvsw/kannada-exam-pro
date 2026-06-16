@@ -4,20 +4,34 @@ import clientPromise from '@/lib/mongodb';
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit')) || 50;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')) : 0;
     
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    const results = await db.collection('quizresults')
+    // Build query - get ALL results if no limit specified
+    let query = db.collection('quizresults')
       .find({})
-      .sort({ date: -1 })
-      .limit(limit)
-      .toArray();
+      .sort({ date: -1 });
     
-    return NextResponse.json(results);
+    // Only apply limit if explicitly specified and > 0
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+    
+    const results = await query.toArray();
+    
+    console.log(`Quiz Results API: Returning ${results.length} results`);
+    
+    return NextResponse.json(results, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
   } catch (error) {
-    console.error('GET error:', error);
+    console.error('GET quiz results error:', error);
     return NextResponse.json([]);
   }
 }
@@ -28,7 +42,6 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    // Save quiz result
     const quizResult = {
       userName: body.userName,
       userEmail: body.userEmail,
@@ -46,9 +59,8 @@ export async function POST(request) {
     const result = await db.collection('quizresults').insertOne(quizResult);
     console.log(`✅ Quiz saved for: ${body.userName} (${body.instagramId}) - Score: ${body.score}`);
     
-    // CRITICAL: Update user's score immediately
+    // Update user's score
     if (body.instagramId) {
-      // Find user
       let user = await db.collection('users').findOne({ instagramId: body.instagramId });
       
       if (!user && body.userEmail) {
@@ -70,9 +82,8 @@ export async function POST(request) {
             }
           }
         );
-        console.log(`✅ Updated user ${body.instagramId}: new score=${newTotalScore}, quizzes=${newQuizzesTaken}`);
+        console.log(`✅ Updated user ${body.instagramId}: score=${newTotalScore}, quizzes=${newQuizzesTaken}`);
       } else {
-        // Create new user if doesn't exist
         const newUser = {
           name: body.userName,
           instagramId: body.instagramId,
