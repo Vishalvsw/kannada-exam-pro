@@ -177,31 +177,153 @@ export default function AdminPanel() {
     if (activeTab === 'questions') {
       return (
         <>
-          <div><label className="block text-sm font-medium mb-2">Question *</label><textarea required className="w-full p-2 border rounded-lg" rows="3" value={formData.question || ''} onChange={(e) => setFormData({ ...formData, question: e.target.value })} placeholder="Enter question" /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-sm font-medium mb-2">Option A *</label><input required className="w-full p-2 border rounded-lg" value={formData.options?.[0] || ''} onChange={(e) => setFormData({ ...formData, options: [e.target.value, formData.options?.[1] || '', formData.options?.[2] || '', formData.options?.[3] || ''] })} placeholder="Option A" /></div>
-            <div><label className="block text-sm font-medium mb-2">Option B *</label><input required className="w-full p-2 border rounded-lg" value={formData.options?.[1] || ''} onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', e.target.value, formData.options?.[2] || '', formData.options?.[3] || ''] })} placeholder="Option B" /></div>
-            <div><label className="block text-sm font-medium mb-2">Option C *</label><input required className="w-full p-2 border rounded-lg" value={formData.options?.[2] || ''} onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', e.target.value, formData.options?.[3] || ''] })} placeholder="Option C" /></div>
-            <div><label className="block text-sm font-medium mb-2">Option D *</label><input required className="w-full p-2 border rounded-lg" value={formData.options?.[3] || ''} onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', formData.options?.[2] || '', e.target.value] })} placeholder="Option D" /></div>
+          {/* UPDATED: Question with multiline support */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Question *
+              <span className="text-xs text-gray-400 ml-2 font-normal">
+                (Preserves line breaks - press Enter for new line)
+              </span>
+            </label>
+            <textarea 
+              required 
+              className="w-full p-3 border rounded-lg font-sans text-gray-800 leading-relaxed resize-y" 
+              rows="8" 
+              value={formData.question || ''} 
+              onChange={(e) => setFormData({ ...formData, question: e.target.value })} 
+              placeholder={`Example format:
+ಕೆಳಗಿನವುಗಳಲ್ಲಿ ದೇಶ ಮತ್ತು ಗಡಿರೇಖೆಗಳ ಸರಿಯಾದ ಹೊಂದಾಣಿಕೆಯಾಗುವ ಜೋಡಿಗಳಾವುವು?
+
+a) ಭಾರತ-ಚೀನಾ : ಮ್ಯಾಕ್ ಮೋಹನ್ ರೇಖೆ
+b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತರ ರೇಖೆ
+
+ಕೆಳಗೆ ಕೊಟ್ಟಿರುವ ಸಂಕೇತಗಳನ್ನು ಬಳಸಿ ಸರಿಯಾದ ಉತ್ತರವನ್ನು ಆಯ್ಕೆಮಾಡಿ.`}
+            />
+            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+              <span>💡</span> Press <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded text-xs">Enter</kbd> for new line
+            </p>
           </div>
-          <div><label className="block text-sm font-medium mb-2">Correct Answer *</label><input required className="w-full p-2 border rounded-lg" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Correct answer" /></div>
-          <div><label className="block text-sm font-medium mb-2">📖 Explanation</label><textarea className="w-full p-2 border rounded-lg bg-blue-50" rows="4" value={formData.explanation || ''} onChange={(e) => setFormData({ ...formData, explanation: e.target.value })} placeholder="Explain why this answer is correct..." /></div>
+          
+          {/* UPDATED: Options with better styling */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-2">Option A *</label>
+              <textarea 
+                required 
+                className="w-full p-2 border rounded-lg resize-y" 
+                rows="2"
+                value={formData.options?.[0] || ''} 
+                onChange={(e) => setFormData({ ...formData, options: [e.target.value, formData.options?.[1] || '', formData.options?.[2] || '', formData.options?.[3] || ''] })} 
+                placeholder="Option A"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Option B *</label>
+              <textarea 
+                required 
+                className="w-full p-2 border rounded-lg resize-y" 
+                rows="2"
+                value={formData.options?.[1] || ''} 
+                onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', e.target.value, formData.options?.[2] || '', formData.options?.[3] || ''] })} 
+                placeholder="Option B"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Option C *</label>
+              <textarea 
+                required 
+                className="w-full p-2 border rounded-lg resize-y" 
+                rows="2"
+                value={formData.options?.[2] || ''} 
+                onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', e.target.value, formData.options?.[3] || ''] })} 
+                placeholder="Option C"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Option D *</label>
+              <textarea 
+                required 
+                className="w-full p-2 border rounded-lg resize-y" 
+                rows="2"
+                value={formData.options?.[3] || ''} 
+                onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', formData.options?.[2] || '', e.target.value] })} 
+                placeholder="Option D"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Correct Answer *</label>
+            <input required className="w-full p-2 border rounded-lg" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Correct answer" />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">📖 Explanation</label>
+            <textarea className="w-full p-3 border rounded-lg bg-blue-50 resize-y" rows="4" value={formData.explanation || ''} onChange={(e) => setFormData({ ...formData, explanation: e.target.value })} placeholder="Explain why this answer is correct..." />
+          </div>
+          
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-sm font-medium mb-2">Category</label><select className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}><option>General</option><option>Karnataka GK</option><option>History</option><option>Geography</option></select></div>
-            <div><label className="block text-sm font-medium mb-2">Difficulty</label><select className="w-full p-2 border rounded-lg" value={formData.difficulty || 'medium'} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}><option>easy</option><option>medium</option><option>hard</option></select></div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Category</label>
+              <select className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+                <option>General</option>
+                <option>Karnataka GK</option>
+                <option>History</option>
+                <option>Geography</option>
+                <option>Polity</option>
+                <option>Science</option>
+                <option>Current Affairs</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Difficulty</label>
+              <select className="w-full p-2 border rounded-lg" value={formData.difficulty || 'medium'} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}>
+                <option>easy</option>
+                <option>medium</option>
+                <option>hard</option>
+              </select>
+            </div>
           </div>
         </>
       );
     } else if (activeTab === 'qa-questions') {
       return (
         <>
-          <div><label className="block text-sm font-medium mb-2">Question (Kannada) *</label><textarea required className="w-full p-2 border rounded-lg" rows="3" value={formData.question || ''} onChange={(e) => setFormData({ ...formData, question: e.target.value })} placeholder="Enter question in Kannada" /></div>
-          <div><label className="block text-sm font-medium mb-2">Question (English)</label><textarea className="w-full p-2 border rounded-lg" rows="2" value={formData.question_en || ''} onChange={(e) => setFormData({ ...formData, question_en: e.target.value })} placeholder="Enter question in English" /></div>
-          <div><label className="block text-sm font-medium mb-2">Answer (Kannada) *</label><textarea required className="w-full p-2 border rounded-lg" rows="3" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Enter answer in Kannada" /></div>
-          <div><label className="block text-sm font-medium mb-2">Answer (English)</label><textarea className="w-full p-2 border rounded-lg" rows="2" value={formData.answer_en || ''} onChange={(e) => setFormData({ ...formData, answer_en: e.target.value })} placeholder="Enter answer in English" /></div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Question (Kannada) *</label>
+            <textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.question || ''} onChange={(e) => setFormData({ ...formData, question: e.target.value })} placeholder="Enter question in Kannada" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Question (English)</label>
+            <textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.question_en || ''} onChange={(e) => setFormData({ ...formData, question_en: e.target.value })} placeholder="Enter question in English" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Answer (Kannada) *</label>
+            <textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Enter answer in Kannada" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Answer (English)</label>
+            <textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.answer_en || ''} onChange={(e) => setFormData({ ...formData, answer_en: e.target.value })} placeholder="Enter answer in English" />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-sm font-medium mb-2">Category</label><select className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}><option>General</option><option>History</option><option>Geography</option><option>Polity</option><option>Science</option><option>Current Affairs</option></select></div>
-            <div><label className="block text-sm font-medium mb-2">Important</label><select className="w-full p-2 border rounded-lg" value={formData.important || false} onChange={(e) => setFormData({ ...formData, important: e.target.value === 'true' })}><option value="false">No</option><option value="true">⭐ Important</option></select></div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Category</label>
+              <select className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+                <option>General</option>
+                <option>History</option>
+                <option>Geography</option>
+                <option>Polity</option>
+                <option>Science</option>
+                <option>Current Affairs</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Important</label>
+              <select className="w-full p-2 border rounded-lg" value={formData.important || false} onChange={(e) => setFormData({ ...formData, important: e.target.value === 'true' })}>
+                <option value="false">No</option>
+                <option value="true">⭐ Important</option>
+              </select>
+            </div>
           </div>
         </>
       );
@@ -210,8 +332,8 @@ export default function AdminPanel() {
         <>
           <div><label className="block text-sm font-medium mb-2">Title (Kannada) *</label><input required className="w-full p-2 border rounded-lg" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Title (English)</label><input className="w-full p-2 border rounded-lg" value={formData.title_en || ''} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} /></div>
-          <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-2 border rounded-lg" rows="5" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
-          <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-2 border rounded-lg" rows="5" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="6" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="6" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Category</label><input className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })} /></div>
         </>
       );
@@ -220,8 +342,8 @@ export default function AdminPanel() {
         <>
           <div><label className="block text-sm font-medium mb-2">Title (Kannada) *</label><input required className="w-full p-2 border rounded-lg" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Title (English)</label><input className="w-full p-2 border rounded-lg" value={formData.title_en || ''} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} /></div>
-          <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-2 border rounded-lg" rows="4" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
-          <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-2 border rounded-lg" rows="4" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="5" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="5" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Date *</label><input type="date" required className="w-full p-2 border rounded-lg" value={formData.date || new Date().toISOString().split('T')[0]} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Category</label><input className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Important</label><select className="w-full p-2 border rounded-lg" value={formData.important || false} onChange={(e) => setFormData({ ...formData, important: e.target.value === 'true' })}><option value="false">No</option><option value="true">⭐ Important</option></select></div>
@@ -307,7 +429,7 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* Quiz Questions Management */}
+        {/* Quiz Questions Management - UPDATED with multiline display */}
         {activeTab === 'questions' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -323,24 +445,27 @@ export default function AdminPanel() {
               <div className="space-y-4">
                 {questions.map((q, idx) => (
                   <div key={q._id} className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
-                    <div className="flex justify-between">
+                    <div className="flex flex-col sm:flex-row justify-between gap-3">
                       <div className="flex-1">
-                        <div className="flex gap-2 mb-2">
+                        <div className="flex flex-wrap gap-2 mb-2">
                           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">#{idx + 1}</span>
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">{q.category}</span>
                           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">{q.difficulty}</span>
                         </div>
-                        <h3 className="font-semibold mb-2">{q.question}</h3>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="p-1 bg-gray-50 rounded">A) {q.options?.[0]}</div>
-                          <div className="p-1 bg-gray-50 rounded">B) {q.options?.[1]}</div>
-                          <div className="p-1 bg-gray-50 rounded">C) {q.options?.[2]}</div>
-                          <div className="p-1 bg-gray-50 rounded">D) {q.options?.[3]}</div>
+                        {/* UPDATED: Preserve line breaks in question display */}
+                        <h3 className="font-semibold mb-2 whitespace-pre-line leading-relaxed">
+                          {q.question}
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                          <div className="p-1 bg-gray-50 rounded whitespace-pre-line">A) {q.options?.[0]}</div>
+                          <div className="p-1 bg-gray-50 rounded whitespace-pre-line">B) {q.options?.[1]}</div>
+                          <div className="p-1 bg-gray-50 rounded whitespace-pre-line">C) {q.options?.[2]}</div>
+                          <div className="p-1 bg-gray-50 rounded whitespace-pre-line">D) {q.options?.[3]}</div>
                         </div>
                         <p className="text-green-600 text-sm mt-2">✓ Correct Answer: {q.answer}</p>
-                        {q.explanation && <div className="mt-3 p-3 bg-blue-50 rounded-lg"><p className="text-xs font-semibold text-blue-800 mb-1">📖 Explanation:</p><p className="text-sm text-blue-700">{q.explanation}</p></div>}
+                        {q.explanation && <div className="mt-3 p-3 bg-blue-50 rounded-lg"><p className="text-xs font-semibold text-blue-800 mb-1">📖 Explanation:</p><p className="text-sm text-blue-700 whitespace-pre-line">{q.explanation}</p></div>}
                       </div>
-                      <div className="flex flex-col gap-2 ml-4">
+                      <div className="flex flex-row sm:flex-col gap-2">
                         <button onClick={() => { setEditingItem(q); setFormData(q); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">✏️ Edit</button>
                         <button onClick={() => { setExplanationQuestion(q); setExplanationText(q.explanation || ''); setShowExplanationModal(true); }} className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600">📖 Explanation</button>
                         <button onClick={() => handleDelete(q._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">🗑️ Delete</button>
@@ -376,10 +501,10 @@ export default function AdminPanel() {
                           {qa.important && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">⭐ Important</span>}
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">{qa.category}</span>
                         </div>
-                        <p className="font-semibold text-gray-800">❓ {qa.question || qa.question_en}</p>
+                        <p className="font-semibold text-gray-800 whitespace-pre-line">❓ {qa.question || qa.question_en}</p>
                         <details className="mt-2">
                           <summary className="cursor-pointer text-green-600 text-sm font-medium">📖 Show Answer</summary>
-                          <div className="bg-green-50 rounded-lg p-3 mt-2"><p className="text-sm text-green-700">✓ {qa.answer || qa.answer_en}</p></div>
+                          <div className="bg-green-50 rounded-lg p-3 mt-2"><p className="text-sm text-green-700 whitespace-pre-line">✓ {qa.answer || qa.answer_en}</p></div>
                         </details>
                       </div>
                       <div className="flex gap-2">
@@ -405,7 +530,7 @@ export default function AdminPanel() {
               </div>
             </div>
             {notes.map(note => (
-              <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{note.title}</h3><p className="text-sm text-gray-500">{note.category}</p><p className="text-gray-600 mt-2 line-clamp-2">{note.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+              <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{note.title}</h3><p className="text-sm text-gray-500">{note.category}</p><p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{note.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
             ))}
           </div>
         )}
@@ -421,7 +546,7 @@ export default function AdminPanel() {
               </div>
             </div>
             {currentAffairs.map(ca => (
-              <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{ca.title}</h3><p className="text-sm text-gray-500">{ca.date} | {ca.category}</p><p className="text-gray-600 mt-2 line-clamp-2">{ca.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+              <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{ca.title}</h3><p className="text-sm text-gray-500">{ca.date} | {ca.category}</p><p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{ca.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
             ))}
           </div>
         )}
@@ -524,12 +649,12 @@ export default function AdminPanel() {
               </div>
               <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm font-semibold text-gray-700">Question:</p>
-                <p className="text-gray-800 mt-1">{explanationQuestion.question}</p>
+                <p className="text-gray-800 mt-1 whitespace-pre-line">{explanationQuestion.question}</p>
                 <p className="text-sm text-green-600 mt-2">✓ Correct Answer: {explanationQuestion.answer}</p>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Explanation</label>
-                <textarea className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" rows="6" value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder="Explain why this answer is correct..." />
+                <textarea className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 resize-y" rows="6" value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder="Explain why this answer is correct..." />
               </div>
               <div className="flex gap-3 pt-4">
                 <button onClick={handleUpdateExplanation} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">💾 Save Explanation</button>
