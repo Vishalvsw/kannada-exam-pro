@@ -5,189 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 
-// ===== ORDERING QUESTION COMPONENT =====
-const OrderingQuestion = ({ question, onOrderChange, isAnswered }) => {
-  const [items, setItems] = useState([]);
-  const [selectedOrder, setSelectedOrder] = useState([]);
-
-  const kannadaLetters = ['ಅ', 'ಆ', 'ಇ', 'ಈ', 'ಉ'];
-  const englishLetters = ['a', 'b', 'c', 'd', 'e'];
-
-  useEffect(() => {
-    if (question?.options) {
-      const initialItems = question.options.map((opt, idx) => ({
-        id: englishLetters[idx],
-        kannadaLetter: kannadaLetters[idx],
-        text: opt,
-        isSelected: false,
-        position: null
-      }));
-      
-      const shuffled = [...initialItems];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      
-      setItems(shuffled);
-      setSelectedOrder([]);
-    }
-  }, [question]);
-
-  const handleSelect = (itemId) => {
-    if (isAnswered) return;
-    if (selectedOrder.includes(itemId)) return;
-    if (selectedOrder.length === 5) return;
-
-    const newOrder = [...selectedOrder, itemId];
-    setSelectedOrder(newOrder);
-    
-    const updatedItems = items.map(item => ({
-      ...item,
-      isSelected: newOrder.includes(item.id),
-      position: newOrder.includes(item.id) ? newOrder.indexOf(item.id) + 1 : null
-    }));
-    setItems(updatedItems);
-
-    onOrderChange(newOrder.join(','));
-  };
-
-  const handleUndo = () => {
-    if (isAnswered) return;
-    if (selectedOrder.length === 0) return;
-
-    const newOrder = selectedOrder.slice(0, -1);
-    setSelectedOrder(newOrder);
-
-    const updatedItems = items.map(item => ({
-      ...item,
-      isSelected: newOrder.includes(item.id),
-      position: newOrder.includes(item.id) ? newOrder.indexOf(item.id) + 1 : null
-    }));
-    setItems(updatedItems);
-
-    onOrderChange(newOrder.join(',') || null);
-  };
-
-  const handleReset = () => {
-    if (isAnswered) return;
-    setSelectedOrder([]);
-    const resetItems = items.map(item => ({
-      ...item,
-      isSelected: false,
-      position: null
-    }));
-    setItems(resetItems);
-    onOrderChange(null);
-  };
-
-  const orderedItems = items.filter(item => item.isSelected).sort((a, b) => a.position - b.position);
-  const remainingItems = items.filter(item => !item.isSelected);
-
-  return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((num) => (
-            <div
-              key={num}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                orderedItems.length >= num
-                  ? 'bg-green-500 text-white scale-110'
-                  : 'bg-gray-200 text-gray-400'
-              }`}
-            >
-              {num}
-            </div>
-          ))}
-        </div>
-        <div className="text-xs text-gray-500">
-          {orderedItems.length} / 5 ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ
-        </div>
-      </div>
-
-      {orderedItems.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border-2 border-blue-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-blue-600 text-lg">📋</span>
-            <p className="text-xs font-semibold text-blue-800">ನಿಮ್ಮ ಕ್ರಮ:</p>
-            <div className="flex-1"></div>
-            <button
-              onClick={handleUndo}
-              disabled={isAnswered || orderedItems.length === 0}
-              className="text-xs text-gray-500 hover:text-blue-600 disabled:opacity-50"
-            >
-              ← ಹಿಂದಕ್ಕೆ
-            </button>
-            <button
-              onClick={handleReset}
-              disabled={isAnswered || orderedItems.length === 0}
-              className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
-            >
-              ಮರುಹೊಂದಿಸಿ
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {orderedItems.map((item) => (
-              <span
-                key={item.id}
-                className="inline-flex items-center gap-1 bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm"
-              >
-                <span className="font-bold">{item.position}.</span>
-                {item.text}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <p className="text-xs text-gray-500 flex items-center gap-1">
-          <span className="text-lg">👆</span>
-          ಸರಿಯಾದ ಕ್ರಮದಲ್ಲಿ ಆಯ್ಕೆಗಳನ್ನು ಒತ್ತಿರಿ
-        </p>
-        
-        {remainingItems.length > 0 ? (
-          remainingItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleSelect(item.id)}
-              disabled={isAnswered || selectedOrder.length === 5}
-              className={`w-full p-4 rounded-xl text-left transition-all transform ${
-                isAnswered || selectedOrder.length === 5
-                  ? 'bg-gray-100 border-2 border-gray-200 cursor-not-allowed opacity-60'
-                  : 'bg-white border-2 border-gray-200 hover:border-purple-400 hover:shadow-md hover:scale-[1.01] active:scale-[0.99]'
-              } flex items-center gap-4`}
-            >
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-purple-700 flex-shrink-0">
-                {item.kannadaLetter}
-              </div>
-              <span className="flex-1 text-sm text-gray-700">{item.text}</span>
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                →
-              </div>
-            </button>
-          ))
-        ) : (
-          <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 text-center">
-            <div className="text-3xl mb-2">🎉</div>
-            <p className="text-sm font-semibold text-green-700">ಎಲ್ಲಾ ಆಯ್ಕೆಗಳನ್ನು ಕ್ರಮಗೊಳಿಸಲಾಗಿದೆ!</p>
-            <p className="text-xs text-green-600 mt-1">"ಉತ್ತರ ಸಲ್ಲಿಸಿ" ಒತ್ತಿರಿ</p>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <span className="text-lg">💡</span>
-          <span>ಸರಿಯಾದ ಕ್ರಮದಲ್ಲಿ ಆಯ್ಕೆಗಳನ್ನು ಆರಿಸಿ. ಹಿಂದಕ್ಕೆ ಅಥವಾ ಮರುಹೊಂದಿಸಬಹುದು.</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ===== MAIN QUIZ PAGE =====
 export default function QuizPage() {
   const router = useRouter();
   const [questions, setQuestions] = useState([]);
@@ -213,16 +30,19 @@ export default function QuizPage() {
   const [finalTimeTaken, setFinalTimeTaken] = useState('00:00');
   const [loading, setLoading] = useState(true);
 
+  // Helper function for case-insensitive answer comparison
   const normalizeAnswer = (answer) => {
     if (!answer) return '';
     return answer.toString().trim().toLowerCase();
   };
 
+  // Live clock
   useEffect(() => {
     const interval = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
+  // Check login and load quiz
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {
@@ -279,6 +99,7 @@ export default function QuizPage() {
     }
   };
 
+  // Timer effect
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted && !loading) {
@@ -296,28 +117,11 @@ export default function QuizPage() {
 
   const handleSubmitAnswer = () => {
     if (quizLocked || quizCompleted) return;
-    
-    const currentQ = questions[currentQuestion];
-    const isOrdering = currentQ?.questionType === 'ordering';
-    
-    if (isOrdering) {
-      if (!selectedAnswer || selectedAnswer.split(',').length < 5) {
-        alert('ದಯವಿಟ್ಟು ಎಲ್ಲಾ 5 ಆಯ್ಕೆಗಳನ್ನು ಸರಿಯಾದ ಕ್ರಮದಲ್ಲಿ ಜೋಡಿಸಿ');
-        return;
-      }
-    } else {
-      if (!selectedAnswer && !showExplanation) return;
-    }
+    if (!selectedAnswer && !showExplanation) return;
 
     if (!showExplanation && selectedAnswer) {
-      let isCorrect = false;
-      
-      if (isOrdering) {
-        isCorrect = selectedAnswer === currentQ?.correctOrder;
-      } else {
-        isCorrect = normalizeAnswer(selectedAnswer) === normalizeAnswer(currentQ?.answer);
-      }
-      
+      // Use case-insensitive comparison
+      const isCorrect = normalizeAnswer(selectedAnswer) === normalizeAnswer(questions[currentQuestion]?.answer);
       if (isCorrect) setScore(prev => prev + 1);
       
       const newAnswers = [...answers];
@@ -328,11 +132,10 @@ export default function QuizPage() {
       newUserAnswers[currentQuestion] = {
         selected: selectedAnswer,
         isCorrect: isCorrect,
-        correctAnswer: isOrdering ? currentQ?.correctOrder : currentQ?.answer,
-        question: currentQ?.question,
-        options: currentQ?.options,
-        explanation: currentQ?.explanation,
-        questionType: currentQ?.questionType
+        correctAnswer: questions[currentQuestion]?.answer,
+        question: questions[currentQuestion]?.question,
+        options: questions[currentQuestion]?.options,
+        explanation: questions[currentQuestion]?.explanation
       };
       setUserAnswers(newUserAnswers);
       
@@ -354,13 +157,8 @@ export default function QuizPage() {
   const calculateScore = () => {
     let finalScore = 0;
     answers.forEach((answer, idx) => {
-      if (answer) {
-        const q = questions[idx];
-        if (q?.questionType === 'ordering') {
-          if (answer === q.correctOrder) finalScore++;
-        } else {
-          if (normalizeAnswer(answer) === normalizeAnswer(q?.answer)) finalScore++;
-        }
+      if (answer && questions[idx] && normalizeAnswer(answer) === normalizeAnswer(questions[idx].answer)) {
+        finalScore++;
       }
     });
     
@@ -382,17 +180,13 @@ export default function QuizPage() {
       const finalUserAnswers = [...userAnswers];
       for (let i = 0; i < answers.length; i++) {
         if (answers[i] && !finalUserAnswers[i]) {
-          const q = questions[i];
           finalUserAnswers[i] = {
             selected: answers[i],
-            isCorrect: q?.questionType === 'ordering' 
-              ? answers[i] === q?.correctOrder
-              : normalizeAnswer(answers[i]) === normalizeAnswer(q?.answer),
-            correctAnswer: q?.questionType === 'ordering' ? q?.correctOrder : q?.answer,
-            question: q?.question,
-            options: q?.options,
-            explanation: q?.explanation,
-            questionType: q?.questionType
+            isCorrect: normalizeAnswer(answers[i]) === normalizeAnswer(questions[i]?.answer),
+            correctAnswer: questions[i]?.answer,
+            question: questions[i]?.question,
+            options: questions[i]?.options,
+            explanation: questions[i]?.explanation
           };
         }
       }
@@ -478,7 +272,7 @@ export default function QuizPage() {
 
   const formattedDate = currentDateTime.toLocaleDateString();
 
-  // ===== RESULT PAGE =====
+  // ========== RESULT PAGE ==========
   if ((quizCompleted && showResults && !showReview) || (quizLocked && !showReview)) {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
@@ -607,7 +401,7 @@ export default function QuizPage() {
                     <div className="mt-1 flex items-center gap-1">
                       <span className="text-[9px] text-gray-400">Your Ans:</span>
                       <span className={`text-[10px] font-medium ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                        {item.questionType === 'ordering' ? 'Ordered' : item.selected}
+                        {item.selected}
                       </span>
                     </div>
                     <div className="mt-1 text-center">
@@ -686,7 +480,7 @@ export default function QuizPage() {
     );
   }
 
-  // ===== REVIEW PAGE =====
+  // ========== DETAILED REVIEW PAGE ==========
   if (showReview) {
     const filteredQuestions = getFilteredQuestions();
     const wrongCount = userAnswers.filter(a => a && !a.isCorrect).length;
@@ -716,8 +510,6 @@ export default function QuizPage() {
           <div className="space-y-3 mb-24">
             {filteredQuestions.map((item, idx) => {
               const originalIndex = userAnswers.findIndex(a => a === item);
-              const isOrdering = item.questionType === 'ordering';
-              
               return (
                 <div key={originalIndex} className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-blue-500">
                   <div className="p-3">
@@ -727,61 +519,25 @@ export default function QuizPage() {
                         <span className="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Correct</span> : 
                         <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full">✗ Wrong</span>
                       }
-                      {isOrdering && (
-                        <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">🔄 Ordering</span>
-                      )}
                     </div>
                     <h3 className="font-semibold text-gray-800 text-sm mb-2">{item.question}</h3>
-                    
-                    {isOrdering ? (
-                      <div className="space-y-2 mb-2">
-                        <div className="bg-purple-50 rounded-lg p-2">
-                          <p className="text-xs font-semibold text-purple-800">Your Order:</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {item.selected?.split(',').map((letter, idx) => {
-                              const optionIndex = ['a','b','c','d','e'].indexOf(letter);
-                              return (
-                                <span key={idx} className="inline-flex items-center gap-1 bg-purple-200 text-purple-800 px-2 py-0.5 rounded text-xs">
-                                  {idx + 1}. {item.options?.[optionIndex] || letter}
-                                </span>
-                              );
-                            })}
+                    <div className="space-y-1 mb-2">
+                      {item.options?.map((opt, optIdx) => {
+                        const letter = String.fromCharCode(65 + optIdx);
+                        const isUserAnswer = normalizeAnswer(item.selected) === normalizeAnswer(opt);
+                        const isCorrectAnswer = normalizeAnswer(item.correctAnswer) === normalizeAnswer(opt);
+                        let bgClass = 'bg-gray-50';
+                        if (isCorrectAnswer) bgClass = 'bg-green-100';
+                        if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
+                        return (
+                          <div key={optIdx} className={`p-1.5 rounded-lg ${bgClass} text-xs`}>
+                            <span className="font-medium">{letter}.</span> {opt}
+                            {isCorrectAnswer && <span className="text-green-600 text-[10px] ml-1">✓</span>}
+                            {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-[10px] ml-1">✗ Your Answer</span>}
                           </div>
-                        </div>
-                        <div className="bg-green-50 rounded-lg p-2">
-                          <p className="text-xs font-semibold text-green-800">Correct Order:</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {item.correctAnswer?.split(',').map((letter, idx) => {
-                              const optionIndex = ['a','b','c','d','e'].indexOf(letter);
-                              return (
-                                <span key={idx} className="inline-flex items-center gap-1 bg-green-200 text-green-800 px-2 py-0.5 rounded text-xs">
-                                  {idx + 1}. {item.options?.[optionIndex] || letter}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-1 mb-2">
-                        {item.options?.map((opt, optIdx) => {
-                          const letter = String.fromCharCode(65 + optIdx);
-                          const isUserAnswer = normalizeAnswer(item.selected) === normalizeAnswer(opt);
-                          const isCorrectAnswer = normalizeAnswer(item.correctAnswer) === normalizeAnswer(opt);
-                          let bgClass = 'bg-gray-50';
-                          if (isCorrectAnswer) bgClass = 'bg-green-100';
-                          if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
-                          return (
-                            <div key={optIdx} className={`p-1.5 rounded-lg ${bgClass} text-xs`}>
-                              <span className="font-medium">{letter}.</span> {opt}
-                              {isCorrectAnswer && <span className="text-green-600 text-[10px] ml-1">✓</span>}
-                              {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-[10px] ml-1">✗ Your Answer</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    
+                        );
+                      })}
+                    </div>
                     <div className="bg-blue-50 rounded-lg p-2">
                       <p className="text-[10px] font-semibold text-blue-800">Explanation:</p>
                       <p className="text-[11px] text-blue-700 mt-0.5">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
@@ -803,7 +559,7 @@ export default function QuizPage() {
     );
   }
 
-  // ===== LOADING =====
+  // Show loading only during initial data fetch
   if (loading || questions.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
@@ -815,15 +571,10 @@ export default function QuizPage() {
     );
   }
 
-  // ===== MAIN QUIZ DISPLAY =====
   const currentQ = questions[currentQuestion];
   const totalQuestions = questions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const isQuestionAnswered = answeredQuestions[currentQuestion];
-  const isOrdering = currentQ?.questionType === 'ordering';
-
-  // Check if user has already answered this question before showing it
-  const isAlreadyAnswered = userAnswers[currentQuestion] !== null && userAnswers[currentQuestion] !== undefined;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
@@ -831,7 +582,6 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Date Display */}
         <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
           <div className="flex justify-center items-center">
             <div className="text-center">
@@ -844,7 +594,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Timer */}
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
           <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
           <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
@@ -852,7 +601,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Progress */}
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-gray-500">Question {currentQuestion + 1} of {totalQuestions}</span>
@@ -864,7 +612,6 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
-        {/* Question Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-center gap-2">
@@ -877,73 +624,52 @@ export default function QuizPage() {
                   <span className="text-green-600 text-[10px]">✓</span>
                 </div>
               )}
-              {isOrdering && (
-                <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">🔄 ಕ್ರಮಾಂಕ</span>
-              )}
-              {isAlreadyAnswered && !showExplanation && (
-                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">✅ Answered</span>
-              )}
             </div>
           </div>
-          
-          {isOrdering ? (
-            <OrderingQuestion 
-              question={currentQ}
-              onOrderChange={(order) => {
-                setSelectedAnswer(order);
-              }}
-              isAnswered={isQuestionAnswered || showExplanation || isAlreadyAnswered}
-            />
-          ) : (
-            <div className="p-3 space-y-2">
-              {currentQ?.options?.map((opt, idx) => {
-                const letter = String.fromCharCode(65 + idx);
-                const isSelected = selectedAnswer === opt;
-                const showCorrect = showExplanation && normalizeAnswer(opt) === normalizeAnswer(currentQ?.answer);
-                const showWrong = showExplanation && isSelected && normalizeAnswer(opt) !== normalizeAnswer(currentQ?.answer);
-                const isDisabled = showExplanation || quizLocked || isQuestionAnswered || isAlreadyAnswered;
-                
-                // Check if this was the user's previously selected answer
-                const wasUserAnswer = isAlreadyAnswered && userAnswers[currentQuestion]?.selected === opt;
-                
-                let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
-                if (showCorrect) bgClass = 'bg-green-50 border-green-400';
-                if (showWrong) bgClass = 'bg-red-50 border-red-400';
-                if (isSelected && !showExplanation && !isQuestionAnswered && !isAlreadyAnswered) bgClass = 'bg-green-50 border-green-400';
-                if (wasUserAnswer && !showExplanation) bgClass = 'bg-blue-50 border-blue-400';
-                
-                return (
-                  <button 
-                    key={idx} 
-                    onClick={() => !isDisabled && handleAnswerSelect(opt)} 
-                    disabled={isDisabled} 
-                    className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${isDisabled ? 'opacity-75 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        showCorrect ? 'bg-green-600 text-white' : 
-                        showWrong ? 'bg-red-600 text-white' : 
-                        (isSelected && !isDisabled) ? 'bg-green-600 text-white' :
-                        wasUserAnswer ? 'bg-blue-600 text-white' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {letter}
-                      </div>
-                      <span className="text-sm text-gray-700 flex-1">{opt}</span>
-                      {showCorrect && <span className="text-green-600 text-xs">✓ Correct</span>}
-                      {showWrong && <span className="text-red-600 text-xs">✗ Wrong</span>}
-                      {wasUserAnswer && !showExplanation && (
-                        <span className="text-blue-600 text-xs">✓ Your Answer</span>
-                      )}
+          <div className="p-3 space-y-2">
+            {currentQ?.options?.map((opt, idx) => {
+              const letter = String.fromCharCode(65 + idx);
+              const isSelected = selectedAnswer === opt;
+              const showCorrect = showExplanation && normalizeAnswer(opt) === normalizeAnswer(currentQ?.answer);
+              const showWrong = showExplanation && isSelected && normalizeAnswer(opt) !== normalizeAnswer(currentQ?.answer);
+              const isDisabled = showExplanation || quizLocked || isQuestionAnswered;
+              
+              let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
+              if (showCorrect) bgClass = 'bg-green-50 border-green-400';
+              if (showWrong) bgClass = 'bg-red-50 border-red-400';
+              if (isSelected && !showExplanation && !isQuestionAnswered) bgClass = 'bg-green-50 border-green-400';
+              if (isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation) bgClass = 'bg-green-50 border-green-400';
+              
+              return (
+                <button 
+                  key={idx} 
+                  onClick={() => !isDisabled && handleAnswerSelect(opt)} 
+                  disabled={isDisabled} 
+                  className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${isDisabled ? 'opacity-75 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      showCorrect ? 'bg-green-600 text-white' : 
+                      showWrong ? 'bg-red-600 text-white' : 
+                      (isSelected && !isDisabled) ? 'bg-green-600 text-white' :
+                      (isQuestionAnswered && answers[currentQuestion] === opt) ? 'bg-green-600 text-white' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {letter}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                    <span className="text-sm text-gray-700 flex-1">{opt}</span>
+                    {showCorrect && <span className="text-green-600 text-xs">✓ Correct</span>}
+                    {showWrong && <span className="text-red-600 text-xs">✗ Wrong</span>}
+                    {isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation && (
+                      <span className="text-green-600 text-xs">✓ Your Answer</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Explanation */}
         {showExplanation && (
           <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
             <div className="flex gap-2">
@@ -953,35 +679,27 @@ export default function QuizPage() {
               <div className="flex-1">
                 <p className="text-[11px] font-semibold text-blue-800">Explanation</p>
                 <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                  {currentQ?.explanation || `The correct answer is ${isOrdering ? currentQ?.correctOrder : currentQ?.answer}`}
+                  {currentQ?.explanation || `The correct answer is ${currentQ?.answer}`}
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Submit Button */}
         <div className="flex gap-2 mt-2">
           <button 
             onClick={handleSubmitAnswer} 
             className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               showExplanation ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
-              (isOrdering ? (selectedAnswer && selectedAnswer.split(',').length === 5) : selectedAnswer) ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
-              isAlreadyAnswered ? 'bg-gray-300 text-gray-500 cursor-not-allowed' :
+              selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`} 
-            disabled={
-              (!showExplanation && !selectedAnswer) || 
-              quizLocked || 
-              (isOrdering && selectedAnswer && selectedAnswer.split(',').length < 5) ||
-              isAlreadyAnswered
-            }
+            disabled={(!showExplanation && !selectedAnswer) || quizLocked}
           >
-            {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →') : isAlreadyAnswered ? '✅ Already Answered' : '✓ Submit Answer'}
+            {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →') : '✓ Submit Answer'}
           </button>
         </div>
 
-        {/* Footer note */}
         <p className="text-center text-[9px] text-gray-400 mt-4">
           🔒 One attempt per question set • New quiz when admin adds questions
         </p>
@@ -989,7 +707,6 @@ export default function QuizPage() {
 
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center py-1">
