@@ -186,7 +186,7 @@ export default function Home() {
         <div className="px-5 mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              🏆 Top Performers
+              🏆 Top Winners 
               <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top {topUsers.length}</span>
             </h2>
             <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
@@ -229,6 +229,8 @@ export default function Home() {
                           rank === 1 ? barColor[1] :
                           rank === 2 ? barColor[2] :
                           rank === 3 ? barColor[3] :
+                          rank === 4 ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 
+                          rank === 5 ? 'bg-gradient-to-r from-green-400 to-green-500' :
                           'bg-gradient-to-r from-purple-400 to-purple-500'
                         }`}
                         style={{ width: `${scorePercentage}%` }}
