@@ -10,6 +10,7 @@ export default function QuizPage() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [selectedOptionIndex, setSelectedOptionIndex] = useState(null);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [showReview, setShowReview] = useState(false);
@@ -110,9 +111,10 @@ export default function QuizPage() {
     return () => clearTimeout(timer);
   }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted, loading]);
 
-  const handleAnswerSelect = (answer) => {
+  const handleAnswerSelect = (answer, index) => {
     if (quizLocked || quizCompleted || answeredQuestions[currentQuestion]) return;
     setSelectedAnswer(answer);
+    setSelectedOptionIndex(index);
   };
 
   const handleSubmitAnswer = () => {
@@ -131,6 +133,7 @@ export default function QuizPage() {
       const newUserAnswers = [...userAnswers];
       newUserAnswers[currentQuestion] = {
         selected: selectedAnswer,
+        selectedIndex: selectedOptionIndex,
         isCorrect: isCorrect,
         correctAnswer: questions[currentQuestion]?.answer,
         question: questions[currentQuestion]?.question,
@@ -143,6 +146,7 @@ export default function QuizPage() {
     } else {
       setShowExplanation(false);
       setSelectedAnswer(null);
+      setSelectedOptionIndex(null);
       setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
       
       if (currentQuestion + 1 < questions.length) {
@@ -397,7 +401,7 @@ export default function QuizPage() {
                         <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">✗</span>
                       }
                     </div>
-                    <p className="text-[11px] font-medium text-gray-700 line-clamp-2">{item.question?.substring(0, 45)}</p>
+                    <p className="text-[11px] font-medium text-gray-700 line-clamp-3 whitespace-pre-line">{item.question}</p>
                     <div className="mt-1 flex items-center gap-1">
                       <span className="text-[9px] text-gray-400">Your Ans:</span>
                       <span className={`text-[10px] font-medium ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
@@ -520,7 +524,7 @@ export default function QuizPage() {
                         <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full">✗ Wrong</span>
                       }
                     </div>
-                    <h3 className="font-semibold text-gray-800 text-sm mb-2">{item.question}</h3>
+                    <h3 className="font-semibold text-gray-800 text-sm mb-2 whitespace-pre-line leading-relaxed">{item.question}</h3>
                     <div className="space-y-1 mb-2">
                       {item.options?.map((opt, optIdx) => {
                         const letter = String.fromCharCode(65 + optIdx);
@@ -531,7 +535,8 @@ export default function QuizPage() {
                         if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
                         return (
                           <div key={optIdx} className={`p-1.5 rounded-lg ${bgClass} text-xs`}>
-                            <span className="font-medium">{letter}.</span> {opt}
+                            <span className="font-medium">{letter}.</span> 
+                            <span className="whitespace-pre-line">{opt}</span>
                             {isCorrectAnswer && <span className="text-green-600 text-[10px] ml-1">✓</span>}
                             {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-[10px] ml-1">✗ Your Answer</span>}
                           </div>
@@ -540,7 +545,7 @@ export default function QuizPage() {
                     </div>
                     <div className="bg-blue-50 rounded-lg p-2">
                       <p className="text-[10px] font-semibold text-blue-800">Explanation:</p>
-                      <p className="text-[11px] text-blue-700 mt-0.5">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
+                      <p className="text-[11px] text-blue-700 mt-0.5 whitespace-pre-line leading-relaxed">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
                     </div>
                   </div>
                 </div>
@@ -612,20 +617,25 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
+        {/* UPDATED: Question Card with multiline support */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center">
+            <div className="flex items-start gap-2">
+              <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
               </div>
-              <h2 className="font-semibold text-gray-800 text-sm flex-1">{currentQ?.question}</h2>
+              <h2 className="font-semibold text-gray-800 text-sm flex-1 leading-relaxed whitespace-pre-line">
+                {currentQ?.question}
+              </h2>
               {isQuestionAnswered && (
-                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                   <span className="text-green-600 text-[10px]">✓</span>
                 </div>
               )}
             </div>
           </div>
+          
+          {/* UPDATED: Options with multiline support */}
           <div className="p-3 space-y-2">
             {currentQ?.options?.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
@@ -643,12 +653,12 @@ export default function QuizPage() {
               return (
                 <button 
                   key={idx} 
-                  onClick={() => !isDisabled && handleAnswerSelect(opt)} 
+                  onClick={() => !isDisabled && handleAnswerSelect(opt, idx)} 
                   disabled={isDisabled} 
                   className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${isDisabled ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  <div className="flex items-start gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
                       showCorrect ? 'bg-green-600 text-white' : 
                       showWrong ? 'bg-red-600 text-white' : 
                       (isSelected && !isDisabled) ? 'bg-green-600 text-white' :
@@ -657,11 +667,13 @@ export default function QuizPage() {
                     }`}>
                       {letter}
                     </div>
-                    <span className="text-sm text-gray-700 flex-1">{opt}</span>
-                    {showCorrect && <span className="text-green-600 text-xs">✓ Correct</span>}
-                    {showWrong && <span className="text-red-600 text-xs">✗ Wrong</span>}
+                    <span className="text-sm text-gray-700 flex-1 leading-relaxed whitespace-pre-line">
+                      {opt}
+                    </span>
+                    {showCorrect && <span className="text-green-600 text-xs flex-shrink-0">✓ Correct</span>}
+                    {showWrong && <span className="text-red-600 text-xs flex-shrink-0">✗ Wrong</span>}
                     {isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation && (
-                      <span className="text-green-600 text-xs">✓ Your Answer</span>
+                      <span className="text-green-600 text-xs flex-shrink-0">✓ Your Answer</span>
                     )}
                   </div>
                 </button>
@@ -670,15 +682,16 @@ export default function QuizPage() {
           </div>
         </div>
 
+        {/* UPDATED: Explanation with multiline support */}
         {showExplanation && (
           <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
             <div className="flex gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                 <span className="text-blue-600 text-xs">i</span>
               </div>
               <div className="flex-1">
                 <p className="text-[11px] font-semibold text-blue-800">Explanation</p>
-                <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                <p className="text-xs text-blue-700 mt-1 leading-relaxed whitespace-pre-line">
                   {currentQ?.explanation || `The correct answer is ${currentQ?.answer}`}
                 </p>
               </div>
