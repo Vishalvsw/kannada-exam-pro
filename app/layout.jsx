@@ -16,6 +16,10 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes" />
         <meta name="theme-color" content="#3B82F6" />
         <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+
+        <link rel="icon" href="/icons/logo.ico" />
+        <link rel="shortcut icon" href="/icons/logo.ico" />
+        <meta name="theme-color" content="#ffffff" />
         
         {/* DNS Prefetch for faster external connections */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />

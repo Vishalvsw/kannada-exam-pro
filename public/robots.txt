@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Allow AdSense crawler
+User-agent: Mediapartners-Google
+Allow: /
+
+# Allow Googlebot to crawl
+User-agent: Googlebot
+Allow: /
+
+# Disallow admin pages (optional)
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+
+# Sitemap location
+Sitemap: https://kannadaexampro.com/sitemap.xml
