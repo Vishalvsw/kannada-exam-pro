@@ -132,7 +132,7 @@ export default function ContactPage() {
   };
 
   // Get email from environment variable
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'your-client-email@example.com';
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'kexampro@gmail.com';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
