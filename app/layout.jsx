@@ -19,6 +19,9 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#3B82F6" />
         <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
 
+        {/* ====== ✅ GOOGLE SEARCH CONSOLE VERIFICATION ====== */}
+        <meta name="google-site-verification" content="y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs" />
+
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <meta name="theme-color" content="#ffffff" />
@@ -27,10 +30,6 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://cmp.gatekeeperconsent.com" />
-        <link rel="dns-prefetch" href="https://the.gatekeeperconsent.com" />
-        <link rel="dns-prefetch" href="https://www.ezojs.com" />
-        <link rel="dns-prefetch" href="//ezoicanalytics.com" />
         
         {/* ====== ✅ GOOGLE ANALYTICS ====== */}
         <Script
@@ -53,40 +52,6 @@ export default function RootLayout({ children }) {
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3976598981288611"
           strategy="afterInteractive"
           crossOrigin="anonymous"
-        />
-
-        {/* ====== ✅ EZOIC SCRIPTS ====== */}
-        {/* Consent Management Platform */}
-        <Script
-          src="https://cmp.gatekeeperconsent.com/min.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
-        <Script
-          src="https://the.gatekeeperconsent.com/cmp.min.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
-        
-        {/* Ezoic SA Script */}
-        <Script
-          src="//www.ezojs.com/ezoic/sa.min.js"
-          strategy="afterInteractive"
-          async
-        />
-        
-        {/* Ezoic Standalone Initialization */}
-        <Script id="ezoic-init" strategy="afterInteractive">
-          {`
-            window.ezstandalone = window.ezstandalone || {};
-            ezstandalone.cmd = ezstandalone.cmd || [];
-          `}
-        </Script>
-        
-        {/* Ezoic Analytics */}
-        <Script
-          src="//ezoicanalytics.com/analytics.js"
-          strategy="afterInteractive"
         />
       </head>
       <body suppressHydrationWarning>
