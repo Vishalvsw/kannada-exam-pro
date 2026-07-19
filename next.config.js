@@ -1,27 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  trailingSlash: false,
   async headers() {
     return [
-      {
-        source: '/sitemap.xml',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/xml',
-          },
-        ],
-      },
-      {
-        source: '/robots.txt',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'text/plain',
-          },
-        ],
-      },
+      { source: '/sitemap.xml', headers: [{ key: 'Content-Type', value: 'application/xml' }, { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' }] },
+      { source: '/robots.txt', headers: [{ key: 'Content-Type', value: 'text/plain' }, { key: 'Cache-Control', value: 'public, max-age=86400' }] },
+      { source: '/(.*)', headers: [{ key: 'X-Content-Type-Options', value: 'nosniff' }, { key: 'X-Frame-Options', value: 'DENY' }, { key: 'X-XSS-Protection', value: '1; mode=block' }] },
     ];
   },
+  images: { domains: ['localhost'], formats: ['image/avif', 'image/webp'] },
 };
-
 module.exports = nextConfig;
