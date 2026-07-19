@@ -75,3 +75,4 @@ data/*.json
 .env*
 .vercel
 .env*
+public/sitemap.xml

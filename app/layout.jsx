@@ -19,19 +19,19 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#3B82F6" />
         <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
 
-        {/* ====== ✅ GOOGLE SEARCH CONSOLE VERIFICATION ====== */}
+        {/* Google Search Console Verification */}
         <meta name="google-site-verification" content="y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs" />
 
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <meta name="theme-color" content="#ffffff" />
         
-        {/* DNS Prefetch for faster external connections */}
+        {/* DNS Prefetch */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         
-        {/* ====== ✅ GOOGLE ANALYTICS ====== */}
+        {/* Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         
-        {/* ====== ✅ ADSENSE SCRIPT ====== */}
+        {/* AdSense */}
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3976598981288611"
           strategy="afterInteractive"
