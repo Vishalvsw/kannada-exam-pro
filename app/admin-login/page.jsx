@@ -93,13 +93,7 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <div className="text-sm text-gray-500 mb-2">Demo Admin Credentials:</div>
-            <div className="bg-gray-50 rounded-lg p-3 text-sm">
-              <p><strong>Email:</strong> admin@kannadaexampro.com</p>
-              <p><strong>Password:</strong> Admin@123</p>
-            </div>
-          </div>
+          
 
           <div className="mt-6 text-center">
             <Link href="/" className="text-gray-500 text-sm hover:text-gray-700">← Back to Website</Link>
