@@ -6,7 +6,7 @@ export async function POST(request) {
     
     // Default admin credentials
     const ADMIN_EMAIL = "admin@kannadaexampro.com";
-    const ADMIN_PASSWORD = "Admin@123";
+    const ADMIN_PASSWORD = "vsw@422";
     
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       return NextResponse.json({ 
