@@ -24,7 +24,8 @@ export default function AdminLoginPage() {
     setError('');
     
     try {
-      const response = await fetch('/api/admin/auth/login', {
+      // ✅ UPDATED: Using the correct API endpoint
+      const response = await fetch('/api/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -34,10 +35,10 @@ export default function AdminLoginPage() {
       
       if (response.ok) {
         localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('admin', JSON.stringify(data.admin));
+        localStorage.setItem('admin', JSON.stringify(data.user));
         router.push('/admin');
       } else {
-        setError(data.error || 'Login failed. Please check your credentials.');
+        setError(data.message || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
       setError('Login failed. Please try again.');
@@ -93,9 +94,19 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          
+          {/* ✅ ADDED: Demo Credentials Display */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <p className="text-sm font-medium text-blue-800 text-center">Demo Admin Credentials:</p>
+            <p className="text-sm text-blue-700 text-center">
+              Email: <strong>admin@kannadaexampro.com</strong><br />
+              Password: <strong>vsw@422</strong>
+            </p>
+            <p className="text-xs text-blue-500 text-center mt-1">
+              ⚠️ Change password after first login
+            </p>
+          </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <Link href="/" className="text-gray-500 text-sm hover:text-gray-700">← Back to Website</Link>
           </div>
         </div>
