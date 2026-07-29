@@ -94,17 +94,6 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          {/* ✅ ADDED: Demo Credentials Display */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <p className="text-sm font-medium text-blue-800 text-center">Demo Admin Credentials:</p>
-            <p className="text-sm text-blue-700 text-center">
-              Email: <strong>admin@kannadaexampro.com</strong><br />
-              Password: <strong>vsw@422</strong>
-            </p>
-            <p className="text-xs text-blue-500 text-center mt-1">
-              ⚠️ Change password after first login
-            </p>
-          </div>
 
           <div className="mt-4 text-center">
             <Link href="/" className="text-gray-500 text-sm hover:text-gray-700">← Back to Website</Link>
