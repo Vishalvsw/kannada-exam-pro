@@ -21,7 +21,6 @@ export default function ProfilePage() {
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -69,8 +68,6 @@ export default function ProfilePage() {
       });
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -95,12 +92,8 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  if (!user || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
+  if (!user) {
+    return null; // Will redirect in useEffect
   }
 
   return (
@@ -309,3 +302,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+

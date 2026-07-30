@@ -7,7 +7,6 @@ import AdSpace from '@/components/AdSpace';
 export default function NotesPage() {
   const [notes, setNotes] = useState([]);
   const [qaQuestions, setQaQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('qa');
 
@@ -24,8 +23,6 @@ export default function NotesPage() {
     } catch (error) {
       console.error('Error fetching notes:', error);
       setNotes([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -126,12 +123,7 @@ export default function NotesPage() {
 
       {/* Content Section */}
       <div className="max-w-4xl mx-auto px-5 py-6">
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-gray-500 mt-4">Loading...</p>
-          </div>
-        ) : activeTab === 'qa' ? (
+        {activeTab === 'qa' ? (
           filteredQA.length > 0 ? (
             <div className="space-y-3">
               {filteredQA.map((qa, index) => (

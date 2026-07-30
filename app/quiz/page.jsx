@@ -29,7 +29,6 @@ export default function QuizPage() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [finalTimeTaken, setFinalTimeTaken] = useState('00:00');
-  const [loading, setLoading] = useState(true);
 
   // Helper function for case-insensitive answer comparison
   const normalizeAnswer = (answer) => {
@@ -79,7 +78,6 @@ export default function QuizPage() {
         setShowResults(true);
         setQuizLocked(true);
         setQuizCompleted(true);
-        setLoading(false);
         return;
       }
       
@@ -95,21 +93,19 @@ export default function QuizPage() {
       }
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Timer effect
   useEffect(() => {
     let timer;
-    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted && !loading) {
+    if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
       timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked && !loading) {
+    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
       handleSubmitAnswer();
     }
     return () => clearTimeout(timer);
-  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted, loading]);
+  }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted]);
 
   const handleAnswerSelect = (answer, index) => {
     if (quizLocked || quizCompleted || answeredQuestions[currentQuestion]) return;
@@ -564,16 +560,9 @@ export default function QuizPage() {
     );
   }
 
-  // Show loading only during initial data fetch
-  if (loading || questions.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-gray-500 mt-4">Loading quiz...</p>
-        </div>
-      </div>
-    );
+  // If no questions are loaded yet, show nothing (will load in background)
+  if (questions.length === 0) {
+    return null;
   }
 
   const currentQ = questions[currentQuestion];

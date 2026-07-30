@@ -7,7 +7,6 @@ import AdSpace from '@/components/AdSpace';
 export default function CurrentAffairsPage() {
   const [affairs, setAffairs] = useState([]);
   const [allAffairs, setAllAffairs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -25,7 +24,6 @@ export default function CurrentAffairsPage() {
   }, [selectedDate]);
 
   const fetchCurrentAffairs = async () => {
-    setLoading(true);
     try {
       const res = await fetch('/api/current-affairs');
       const data = await res.json();
@@ -36,8 +34,6 @@ export default function CurrentAffairsPage() {
       console.error('Error fetching affairs:', error);
       setAffairs([]);
       setAllAffairs([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -209,16 +205,7 @@ export default function CurrentAffairsPage() {
         </div>
 
         {/* Content - List View Only with Green Border */}
-        {loading ? (
-          <div className="space-y-3">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : filteredAffairs.length > 0 ? (
+        {filteredAffairs.length > 0 ? (
           <div className="space-y-3">
             {filteredAffairs.map((affair, idx) => (
               <div key={affair._id || idx} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
