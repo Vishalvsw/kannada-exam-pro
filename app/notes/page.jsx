@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
+import AnswerExplanation from '@/components/AnswerExplanation';
 
 export default function NotesPage() {
   const [notes, setNotes] = useState([]);
   const [qaQuestions, setQaQuestions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('qa');
+  const [selectedSubject, setSelectedSubject] = useState('all');
 
   useEffect(() => {
     fetchNotes();
@@ -37,12 +39,16 @@ export default function NotesPage() {
     }
   };
 
+  // Get unique subjects for filtering
+  const subjects = [...new Set(notes.map(note => note.subject).filter(Boolean))];
+
   const filteredNotes = notes.filter(note => {
     const matchesSearch = searchTerm === '' || 
                           note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           note.title_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           note.content?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesSubject = selectedSubject === 'all' || note.subject === selectedSubject;
+    return matchesSearch && matchesSubject;
   });
 
   const filteredQA = qaQuestions.filter(qa => {
@@ -74,6 +80,39 @@ export default function NotesPage() {
         </div>
       </div>
 
+      {/* Rich Content Section - Visible to Crawlers */}
+      <div className="max-w-6xl mx-auto px-5 py-6 bg-white rounded-xl shadow-sm mt-4">
+        <div className="prose max-w-none">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Comprehensive Study Material for Karnataka Competitive Exams
+          </h2>
+          <p className="text-gray-600 leading-relaxed">
+            Prepare for <strong>KAS, PSI, PDO, FDA, SDA</strong> and other Karnataka 
+            state government exams with our curated study materials. Our notes cover 
+            all essential subjects including Kannada grammar, reasoning, quantitative 
+            aptitude, general knowledge, and Karnataka history.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+            <div className="bg-green-50 p-3 rounded-lg text-center">
+              <span className="text-2xl">📚</span>
+              <p className="text-xs font-semibold mt-1">Kannada Grammar</p>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg text-center">
+              <span className="text-2xl">📐</span>
+              <p className="text-xs font-semibold mt-1">Reasoning</p>
+            </div>
+            <div className="bg-yellow-50 p-3 rounded-lg text-center">
+              <span className="text-2xl">📊</span>
+              <p className="text-xs font-semibold mt-1">Quantitative</p>
+            </div>
+            <div className="bg-purple-50 p-3 rounded-lg text-center">
+              <span className="text-2xl">🏛️</span>
+              <p className="text-xs font-semibold mt-1">Karnataka History</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="max-w-6xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-md p-1 flex gap-1">
@@ -100,6 +139,37 @@ export default function NotesPage() {
         </div>
       </div>
 
+      {/* Subject Filter - Only for Notes */}
+      {activeTab === 'notes' && subjects.length > 0 && (
+        <div className="max-w-6xl mx-auto px-5 mt-4">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <button
+              onClick={() => setSelectedSubject('all')}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+                selectedSubject === 'all'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              All Subjects
+            </button>
+            {subjects.map(subject => (
+              <button
+                key={subject}
+                onClick={() => setSelectedSubject(subject)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+                  selectedSubject === subject
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                {subject}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Search Bar */}
       <div className="max-w-6xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-lg p-3">
@@ -107,7 +177,7 @@ export default function NotesPage() {
             <span className="text-gray-400 text-xl">🔍</span>
             <input
               type="text"
-              placeholder={activeTab === 'notes' ? "Search notes..." : "Search Q&A..."}
+              placeholder={activeTab === 'notes' ? "Search notes by title or content..." : "Search Q&A..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 outline-none text-sm"
@@ -126,6 +196,9 @@ export default function NotesPage() {
         {activeTab === 'qa' ? (
           filteredQA.length > 0 ? (
             <div className="space-y-3">
+              <div className="text-sm text-gray-500 mb-3">
+                Showing {filteredQA.length} Q&A {searchTerm && `matching "${searchTerm}"`}
+              </div>
               {filteredQA.map((qa, index) => (
                 <div key={qa._id || index} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300">
                   <div className="border-l-4 border-green-500 p-4">
@@ -137,6 +210,11 @@ export default function NotesPage() {
                         <h3 className="font-semibold text-gray-800 text-sm leading-relaxed mb-2">
                           {qa.question || qa.question_en}
                         </h3>
+                        {qa.subject && (
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full mb-2 inline-block">
+                            📖 {qa.subject}
+                          </span>
+                        )}
                         <details className="group">
                           <summary className="cursor-pointer inline-flex items-center gap-1 text-green-600 text-xs font-semibold hover:text-green-700 transition">
                             <span className="text-sm">📖</span>
@@ -148,9 +226,16 @@ export default function NotesPage() {
                           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mt-2 border border-green-100">
                             <div className="flex items-start gap-2">
                               <span className="text-green-600 text-sm">✓</span>
-                              <p className="text-xs text-green-800 leading-relaxed font-medium">
-                                {qa.answer || qa.answer_en}
-                              </p>
+                              <div>
+                                <p className="text-xs text-green-800 leading-relaxed font-medium">
+                                  {qa.answer || qa.answer_en}
+                                </p>
+                                {qa.explanation && (
+                                  <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-green-200">
+                                    <span className="font-semibold">💡 Explanation:</span> {qa.explanation}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </details>
@@ -165,38 +250,51 @@ export default function NotesPage() {
               <div className="text-6xl mb-4">❓</div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">No Q&A Available</h3>
               <p className="text-gray-500 text-sm">Questions and answers will appear here once added.</p>
+              <p className="text-gray-400 text-xs mt-2">Check back later for new content</p>
             </div>
           )
         ) : (
           filteredNotes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredNotes.map((note) => (
-                <Link key={note._id} href={`/notes/${note._id}`}>
-                  <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-1">
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 text-white">
-                      <div className="text-2xl">📖</div>
-                      <h3 className="font-bold text-sm mt-2 line-clamp-2">{note.title}</h3>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-gray-600 text-xs line-clamp-2">
-                        {note.content?.substring(0, 80)}...
-                      </p>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-[10px] text-gray-400">📅 {new Date(note.createdAt).toLocaleDateString()}</span>
-                        <button className="text-green-600 font-semibold text-xs group-hover:translate-x-1 transition">
-                          Read →
-                        </button>
+            <>
+              <div className="text-sm text-gray-500 mb-3">
+                Showing {filteredNotes.length} notes {searchTerm && `matching "${searchTerm}"`}
+                {selectedSubject !== 'all' && ` in "${selectedSubject}"`}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredNotes.map((note) => (
+                  <Link key={note._id} href={`/notes/${note._id}`}>
+                    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-1">
+                      <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 text-white">
+                        <div className="text-2xl">📖</div>
+                        <h3 className="font-bold text-sm mt-2 line-clamp-2">{note.title}</h3>
+                        {note.subject && (
+                          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full inline-block mt-1">
+                            {note.subject}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="text-gray-600 text-xs line-clamp-2">
+                          {note.content?.substring(0, 80)}...
+                        </p>
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-[10px] text-gray-400">📅 {new Date(note.createdAt).toLocaleDateString()}</span>
+                          <button className="text-green-600 font-semibold text-xs group-hover:translate-x-1 transition">
+                            Read →
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
               <div className="text-6xl mb-4">📖</div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">No Notes Available</h3>
               <p className="text-gray-500 text-sm">Study notes will appear here once added.</p>
+              <p className="text-gray-400 text-xs mt-2">Check back later for new content</p>
             </div>
           )
         )}

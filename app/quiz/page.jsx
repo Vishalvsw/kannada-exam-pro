@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
+import AnswerExplanation from '@/components/AnswerExplanation';
 
 export default function QuizPage() {
   const router = useRouter();
@@ -134,7 +135,10 @@ export default function QuizPage() {
         correctAnswer: questions[currentQuestion]?.answer,
         question: questions[currentQuestion]?.question,
         options: questions[currentQuestion]?.options,
-        explanation: questions[currentQuestion]?.explanation
+        explanation: questions[currentQuestion]?.explanation,
+        examTip: questions[currentQuestion]?.examTip,
+        subject: questions[currentQuestion]?.subject,
+        difficulty: questions[currentQuestion]?.difficulty
       };
       setUserAnswers(newUserAnswers);
       
@@ -186,7 +190,10 @@ export default function QuizPage() {
             correctAnswer: questions[i]?.answer,
             question: questions[i]?.question,
             options: questions[i]?.options,
-            explanation: questions[i]?.explanation
+            explanation: questions[i]?.explanation,
+            examTip: questions[i]?.examTip,
+            subject: questions[i]?.subject,
+            difficulty: questions[i]?.difficulty
           };
         }
       }
@@ -539,10 +546,13 @@ export default function QuizPage() {
                         );
                       })}
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-2">
-                      <p className="text-[10px] font-semibold text-blue-800">Explanation:</p>
-                      <p className="text-[11px] text-blue-700 mt-0.5 whitespace-pre-line leading-relaxed">{item.explanation || `Correct answer is ${item.correctAnswer}`}</p>
-                    </div>
+                    <AnswerExplanation
+                      correctAnswer={item.correctAnswer}
+                      explanation={item.explanation}
+                      examTip={item.examTip}
+                      subject={item.subject}
+                      difficulty={item.difficulty}
+                    />
                   </div>
                 </div>
               );
@@ -606,7 +616,7 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
-        {/* UPDATED: Question Card with multiline support */}
+        {/* Question Card with multiline support */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-start gap-2">
@@ -622,9 +632,21 @@ export default function QuizPage() {
                 </div>
               )}
             </div>
+            {currentQ?.subject && (
+              <div className="mt-2 flex gap-2">
+                <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
+                  📖 {currentQ.subject}
+                </span>
+                {currentQ?.difficulty && (
+                  <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+                    ⚡ {currentQ.difficulty}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           
-          {/* UPDATED: Options with multiline support */}
+          {/* Options with multiline support */}
           <div className="p-3 space-y-2">
             {currentQ?.options?.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
@@ -671,21 +693,15 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* UPDATED: Explanation with multiline support */}
+        {/* Enhanced Explanation with AnswerExplanation Component */}
         {showExplanation && (
-          <div className="bg-blue-50 rounded-xl p-3 mb-4 border border-blue-100">
-            <div className="flex gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-blue-600 text-xs">i</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-[11px] font-semibold text-blue-800">Explanation</p>
-                <p className="text-xs text-blue-700 mt-1 leading-relaxed whitespace-pre-line">
-                  {currentQ?.explanation || `The correct answer is ${currentQ?.answer}`}
-                </p>
-              </div>
-            </div>
-          </div>
+          <AnswerExplanation
+            correctAnswer={currentQ?.answer}
+            explanation={currentQ?.explanation}
+            examTip={currentQ?.examTip}
+            subject={currentQ?.subject}
+            difficulty={currentQ?.difficulty}
+          />
         )}
 
         <div className="flex gap-2 mt-2">
