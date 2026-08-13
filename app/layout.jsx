@@ -1,62 +1,91 @@
-'use client';
-
+// app/layout.jsx
 import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
 import Script from 'next/script';
-import { usePathname } from 'next/navigation';
 import './globals.css';
+
+// ✅ Metadata for SEO - Server Component
+export const metadata = {
+  title: 'ಕನ್ನಡ ಎಕ್ಸಾಂ ಪ್ರೋ - ಕೆಎಎಸ್ | ಪಿಎಸ್ಐ | ಪಿಡಿಒ ಪರೀಕ್ಷಾ ತಯಾರಿ',
+  description: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳೊಂದಿಗೆ ತಯಾರಿ ಮಾಡಿ',
+  metadataBase: new URL('https://www.kannadaexampro.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'ಕನ್ನಡ ಎಕ್ಸಾಂ ಪ್ರೋ - ಕೆಎಎಸ್ | ಪಿಎಸ್ಐ | ಪಿಡಿಒ',
+    description: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳು, ಅಧ್ಯಯನ ಟಿಪ್ಪಣಿಗಳು ಮತ್ತು ಪ್ರಸ್ತುತ ವಿದ್ಯಮಾನಗಳು',
+    url: 'https://www.kannadaexampro.com',
+    siteName: 'Kannada Exam Pro',
+    images: [
+      {
+        url: '/icons/logo.ico',
+        width: 800,
+        height: 600,
+        alt: 'Kannada Exam Pro Logo',
+      },
+    ],
+    locale: 'kn_IN',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ಕನ್ನಡ ಎಕ್ಸಾಂ ಪ್ರೋ - ಕೆಎಎಸ್ | ಪಿಎಸ್ಐ | ಪಿಡಿಒ',
+    description: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳು',
+    images: ['/icons/logo.ico'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs',
+  },
+};
+
+// ✅ Viewport configuration
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: true,
+  themeColor: '#3B82F6',
+};
 
 export default function RootLayout({ children }) {
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
-  const pathname = usePathname();
-  
-  // Base URL - always use www for canonical
-  const BASE_URL = 'https://www.kannadaexampro.com';
-  
-  // Build canonical URL
-  const canonicalURL = `${BASE_URL}${pathname}`;
-  
-  // Determine if page should be noindexed
-  const isNoIndexPage = pathname === '/login' || pathname === '/admin' || pathname === '/admin-login';
   
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
-        <title>ಕನ್ನಡ ಎಕ್ಸಾಂ ಪ್ರೋ - ಕೆಎಎಸ್ | ಪಿಎಸ್ಐ | ಪಿಡಿಒ ಪರೀಕ್ಷಾ ತಯಾರಿ</title>
-        <meta name="description" content="ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳೊಂದಿಗೆ ತಯಾರಿ ಮಾಡಿ" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes" />
-        <meta name="theme-color" content="#3B82F6" />
-        <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
-
-        {/* Google Search Console Verification */}
-        <meta name="google-site-verification" content="y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs" />
-
-        {/* ====== ✅ CANONICAL URL - FIX FOR DUPLICATE ISSUE ====== */}
-        <link rel="canonical" href={canonicalURL} />
-        
-        {/* ====== ✅ NOINDEX FOR LOGIN/ADMIN PAGES ====== */}
-        {isNoIndexPage && (
-          <meta name="robots" content="noindex, nofollow" />
-        )}
-        
-        {/* ====== ✅ ALTERNATE FOR MOBILE ====== */}
-        <link rel="alternate" media="only screen and (max-width: 640px)" href={canonicalURL} />
-
-        <link rel="icon" href="/icons/logo.ico" />
-        <link rel="shortcut icon" href="/icons/logo.ico" />
-        <meta name="theme-color" content="#ffffff" />
-        
         {/* ====== ✅ SITEMAP ====== */}
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
         
-        {/* DNS Prefetch */}
+        {/* ====== ✅ ICONS ====== */}
+        <link rel="icon" href="/icons/logo.ico" />
+        <link rel="shortcut icon" href="/icons/logo.ico" />
+        <link rel="apple-touch-icon" href="/icons/logo.ico" />
+        
+        {/* ====== ✅ DNS PREFETCH ====== */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         
-        {/* Google Analytics - Keeping this as it's usually safe */}
+        {/* ====== ✅ PRELOAD CRITICAL FONTS ====== */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* ====== ✅ GOOGLE ANALYTICS ====== */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -72,45 +101,15 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         
-        {/* ====== ✅ ADSENSE - TEMPORARILY REMOVED TO FIX removeChild ERROR ====== */}
-        {/* Uncomment this after testing if the page loads without errors */}
-        
+        {/* ====== ✅ ADSENSE ====== */}
         <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3976598981288611"
           strategy="afterInteractive"
           crossOrigin="anonymous"
         />
-       
         
-        {/* ====== ✅ EZOIC SCRIPTS - TEMPORARILY REMOVED ====== */}
-        {/* Uncomment these one by one to find the culprit */}
-        {/*
-        <Script
-          src="https://cmp.gatekeeperconsent.com/min.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
-        <Script
-          src="https://the.gatekeeperconsent.com/cmp.min.js"
-          strategy="afterInteractive"
-          data-cfasync="false"
-        />
-        <Script
-          src="//www.ezojs.com/ezoic/sa.min.js"
-          strategy="afterInteractive"
-          async
-        />
-        <Script id="ezoic-init" strategy="afterInteractive">
-          {`
-            window.ezstandalone = window.ezstandalone || {};
-            ezstandalone.cmd = ezstandalone.cmd || [];
-          `}
-        </Script>
-        <Script
-          src="//ezoicanalytics.com/analytics.js"
-          strategy="afterInteractive"
-        />
-        */}
+        {/* ====== ✅ EZOIC - REMOVED TO FIX ERRORS ====== */}
+        {/* Ezoic scripts removed to prevent removeChild errors */}
       </head>
       <body suppressHydrationWarning>
         <ClientOnly>
