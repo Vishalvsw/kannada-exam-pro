@@ -10,14 +10,9 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [quizResults, setQuizResults] = useState([]);
   const [stats, setStats] = useState({
-    totalScore: 0,
-    totalQuizzes: 0,
-    correctAnswers: 0,
-    wrongAnswers: 0,
-    accuracy: 0,
-    bestScore: 0,
-    averagePercentage: 0,
-    rank: 0
+    totalScore: 0, totalQuizzes: 0, correctAnswers: 0,
+    wrongAnswers: 0, accuracy: 0, bestScore: 0,
+    averagePercentage: 0, rank: 0
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [newInstagramId, setNewInstagramId] = useState('');
@@ -36,7 +31,6 @@ export default function ProfilePage() {
 
   const loadUserData = async (currentUser) => {
     try {
-      // Fetch only user-specific data with limit
       const [resultsRes, leaderboardRes] = await Promise.all([
         fetch(`/api/quiz-results?userId=${currentUser.instagramId}&limit=50&_t=${Date.now()}`),
         fetch(`/api/leaderboard?_t=${Date.now()}`)
@@ -92,15 +86,12 @@ export default function ProfilePage() {
     setShowEditModal(false);
   };
 
-  if (!user) {
-    return null; // Will redirect in useEffect
-  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* Profile Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white pt-8 pb-12">
         <div className="px-5">
           <div className="flex flex-col items-center text-center">
@@ -109,7 +100,6 @@ export default function ProfilePage() {
                 src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3B82F6&color=fff&size=120`}
                 className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover"
                 alt={user.name}
-                onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3B82F6&color=fff&size=120`; }}
               />
               <div className="absolute bottom-1 right-1 bg-green-500 rounded-full w-4 h-4 border-2 border-white"></div>
             </div>
@@ -136,87 +126,38 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="px-5 -mt-6">
         <div className="bg-white rounded-2xl shadow-xl p-5">
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-xl">
-              <p className="text-gray-500 text-xs">Total Score</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.totalScore}</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-xl">
-              <p className="text-gray-500 text-xs">Quizzes Taken</p>
-              <p className="text-2xl font-bold text-green-600">{stats.totalQuizzes}</p>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-xl">
-              <p className="text-gray-500 text-xs">Correct Answers</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.correctAnswers}</p>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded-xl">
-              <p className="text-gray-500 text-xs">Accuracy</p>
-              <p className="text-2xl font-bold text-orange-600">{stats.accuracy}%</p>
-            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-xl"><p className="text-gray-500 text-xs">Total Score</p><p className="text-2xl font-bold text-blue-600">{stats.totalScore}</p></div>
+            <div className="text-center p-4 bg-green-50 rounded-xl"><p className="text-gray-500 text-xs">Quizzes Taken</p><p className="text-2xl font-bold text-green-600">{stats.totalQuizzes}</p></div>
+            <div className="text-center p-4 bg-purple-50 rounded-xl"><p className="text-gray-500 text-xs">Correct Answers</p><p className="text-2xl font-bold text-purple-600">{stats.correctAnswers}</p></div>
+            <div className="text-center p-4 bg-orange-50 rounded-xl"><p className="text-gray-500 text-xs">Accuracy</p><p className="text-2xl font-bold text-orange-600">{stats.accuracy}%</p></div>
           </div>
         </div>
       </div>
 
-      {/* Quick Stats Row */}
       <div className="px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-md p-4">
           <div className="flex justify-around">
-            <div className="text-center">
-              <p className="text-gray-500 text-xs">Best Score</p>
-              <p className="text-xl font-bold text-yellow-600">{stats.bestScore}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs">Avg Score</p>
-              <p className="text-xl font-bold text-indigo-600">{stats.averagePercentage}%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500 text-xs">Wrong Answers</p>
-              <p className="text-xl font-bold text-red-600">{stats.wrongAnswers}</p>
-            </div>
+            <div className="text-center"><p className="text-gray-500 text-xs">Best Score</p><p className="text-xl font-bold text-yellow-600">{stats.bestScore}</p></div>
+            <div className="text-center"><p className="text-gray-500 text-xs">Avg Score</p><p className="text-xl font-bold text-indigo-600">{stats.averagePercentage}%</p></div>
+            <div className="text-center"><p className="text-gray-500 text-xs">Wrong Answers</p><p className="text-xl font-bold text-red-600">{stats.wrongAnswers}</p></div>
           </div>
         </div>
       </div>
 
-      {/* Progress Section */}
       <div className="px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold mb-4">📊 Your Progress</h3>
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Overall Score</span>
-                <span className="font-semibold text-blue-600">{stats.totalScore} pts</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" style={{ width: `${Math.min((stats.totalScore / 10) || 0, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Quiz Completion</span>
-                <span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style={{ width: `${Math.min((stats.totalQuizzes * 5) || 0, 100)}%` }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Accuracy Rate</span>
-                <span className="font-semibold text-orange-600">{stats.accuracy}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy || 0}%` }}></div>
-              </div>
-            </div>
+            <div><div className="flex justify-between text-sm mb-1"><span className="text-gray-600">Overall Score</span><span className="font-semibold text-blue-600">{stats.totalScore} pts</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" style={{ width: `${Math.min((stats.totalScore / 10) || 0, 100)}%` }}></div></div></div>
+            <div><div className="flex justify-between text-sm mb-1"><span className="text-gray-600">Quiz Completion</span><span className="font-semibold text-green-600">{stats.totalQuizzes} quizzes</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style={{ width: `${Math.min((stats.totalQuizzes * 5) || 0, 100)}%` }}></div></div></div>
+            <div><div className="flex justify-between text-sm mb-1"><span className="text-gray-600">Accuracy Rate</span><span className="font-semibold text-orange-600">{stats.accuracy}%</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full" style={{ width: `${stats.accuracy || 0}%` }}></div></div></div>
           </div>
         </div>
       </div>
 
-      {/* Quiz History */}
       <div className="px-5 mt-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-lg font-bold mb-4">📋 Recent Quizzes</h3>
@@ -231,14 +172,8 @@ export default function ProfilePage() {
               {quizResults.slice(0, 10).map((quiz, idx) => (
                 <div key={quiz._id || idx} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p>
-                      <p className="text-xs text-gray-500">{new Date(quiz.date || quiz.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p>
-                      <p className="text-xs text-gray-500">{quiz.percentage}%</p>
-                    </div>
+                    <div><p className="font-semibold text-gray-800">Quiz #{quizResults.length - idx}</p><p className="text-xs text-gray-500">{new Date(quiz.date || quiz.createdAt).toLocaleDateString()}</p></div>
+                    <div className="text-right"><p className="text-xl font-bold text-green-600">{quiz.score}/{quiz.totalQuestions}</p><p className="text-xs text-gray-500">{quiz.percentage}%</p></div>
                   </div>
                   <div className="flex gap-3 mt-2 text-xs">
                     <span className="text-green-600">✓ {quiz.correctCount || quiz.score} correct</span>
@@ -251,13 +186,11 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="px-5 mt-6 flex gap-3 pb-8">
         <Link href="/quiz" className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-700 transition">🎯 Take New Quiz</Link>
         <Link href="/leaderboard" className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold text-center hover:bg-gray-300 transition">🏆 View Leaderboard</Link>
       </div>
 
-      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition"><span className="text-xl">🏠</span><span className="text-[10px]">Home</span></Link>
@@ -269,7 +202,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Edit Instagram Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
@@ -281,14 +213,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Instagram ID</label>
               <div className="relative">
                 <span className="absolute left-3 top-3 text-gray-400">@</span>
-                <input
-                  type="text"
-                  value={newInstagramId}
-                  onChange={(e) => setNewInstagramId(e.target.value.replace('@', ''))}
-                  className="w-full pl-8 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="username"
-                  autoFocus
-                />
+                <input type="text" value={newInstagramId} onChange={(e) => setNewInstagramId(e.target.value.replace('@', ''))} className="w-full pl-8 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="username" autoFocus />
               </div>
               <p className="text-xs text-gray-500 mt-1">This will be visible on leaderboard</p>
             </div>
@@ -302,5 +227,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-
