@@ -1,8 +1,16 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Footer() {
+  const pathname = usePathname();
+  
+  // Only show footer on homepage
+  if (pathname !== '/') {
+    return null;
+  }
+
   return (
     <footer className="bg-gray-50 border-t border-gray-200 py-8 mt-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -20,7 +28,7 @@ export default function Footer() {
               NISHANTH SHINDE
             </h3>
             <p className="text-sm text-gray-500 font-medium">
-              Operated by <span className="text-blue-600">KannadaExamPro</span>
+              Operated by <span className="text-blue-600">Kannada Exam Pro</span>
             </p>
             
             <p className="text-sm text-gray-600 flex items-center justify-center gap-1">
@@ -28,7 +36,7 @@ export default function Footer() {
             </p>
             
             <p className="text-xs text-gray-400">
-              © {new Date().getFullYear()} kannadaexampro. All Rights reserved
+              © {new Date().getFullYear()} KannadaExamPro. All Rights reserved
             </p>
           </div>
           
