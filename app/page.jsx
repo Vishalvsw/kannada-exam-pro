@@ -6,7 +6,6 @@ import AdSpace from '@/components/AdSpace';
 import Image from 'next/image';
 
 export default function Home() {
-  const [totalQuestions, setTotalQuestions] = useState(0);
   const [topUsers, setTopUsers] = useState([]);
   const [user, setUser] = useState(null);
   const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
@@ -22,9 +21,9 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    fetchData();
     const storedUser = localStorage.getItem('user');
     if (storedUser) setUser(JSON.parse(storedUser));
+    fetchData();
     
     const interval = setInterval(() => {
       setCurrentLogoIndex((prev) => (prev + 1) % slidingLogos.length);
@@ -34,19 +33,9 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const [questionsRes, usersRes] = await Promise.all([
-        fetch('/api/questions'),
-        fetch('/api/leaderboard'),
-      ]);
-      
-      const questions = await questionsRes.json();
+      const usersRes = await fetch('/api/leaderboard');
       const users = await usersRes.json();
       
-      // Handle empty/null responses
-      const questionsArray = Array.isArray(questions) ? questions : [];
-      setTotalQuestions(questionsArray.length);
-      
-      // Handle different response formats
       let usersArray = [];
       if (Array.isArray(users)) {
         usersArray = users;
@@ -59,7 +48,6 @@ export default function Home() {
       setTopUsers(usersArray.slice(0, 5));
     } catch (error) {
       console.error('Error fetching data:', error);
-      setTotalQuestions(0);
       setTopUsers([]);
     }
   };
