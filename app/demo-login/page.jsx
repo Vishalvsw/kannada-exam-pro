@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Logo from '@/components/Logo';
 
 export default function DemoLoginPage() {
-  const { demoLogin, loading, demoUsers } = useDemoAuth();
+  const { demoLogin, demoUsers } = useDemoAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [showDemoAnimation, setShowDemoAnimation] = useState(false);
@@ -82,7 +82,7 @@ export default function DemoLoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={false}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50"
             >
               {loading ? 'Logging in...' : 'Login to Kannada Exam Pro'}

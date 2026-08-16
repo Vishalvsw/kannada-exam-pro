@@ -10,7 +10,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('qa');
   const [selectedSubject, setSelectedSubject] = useState('all');
-  const [loading, setLoading] = useState(false);
 
   // Fetch fresh data on client if no initial data
   useEffect(() => {
@@ -20,7 +19,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
       const [notesRes, qaRes] = await Promise.all([
         fetch('/api/notes'),
@@ -39,7 +37,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      setLoading(false);
     }
   };
 
@@ -215,7 +212,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-gray-500 mt-4">Loading content...</p>
           </div>
         ) : activeTab === 'qa' ? (
           filteredQA.length > 0 ? (

@@ -8,7 +8,6 @@ import AdSpace from '@/components/AdSpace';
 export default function NoteDetailPage() {
   const { id } = useParams();
   const [note, setNote] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -24,17 +23,9 @@ export default function NoteDetailPage() {
     } catch (error) {
       console.error('Error:', error);
     } finally {
-      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
 
   if (!note) {
     return (
