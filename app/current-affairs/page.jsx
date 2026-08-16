@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 
@@ -19,7 +19,7 @@ export default function CurrentAffairsPage() {
     fetchCurrentAffairs(today);
   }, []);
 
-  const fetchCurrentAffairs = async (date) => {
+  const fetchCurrentAffairs = useCallback(async (date) => {
     try {
       const res = await fetch('/api/current-affairs');
       const data = await res.json();
@@ -30,49 +30,61 @@ export default function CurrentAffairsPage() {
       console.error('Error fetching affairs:', error);
       setAffairs([]);
     }
-  };
+  }, []);
 
-  const handleDateSelect = (day) => {
+  const handleDateSelect = useCallback((day) => {
     const newDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(newDate);
     setCalendarOpen(false);
     fetchCurrentAffairs(newDate);
-  };
+  }, [currentYear, currentMonth, fetchCurrentAffairs]);
 
-  const changeMonth = (direction) => {
+  const changeMonth = useCallback((direction) => {
     if (direction === 'prev') {
       if (currentMonth === 0) {
         setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
+        setCurrentYear(prev => prev - 1);
       } else {
-        setCurrentMonth(currentMonth - 1);
+        setCurrentMonth(prev => prev - 1);
       }
     } else {
       if (currentMonth === 11) {
         setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
+        setCurrentYear(prev => prev + 1);
       } else {
-        setCurrentMonth(currentMonth + 1);
+        setCurrentMonth(prev => prev + 1);
       }
     }
-  };
+  }, [currentMonth]);
 
-  const getDaysInMonth = (year, month) => {
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setCurrentMonth(today.getMonth());
+    setCurrentYear(today.getFullYear());
+    const todayStr = today.toISOString().split('T')[0];
+    setSelectedDate(todayStr);
+    setCalendarOpen(false);
+    fetchCurrentAffairs(todayStr);
+  }, [fetchCurrentAffairs]);
+
+  const getDaysInMonth = useCallback((year, month) => {
     return new Date(year, month + 1, 0).getDate();
-  };
+  }, []);
 
-  const getFirstDayOfMonth = (year, month) => {
+  const getFirstDayOfMonth = useCallback((year, month) => {
     return new Date(year, month, 1).getDay();
-  };
+  }, []);
 
-  const filteredAffairs = affairs.filter(affair => {
-    const matchesSearch = searchTerm === '' || 
-                          affair.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          affair.content?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const filteredAffairs = useMemo(() => {
+    return affairs.filter(affair => {
+      const matchesSearch = searchTerm === '' || 
+                            affair.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            affair.content?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    });
+  }, [affairs, searchTerm]);
 
-  const formatDate = (dateStr) => {
+  const formatDate = useCallback((dateStr) => {
     if (!dateStr) return 'Select a date';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { 
@@ -81,23 +93,18 @@ export default function CurrentAffairsPage() {
       month: 'long', 
       day: 'numeric' 
     });
-  };
+  }, []);
 
-  const goToToday = () => {
-    const today = new Date();
-    setCurrentMonth(today.getMonth());
-    setCurrentYear(today.getFullYear());
-    const todayStr = today.toISOString().split('T')[0];
-    setSelectedDate(todayStr);
-    setCalendarOpen(false);
-    fetchCurrentAffairs(todayStr);
-  };
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayOfMonth = getFirstDayOfMonth(currentYear, currentMonth);
+  const emptyDays = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
 
-      {/* Header - Green */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 pt-6 pb-8">
         <div className="max-w-md mx-auto text-center">
           <div className="text-5xl mb-2">📰</div>
@@ -117,9 +124,14 @@ export default function CurrentAffairsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 outline-none text-sm"
+              aria-label="Search current affairs"
             />
             {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600">
+              <button 
+                onClick={() => setSearchTerm('')} 
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
+              >
                 ✕
               </button>
             )}
@@ -137,8 +149,9 @@ export default function CurrentAffairsPage() {
                 <p className="text-lg font-semibold">{formatDate(selectedDate)}</p>
               </div>
               <button 
-                onClick={() => setCalendarOpen(!calendarOpen)}
+                onClick={() => setCalendarOpen(prev => !prev)}
                 className="bg-white/20 px-3 py-1 rounded-lg text-sm hover:bg-white/30 transition"
+                aria-label={calendarOpen ? 'Close calendar' : 'Open calendar'}
               >
                 {calendarOpen ? 'Close 📅' : 'Change Date 📅'}
               </button>
@@ -148,11 +161,23 @@ export default function CurrentAffairsPage() {
           {calendarOpen && (
             <div className="p-4 border-t">
               <div className="flex justify-between items-center mb-4">
-                <button onClick={() => changeMonth('prev')} className="w-8 h-8 rounded-full hover:bg-gray-100 transition">◀</button>
+                <button 
+                  onClick={() => changeMonth('prev')} 
+                  className="w-8 h-8 rounded-full hover:bg-gray-100 transition"
+                  aria-label="Previous month"
+                >
+                  ◀
+                </button>
                 <h3 className="font-semibold text-gray-800">
                   {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} {currentYear}
                 </h3>
-                <button onClick={() => changeMonth('next')} className="w-8 h-8 rounded-full hover:bg-gray-100 transition">▶</button>
+                <button 
+                  onClick={() => changeMonth('next')} 
+                  className="w-8 h-8 rounded-full hover:bg-gray-100 transition"
+                  aria-label="Next month"
+                >
+                  ▶
+                </button>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-center text-sm mb-2">
@@ -162,11 +187,10 @@ export default function CurrentAffairsPage() {
               </div>
               
               <div className="grid grid-cols-7 gap-1 text-center text-sm">
-                {Array(getFirstDayOfMonth(currentYear, currentMonth)).fill().map((_, i) => (
+                {emptyDays.map((_, i) => (
                   <div key={`empty-${i}`} className="p-2"></div>
                 ))}
-                {Array(getDaysInMonth(currentYear, currentMonth)).fill().map((_, i) => {
-                  const day = i + 1;
+                {daysArray.map((day) => {
                   const isToday = day === new Date().getDate() && 
                                   currentMonth === new Date().getMonth() && 
                                   currentYear === new Date().getFullYear();
@@ -179,6 +203,7 @@ export default function CurrentAffairsPage() {
                         isSelected ? 'bg-green-600 text-white font-bold' : 
                         isToday ? 'bg-green-100 text-green-600 font-bold' : 'text-gray-700'
                       }`}
+                      aria-label={`Select ${day} ${new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })}`}
                     >
                       {day}
                     </button>
@@ -197,16 +222,15 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Results Header */}
+      {/* Results */}
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold text-gray-800">📅 {formatDate(selectedDate)}</h2>
-          <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
             {filteredAffairs.length} {filteredAffairs.length === 1 ? 'update' : 'updates'}
-          </p>
+          </span>
         </div>
 
-        {/* Content - Instant Display */}
         {filteredAffairs.length > 0 ? (
           <div className="space-y-3">
             {filteredAffairs.map((affair, idx) => (
@@ -234,9 +258,11 @@ export default function CurrentAffairsPage() {
                         <summary className="cursor-pointer text-green-600 text-xs font-medium hover:text-green-700 transition inline-flex items-center gap-1">
                           <span>📖</span> Read More
                         </summary>
-                        <p className="text-xs text-gray-600 mt-2 p-3 bg-gray-50 rounded-lg leading-relaxed">
-                          {affair.content}
-                        </p>
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 mt-2 border border-green-100">
+                          <p className="text-xs text-gray-700 leading-relaxed">
+                            {affair.content}
+                          </p>
+                        </div>
                       </details>
                     </div>
                   </div>
