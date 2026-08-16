@@ -31,19 +31,16 @@ export default function QuizPage() {
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [finalTimeTaken, setFinalTimeTaken] = useState('00:00');
 
-  // Helper function for case-insensitive answer comparison
   const normalizeAnswer = (answer) => {
     if (!answer) return '';
     return answer.toString().trim().toLowerCase();
   };
 
-  // Live clock
   useEffect(() => {
     const interval = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Check login and load quiz
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {
@@ -97,7 +94,6 @@ export default function QuizPage() {
     }
   };
 
-  // Timer effect
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
@@ -119,7 +115,6 @@ export default function QuizPage() {
     if (!selectedAnswer && !showExplanation) return;
 
     if (!showExplanation && selectedAnswer) {
-      // Use case-insensitive comparison
       const isCorrect = normalizeAnswer(selectedAnswer) === normalizeAnswer(questions[currentQuestion]?.answer);
       if (isCorrect) setScore(prev => prev + 1);
       
@@ -570,7 +565,7 @@ export default function QuizPage() {
     );
   }
 
-  // If no questions are loaded yet, show nothing (will load in background)
+  // If no questions are loaded yet, show nothing
   if (questions.length === 0) {
     return null;
   }
@@ -616,7 +611,7 @@ export default function QuizPage() {
           <p className="text-right text-[10px] text-gray-400 mt-1">of {totalQuestions}</p>
         </div>
 
-        {/* Question Card with multiline support */}
+        {/* Question Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-start gap-2">
@@ -646,7 +641,7 @@ export default function QuizPage() {
             )}
           </div>
           
-          {/* Options with multiline support */}
+          {/* Options */}
           <div className="p-3 space-y-2">
             {currentQ?.options?.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
@@ -693,7 +688,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Enhanced Explanation with AnswerExplanation Component */}
+        {/* Enhanced Explanation */}
         {showExplanation && (
           <AnswerExplanation
             correctAnswer={currentQ?.answer}
