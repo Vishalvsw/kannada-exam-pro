@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 import Image from 'next/image';
@@ -9,27 +9,46 @@ export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
   const [user, setUser] = useState(null);
   const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  const slidingLogos = [
-    { image: '/logos/police.png', name: 'Police', color: 'from-blue-500 to-blue-600', fallback: '👮' },
-    { image: '/logos/defence.jpg', name: 'Defence', color: 'from-green-500 to-green-600', fallback: '🛡️' },
-    { image: '/logos/SBI.jpeg', name: 'SBI', color: 'from-yellow-500 to-yellow-600', fallback: '🏦' },
-    { image: '/logos/ssc.jpeg', name: 'SSC', color: 'from-purple-500 to-purple-600', fallback: '📚' },
-    { image: '/logos/bsf.jpeg', name: 'BSF', color: 'from-pink-500 to-pink-600', fallback: '🚔' },
-    { image: '/logos/all jobs.jpeg', name: 'All Jobs', color: 'from-gray-500 to-gray-600', fallback: '💼' },
-    { image: '/logos/railways.jpeg', name: 'Railways', color: 'from-red-500 to-red-600', fallback: '🚂' },
-  ];
+  const slidingLogos = useMemo(() => [
+    { image: '/logos/police.png', name: 'Police', color: 'from-blue-500 to-blue-600' },
+    { image: '/logos/defence.jpg', name: 'Defence', color: 'from-green-500 to-green-600' },
+    { image: '/logos/SBI.jpeg', name: 'SBI', color: 'from-yellow-500 to-yellow-600' },
+    { image: '/logos/ssc.jpeg', name: 'SSC', color: 'from-purple-500 to-purple-600' },
+    { image: '/logos/bsf.jpeg', name: 'BSF', color: 'from-pink-500 to-pink-600' },
+    { image: '/logos/all jobs.jpeg', name: 'All Jobs', color: 'from-gray-500 to-gray-600' },
+    { image: '/logos/railways.jpeg', name: 'Railways', color: 'from-red-500 to-red-600' },
+  ], []);
 
+  const categories = useMemo(() => [
+    { title: 'Quiz', icon: '❓', color: 'from-blue-500 to-blue-600', href: '/quiz', desc: '20 MCQ / Win Prizes' },
+    { title: 'Notes', icon: '📝', color: 'from-green-500 to-green-600', href: '/notes', desc: '50 imp Questions & Answers' },
+    { title: 'Current Affairs', icon: '📰', color: 'from-orange-500 to-orange-600', href: '/current-affairs', desc: 'Check It Now' },
+    { title: 'Leaderboard', icon: '🏆', color: 'from-yellow-500 to-yellow-600', href: '/leaderboard', desc: 'Top Winners' },
+  ], []);
+
+  // Load user instantly from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        setUser(null);
+      }
+    }
+  }, []);
+
+  // Load data and start logo animation
+  useEffect(() => {
     fetchData();
     
     const interval = setInterval(() => {
       setCurrentLogoIndex((prev) => (prev + 1) % slidingLogos.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [slidingLogos.length]);
 
   const fetchData = async () => {
     try {
@@ -49,20 +68,15 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching data:', error);
       setTopUsers([]);
+    } finally {
+      setDataLoaded(true);
     }
   };
 
   const currentLogo = slidingLogos[currentLogoIndex];
-
-  const categories = [
-    { title: 'Quiz', icon: '❓', color: 'from-blue-500 to-blue-600', href: '/quiz', desc: '20 MCQ / Win Prizes' },
-    { title: 'Notes', icon: '📝', color: 'from-green-500 to-green-600', href: '/notes', desc: '50 imp Questions & Answers' },
-    { title: 'Current Affairs', icon: '📰', color: 'from-orange-500 to-orange-600', href: '/current-affairs', desc: 'Check It Now' },
-    { title: 'Leaderboard', icon: '🏆', color: 'from-yellow-500 to-yellow-600', href: '/leaderboard', desc: 'Top Winners' },
-  ];
-
   const maxScore = topUsers.length > 0 ? Math.max(...topUsers.map(u => u.score || 0)) : 100;
 
+  // Show content immediately, no loading state
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
@@ -83,6 +97,8 @@ export default function Home() {
                   alt={currentLogo.name}
                   width={56}
                   height={56}
+                  priority={currentLogoIndex === 0}
+                  loading={currentLogoIndex === 0 ? 'eager' : 'lazy'}
                   className="w-14 h-14 rounded-full object-cover"
                   onError={(e) => {
                     e.target.style.display = 'none';
@@ -117,6 +133,7 @@ export default function Home() {
                 src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=80`} 
                 className="w-12 h-12 rounded-full border-2 border-blue-500 object-cover" 
                 alt={user.name}
+                loading="lazy"
                 onError={(e) => {
                   e.target.src = `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=80`;
                 }}
@@ -155,7 +172,8 @@ export default function Home() {
       <AdSpace type="inArticle" className="mx-4 my-6" />
 
       {/* Show message when no data */}
-      {topUsers.length === 0 && (
+
+      {topUsers.length === 0 ? (
         <div className="px-5 mt-6">
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-8 text-center">
             <span className="text-5xl mb-3 block">🏆</span>
@@ -168,9 +186,7 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      )}
-
-      {topUsers.length > 0 && (
+      ) : (
         <div className="px-5 mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
