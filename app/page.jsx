@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 import Image from 'next/image';
@@ -9,7 +9,7 @@ export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
   const [user, setUser] = useState(null);
   const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const slidingLogos = useMemo(() => [
     { image: '/logos/police.png', name: 'Police', color: 'from-blue-500 to-blue-600' },
@@ -28,29 +28,40 @@ export default function Home() {
     { title: 'Leaderboard', icon: '🏆', color: 'from-yellow-500 to-yellow-600', href: '/leaderboard', desc: 'Top Winners' },
   ], []);
 
-  // Load user instantly from localStorage
+  // Load user from localStorage instantly
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
         setUser(JSON.parse(storedUser));
-      } catch (e) {
-        setUser(null);
       }
+    } catch (e) {
+      setUser(null);
     }
   }, []);
 
-  // Load data and start logo animation
+  // Check cache first, then fetch
   useEffect(() => {
-    fetchData();
+    // Try to load from cache first
+    const cachedData = localStorage.getItem('leaderboard_cache');
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        // Use cache if less than 5 minutes old
+        if (Date.now() - parsed.timestamp < 300000) {
+          setTopUsers(parsed.data.slice(0, 5));
+          setIsDataLoaded(true);
+        }
+      } catch (e) {
+        // Cache invalid, will fetch
+      }
+    }
     
-    const interval = setInterval(() => {
-      setCurrentLogoIndex((prev) => (prev + 1) % slidingLogos.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [slidingLogos.length]);
+    // Always fetch fresh data in background
+    fetchData();
+  }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const usersRes = await fetch('/api/leaderboard');
       const users = await usersRes.json();
@@ -64,19 +75,122 @@ export default function Home() {
         usersArray = users.users;
       }
       
-      setTopUsers(usersArray.slice(0, 5));
+      const topFive = usersArray.slice(0, 5);
+      setTopUsers(topFive);
+      
+      // Save to cache
+      localStorage.setItem('leaderboard_cache', JSON.stringify({
+        data: usersArray,
+        timestamp: Date.now()
+      }));
+      
+      setIsDataLoaded(true);
     } catch (error) {
       console.error('Error fetching data:', error);
-      setTopUsers([]);
-    } finally {
-      setDataLoaded(true);
+      setIsDataLoaded(true);
     }
-  };
+  }, []);
+
+  // Start logo animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentLogoIndex((prev) => (prev + 1) % slidingLogos.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [slidingLogos.length]);
 
   const currentLogo = slidingLogos[currentLogoIndex];
   const maxScore = topUsers.length > 0 ? Math.max(...topUsers.map(u => u.score || 0)) : 100;
 
-  // Show content immediately, no loading state
+  // Leaderboard component
+  const LeaderboardSection = useMemo(() => {
+    if (topUsers.length === 0) {
+      return (
+        <div className="px-5 mt-6">
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-8 text-center">
+            <span className="text-5xl mb-3 block">🏆</span>
+            <h3 className="text-lg font-semibold text-gray-800">No Winners Yet!</h3>
+            <p className="text-sm text-gray-500 mt-2">Be the first to take the quiz and win!</p>
+            <Link href="/quiz">
+              <button className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
+                Start Quiz Now 🎯
+              </button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="px-5 mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            🏆 Top Winners 
+            <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top {topUsers.length}</span>
+          </h2>
+          <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
+        </div>
+        
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-5">
+          <div className="space-y-4">
+            {topUsers.map((user, idx) => {
+              const rank = idx + 1;
+              const scorePercentage = maxScore > 0 ? Math.min((user.score / maxScore) * 100, 100) : 0;
+              
+              const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
+              const rankColor = { 1: 'text-yellow-600', 2: 'text-gray-600', 3: 'text-orange-600' };
+              const barColor = {
+                1: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
+                2: 'bg-gradient-to-r from-gray-400 to-gray-500',
+                3: 'bg-gradient-to-r from-orange-400 to-orange-500',
+                4: 'bg-gradient-to-r from-blue-400 to-blue-500',
+                5: 'bg-gradient-to-r from-green-400 to-green-500',
+              };
+              
+              return (
+                <div key={user._id || idx} className="group">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`text-lg font-bold flex-shrink-0 ${rank <= 3 ? rankColor[rank] : 'text-purple-600'}`}>
+                        {rank <= 3 ? rankIcon[rank] : `${rank}th`}
+                      </span>
+                      <p className="font-semibold text-gray-800 text-sm truncate max-w-[120px]">
+                        {user.name?.split(' ')[0] || 'User'}
+                      </p>
+                      <span className="text-xs text-gray-400 truncate max-w-[80px] hidden sm:inline">
+                        @{user.instagramId || 'user'}
+                      </span>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-bold text-purple-600">{user.score || 0}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="relative w-full bg-gray-200 rounded-full h-7 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out ${
+                        barColor[rank] || 'bg-gradient-to-r from-purple-400 to-purple-500'
+                      }`}
+                      style={{ width: `${Math.max(scorePercentage, 5)}%` }}
+                    >
+                      <span className="text-xs font-bold text-white drop-shadow-md">
+                        {Math.round(scorePercentage)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="mt-4 pt-3 border-t border-purple-200 text-center">
+            <p className="text-xs text-gray-500">🏆 Keep practicing to reach the top!</p>
+          </div>
+        </div>
+      </div>
+    );
+  }, [topUsers, maxScore]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
@@ -171,90 +285,8 @@ export default function Home() {
 
       <AdSpace type="inArticle" className="mx-4 my-6" />
 
-      {/* Show message when no data */}
-
-      {topUsers.length === 0 ? (
-        <div className="px-5 mt-6">
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-8 text-center">
-            <span className="text-5xl mb-3 block">🏆</span>
-            <h3 className="text-lg font-semibold text-gray-800">No Winners Yet!</h3>
-            <p className="text-sm text-gray-500 mt-2">Be the first to take the quiz and win!</p>
-            <Link href="/quiz">
-              <button className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transition">
-                Start Quiz Now 🎯
-              </button>
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div className="px-5 mt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              🏆 Top Winners 
-              <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top {topUsers.length}</span>
-            </h2>
-            <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-5">
-            <div className="space-y-4">
-              {topUsers.map((user, idx) => {
-                const rank = idx + 1;
-                const scorePercentage = maxScore > 0 ? (user.score / maxScore) * 100 : 0;
-                
-                const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
-                const rankColor = { 1: 'text-yellow-600', 2: 'text-gray-600', 3: 'text-orange-600' };
-                const barColor = {
-                  1: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
-                  2: 'bg-gradient-to-r from-gray-400 to-gray-500',
-                  3: 'bg-gradient-to-r from-orange-400 to-orange-500',
-                };
-                
-                return (
-                  <div key={user._id || idx} className="group">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-lg font-bold ${rank <= 3 ? rankColor[rank] : 'text-purple-600'}`}>
-                          {rank <= 3 ? rankIcon[rank] : `${rank}th`}
-                        </span>
-                        <p className="font-semibold text-gray-800 text-sm">
-                          {user.name?.split(' ')[0] || 'User'}
-                        </p>
-                        <span className="text-xs text-gray-400">@{user.instagramId || 'user'}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-purple-600">{user.score || 0}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="relative w-full bg-gray-200 rounded-full h-7 overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out ${
-                          rank === 1 ? barColor[1] :
-                          rank === 2 ? barColor[2] :
-                          rank === 3 ? barColor[3] :
-                          rank === 4 ? 'bg-gradient-to-r from-blue-400 to-blue-500' : 
-                          rank === 5 ? 'bg-gradient-to-r from-green-400 to-green-500' :
-                          'bg-gradient-to-r from-purple-400 to-purple-500'
-                        }`}
-                        style={{ width: `${scorePercentage}%` }}
-                      >
-                        <span className="text-xs font-bold text-white drop-shadow-md">
-                          {Math.round(scorePercentage)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="mt-4 pt-3 border-t border-purple-200 text-center">
-              <p className="text-xs text-gray-500">🏆 Keep practicing to reach the top!</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Leaderboard - Rendered with useMemo */}
+      {isDataLoaded && LeaderboardSection}
 
       <div className="px-5 mt-8 mb-4 text-center">
         <p className="text-sm text-gray-500">For Daily Quiz and Updates</p>
