@@ -12,7 +12,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   const [selectedSubject, setSelectedSubject] = useState('all');
 
   useEffect(() => {
-    // Only fetch if initial data is empty
     if (initialNotes.length === 0) {
       fetchNotes();
     }
@@ -66,12 +65,13 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
 
+      {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 animate-bounce">
-              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-transform duration-300">
-                <span className="text-5xl animate-pulse">📖</span>
+            <div className="mb-4">
+              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+                <span className="text-5xl">📖</span>
               </div>
             </div>
             <div>
@@ -82,36 +82,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-5 py-6 bg-white rounded-xl shadow-sm mt-4">
-        <div className="prose max-w-none">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Comprehensive Study Material for Karnataka Competitive Exams
-          </h2>
-          <p className="text-gray-600 leading-relaxed">
-            Prepare for <strong>KAS, PSI, PDO, FDA, SDA</strong> and other Karnataka 
-            state government exams with our curated study materials.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-            <div className="bg-green-50 p-3 rounded-lg text-center">
-              <span className="text-2xl">📚</span>
-              <p className="text-xs font-semibold mt-1">Kannada Grammar</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg text-center">
-              <span className="text-2xl">📐</span>
-              <p className="text-xs font-semibold mt-1">Reasoning</p>
-            </div>
-            <div className="bg-yellow-50 p-3 rounded-lg text-center">
-              <span className="text-2xl">📊</span>
-              <p className="text-xs font-semibold mt-1">Quantitative</p>
-            </div>
-            <div className="bg-purple-50 p-3 rounded-lg text-center">
-              <span className="text-2xl">🏛️</span>
-              <p className="text-xs font-semibold mt-1">Karnataka History</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      {/* Tab Navigation */}
       <div className="max-w-6xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-md p-1 flex gap-1">
           <button
@@ -137,6 +108,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
+      {/* Subject Filter - Only for Notes */}
       {activeTab === 'notes' && subjects.length > 0 && (
         <div className="max-w-6xl mx-auto px-5 mt-4">
           <div className="flex gap-2 overflow-x-auto pb-2">
@@ -167,13 +139,14 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       )}
 
+      {/* Search Bar */}
       <div className="max-w-6xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-lg p-3">
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xl">🔍</span>
             <input
               type="text"
-              placeholder={activeTab === 'notes' ? "Search notes by title or content..." : "Search Q&A..."}
+              placeholder={activeTab === 'notes' ? "Search notes..." : "Search Q&A..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 outline-none text-sm"
@@ -187,6 +160,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
+      {/* Q&A Content - Direct Display */}
       <div className="max-w-4xl mx-auto px-5 py-6">
         {activeTab === 'qa' ? (
           filteredQA.length > 0 ? (
@@ -248,6 +222,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
             </div>
           )
         ) : (
+          // Notes Section
           filteredNotes.length > 0 ? (
             <>
               <div className="text-sm text-gray-500 mb-3">
@@ -295,6 +270,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">

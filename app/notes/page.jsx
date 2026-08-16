@@ -3,8 +3,8 @@ import NotesClient from './NotesClient';
 
 export const metadata = {
   title: 'Karnataka Exam Study Notes | Free KAS, PSI, PDO Preparation',
-  description: 'Free study notes for Karnataka competitive exams including KAS, PSI, PDO, FDA, SDA. Comprehensive notes with subject-wise organization.',
-  keywords: 'Karnataka exam notes, KAS study material, PSI preparation, PDO exam notes',
+  description: 'Free study notes for Karnataka competitive exams including KAS, PSI, PDO, FDA, SDA.',
+  keywords: 'Karnataka exam notes, KAS study material, PSI preparation',
   openGraph: {
     title: 'Karnataka Exam Study Notes - KannadaExamPro',
     description: 'Free study notes for Karnataka competitive exams.',
