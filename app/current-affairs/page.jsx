@@ -6,49 +6,37 @@ import AdSpace from '@/components/AdSpace';
 
 export default function CurrentAffairsPage() {
   const [affairs, setAffairs] = useState([]);
-  const [allAffairs, setAllAffairs] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Load data instantly on mount
   useEffect(() => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(today);
+    fetchCurrentAffairs(today);
   }, []);
 
-  useEffect(() => {
-    if (selectedDate) {
-      fetchCurrentAffairs();
-    }
-  }, [selectedDate]);
-
-  const fetchCurrentAffairs = async () => {
+  const fetchCurrentAffairs = async (date) => {
     try {
       const res = await fetch('/api/current-affairs');
       const data = await res.json();
-      setAllAffairs(Array.isArray(data) ? data : []);
-      let filtered = Array.isArray(data) ? data.filter(a => a.date === selectedDate) : [];
+      const affairsData = Array.isArray(data) ? data : [];
+      const filtered = affairsData.filter(a => a.date === date);
       setAffairs(filtered);
     } catch (error) {
       console.error('Error fetching affairs:', error);
       setAffairs([]);
-      setAllAffairs([]);
     }
-  };
-
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
   };
 
   const handleDateSelect = (day) => {
     const newDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(newDate);
     setCalendarOpen(false);
+    fetchCurrentAffairs(newDate);
   };
 
   const changeMonth = (direction) => {
@@ -69,6 +57,14 @@ export default function CurrentAffairsPage() {
     }
   };
 
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year, month) => {
+    return new Date(year, month, 1).getDay();
+  };
+
   const filteredAffairs = affairs.filter(affair => {
     const matchesSearch = searchTerm === '' || 
                           affair.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -87,6 +83,16 @@ export default function CurrentAffairsPage() {
     });
   };
 
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentMonth(today.getMonth());
+    setCurrentYear(today.getFullYear());
+    const todayStr = today.toISOString().split('T')[0];
+    setSelectedDate(todayStr);
+    setCalendarOpen(false);
+    fetchCurrentAffairs(todayStr);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <AdSpace type="banner" className="mx-4 mt-2" />
@@ -94,7 +100,7 @@ export default function CurrentAffairsPage() {
       {/* Header - Green */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 pt-6 pb-8">
         <div className="max-w-md mx-auto text-center">
-          <div className="text-5xl mb-2 animate-bounce">📰</div>
+          <div className="text-5xl mb-2">📰</div>
           <h1 className="text-2xl font-bold">Current Affairs</h1>
           <p className="text-green-100 text-sm mt-1">Daily updates for competitive exams</p>
         </div>
@@ -121,7 +127,7 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Date Picker - Green */}
+      {/* Date Picker */}
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 text-white">
@@ -132,7 +138,7 @@ export default function CurrentAffairsPage() {
               </div>
               <button 
                 onClick={() => setCalendarOpen(!calendarOpen)}
-                className="bg-white/20 px-3 py-1 rounded-lg text-sm"
+                className="bg-white/20 px-3 py-1 rounded-lg text-sm hover:bg-white/30 transition"
               >
                 {calendarOpen ? 'Close 📅' : 'Change Date 📅'}
               </button>
@@ -142,11 +148,11 @@ export default function CurrentAffairsPage() {
           {calendarOpen && (
             <div className="p-4 border-t">
               <div className="flex justify-between items-center mb-4">
-                <button onClick={() => changeMonth('prev')} className="w-8 h-8 rounded-full hover:bg-gray-100">◀</button>
+                <button onClick={() => changeMonth('prev')} className="w-8 h-8 rounded-full hover:bg-gray-100 transition">◀</button>
                 <h3 className="font-semibold text-gray-800">
                   {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} {currentYear}
                 </h3>
-                <button onClick={() => changeMonth('next')} className="w-8 h-8 rounded-full hover:bg-gray-100">▶</button>
+                <button onClick={() => changeMonth('next')} className="w-8 h-8 rounded-full hover:bg-gray-100 transition">▶</button>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-center text-sm mb-2">
@@ -164,11 +170,13 @@ export default function CurrentAffairsPage() {
                   const isToday = day === new Date().getDate() && 
                                   currentMonth === new Date().getMonth() && 
                                   currentYear === new Date().getFullYear();
+                  const isSelected = selectedDate === `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                   return (
                     <button
                       key={day}
                       onClick={() => handleDateSelect(day)}
                       className={`p-2 rounded-lg hover:bg-green-100 transition ${
+                        isSelected ? 'bg-green-600 text-white font-bold' : 
                         isToday ? 'bg-green-100 text-green-600 font-bold' : 'text-gray-700'
                       }`}
                     >
@@ -179,13 +187,7 @@ export default function CurrentAffairsPage() {
               </div>
               
               <button
-                onClick={() => {
-                  const today = new Date();
-                  setCurrentMonth(today.getMonth());
-                  setCurrentYear(today.getFullYear());
-                  setSelectedDate(today.toISOString().split('T')[0]);
-                  setCalendarOpen(false);
-                }}
+                onClick={goToToday}
                 className="w-full mt-4 text-center text-xs text-green-600 py-2 border-t hover:bg-green-50 transition"
               >
                 📅 Go to Today
@@ -204,7 +206,7 @@ export default function CurrentAffairsPage() {
           </p>
         </div>
 
-        {/* Content - List View Only with Green Border */}
+        {/* Content - Instant Display */}
         {filteredAffairs.length > 0 ? (
           <div className="space-y-3">
             {filteredAffairs.map((affair, idx) => (
@@ -222,6 +224,11 @@ export default function CurrentAffairsPage() {
                         <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
                           📅 {affair.date}
                         </span>
+                        {affair.category && (
+                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                            📂 {affair.category}
+                          </span>
+                        )}
                       </div>
                       <details className="mt-2">
                         <summary className="cursor-pointer text-green-600 text-xs font-medium hover:text-green-700 transition inline-flex items-center gap-1">
@@ -242,8 +249,8 @@ export default function CurrentAffairsPage() {
             <div className="text-6xl mb-3">📰</div>
             <p className="text-gray-600 font-medium">No current affairs for this date</p>
             <button 
-              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} 
-              className="mt-4 text-sm text-green-600 underline hover:text-green-700"
+              onClick={goToToday}
+              className="mt-4 text-sm text-green-600 underline hover:text-green-700 transition"
             >
               📅 Go to Today
             </button>
@@ -251,7 +258,7 @@ export default function CurrentAffairsPage() {
         )}
       </div>
 
-      {/* Daily Quiz Link - Green */}
+      {/* Daily Quiz Link */}
       <div className="max-w-md mx-auto px-4 mt-6">
         <Link href="/quiz">
           <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-4 text-white text-center hover:shadow-lg transition transform hover:scale-105">
@@ -262,7 +269,7 @@ export default function CurrentAffairsPage() {
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
-      {/* Bottom Navigation - Green active */}
+      {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
