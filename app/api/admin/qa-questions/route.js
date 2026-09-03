@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+// ✅ Disable caching for admin QA questions API
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const client = await clientPromise;
@@ -13,10 +17,25 @@ export async function GET() {
       questions = await db.collection("qaoquestions").find({}).sort({ createdAt: -1 }).toArray();
     }
     
-    return NextResponse.json(questions);
+    return NextResponse.json(questions, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
   } catch (error) {
     console.error('Admin QA GET Error:', error);
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: 'Failed to fetch Q&A questions' },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   }
 }
 
@@ -38,10 +57,21 @@ export async function POST(request) {
     };
     
     const result = await db.collection("qaquestions").insertOne(newQA);
-    return NextResponse.json({ success: true, _id: result.insertedId });
+    
+    return NextResponse.json(
+      { success: true, _id: result.insertedId },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin QA POST Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -88,10 +118,20 @@ export async function PUT(request) {
       }
     }
     
-    return NextResponse.json({ success: true, modified: result.modifiedCount || 1 });
+    return NextResponse.json(
+      { success: true, modified: result.modifiedCount || 1 },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin QA PUT Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -118,9 +158,19 @@ export async function DELETE(request) {
       result = await db.collection("qaoquestions").deleteOne({ _id: new ObjectId(id) });
     }
     
-    return NextResponse.json({ success: true, deleted: result.deletedCount });
+    return NextResponse.json(
+      { success: true, deleted: result.deletedCount },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin QA DELETE Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
