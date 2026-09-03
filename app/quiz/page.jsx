@@ -581,24 +581,22 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        <div className="bg-white rounded-xl shadow-md p-2 mb-4 border border-gray-100">
-          <div className="flex justify-center items-center">
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-1">
-                <span className="text-blue-600 text-sm font-bold">📅</span>
-              </div>
-              <p className="text-[10px] text-gray-400">DATE</p>
-              <p className="text-xs font-semibold text-gray-700">{formattedDate}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-gray-100 mb-4">
-          <p className="text-[11px] text-gray-400 uppercase tracking-wide">Time Remaining</p>
-          <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-            {formatTime(timeLeft)}
-          </div>
-        </div>
+<div className="bg-white rounded-xl shadow-md p-3 mb-4 border border-gray-100">
+  <div className="flex justify-between items-center">
+    {/* Left: Date */}
+    <div className="flex items-center gap-1">
+      <span className="text-sm text-gray-400">📅</span>
+      <span className="text-sm font-medium text-gray-700">{formattedDate}</span>
+    </div>
+    {/* Right: Time Remaining */}
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-gray-400">⏱️</span>
+      <span className={`text-lg font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+        {formatTime(timeLeft)}
+      </span>
+    </div>
+  </div>
+</div>
 
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
