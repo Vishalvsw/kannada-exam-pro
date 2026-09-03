@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 
@@ -10,36 +10,60 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('qa');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
+  // ✅ Force refresh on mount and every 10 seconds
   useEffect(() => {
-    if (initialNotes.length === 0) {
-      fetchNotes();
-    }
-    if (initialQA.length === 0) {
-      fetchQAQuestions();
+    refreshData();
+    
+    const interval = setInterval(refreshData, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ Refresh function with cache busting
+  const refreshData = useCallback(async () => {
+    try {
+      const timestamp = Date.now();
+      
+      const [notesRes, qaRes] = await Promise.all([
+        fetch(`/api/notes?_=${timestamp}`, {
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        }),
+        fetch(`/api/qa-questions?_=${timestamp}`, {
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        })
+      ]);
+      
+      const notesData = await notesRes.json();
+      const qaData = await qaRes.json();
+      
+      setNotes(Array.isArray(notesData) ? notesData : []);
+      setQaQuestions(Array.isArray(qaData) ? qaData : []);
+      setLastUpdated(new Date());
+      
+      console.log('✅ Refreshed data:', {
+        notes: notesData.length,
+        qa: qaData.length,
+        time: new Date().toLocaleTimeString()
+      });
+      
+    } catch (error) {
+      console.error('Refresh error:', error);
     }
   }, []);
 
-  const fetchNotes = async () => {
-    try {
-      const response = await fetch('/api/notes');
-      const data = await response.json();
-      setNotes(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-      setNotes([]);
-    }
-  };
-
-  const fetchQAQuestions = async () => {
-    try {
-      const response = await fetch('/api/qa-questions');
-      const data = await response.json();
-      setQaQuestions(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching QA questions:', error);
-      setQaQuestions([]);
-    }
+  // ✅ Manual refresh handler
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshData();
+    setIsRefreshing(false);
   };
 
   const subjects = [...new Set(notes.map(note => note.subject).filter(Boolean))];
@@ -82,8 +106,30 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
+      {/* Refresh Button & Last Updated */}
+      <div className="max-w-6xl mx-auto px-5 mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs text-gray-400">
+          Last updated: {lastUpdated.toLocaleTimeString()}
+        </div>
+        <button
+          onClick={handleManualRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm"
+        >
+          {isRefreshing ? (
+            <>
+              <span className="animate-spin">⏳</span> Refreshing...
+            </>
+          ) : (
+            <>
+              🔄 Refresh
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Tab Navigation */}
-      <div className="max-w-6xl mx-auto px-5 mt-4">
+      <div className="max-w-6xl mx-auto px-5 mt-2">
         <div className="bg-white rounded-2xl shadow-md p-1 flex gap-1">
           <button
             onClick={() => setActiveTab('qa')}
