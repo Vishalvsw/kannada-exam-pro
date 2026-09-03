@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+// ✅ Disable caching for admin current affairs API
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET - Fetch all current affairs
 export async function GET() {
   try {
@@ -19,10 +23,25 @@ export async function GET() {
       date: affair.date ? affair.date.split('T')[0] : affair.date
     }));
     
-    return NextResponse.json(formattedAffairs);
+    return NextResponse.json(formattedAffairs, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
   } catch (error) {
     console.error('Admin GET Error:', error);
-    return NextResponse.json([], { status: 200 });
+    return NextResponse.json(
+      { error: 'Failed to fetch current affairs' },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   }
 }
 
@@ -54,14 +73,25 @@ export async function POST(request) {
     
     const result = await db.collection("currentaffairs").insertOne(newAffair);
     
-    return NextResponse.json({ 
-      success: true, 
-      _id: result.insertedId,
-      ...newAffair 
-    }, { status: 201 });
+    return NextResponse.json(
+      { 
+        success: true, 
+        _id: result.insertedId,
+        ...newAffair 
+      }, 
+      { 
+        status: 201,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin POST Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -89,10 +119,20 @@ export async function PUT(request) {
       { $set: { ...updateData, updatedAt: new Date() } }
     );
     
-    return NextResponse.json({ success: true, modified: result.modifiedCount });
+    return NextResponse.json(
+      { success: true, modified: result.modifiedCount },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin PUT Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -111,9 +151,19 @@ export async function DELETE(request) {
     
     const result = await db.collection("currentaffairs").deleteOne({ _id: new ObjectId(id) });
     
-    return NextResponse.json({ success: true, deleted: result.deletedCount });
+    return NextResponse.json(
+      { success: true, deleted: result.deletedCount },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin DELETE Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }

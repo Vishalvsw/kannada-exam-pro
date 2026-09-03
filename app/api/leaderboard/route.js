@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+// ✅ Disable caching for leaderboard API
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -53,13 +57,22 @@ export async function GET(request) {
     
     return NextResponse.json(formattedUsers, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
+        'Surrogate-Control': 'no-store',
       }
     });
   } catch (error) {
     console.error('Leaderboard Error:', error);
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: 'Failed to fetch leaderboard' },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   }
 }

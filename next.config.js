@@ -1,121 +1,65 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-  
-  // Ensure proper canonical URLs - set to false for better URL handling
   trailingSlash: false,
   
-  // TEMPORARILY DISABLE REDIRECTS FOR TESTING
-  // async redirects() {
-  //   return [
-  //     {
-  //       source: '/login',
-  //       destination: '/',
-  //       permanent: false,
-  //     },
-  //     {
-  //       source: '/admin',
-  //       destination: '/admin-login',
-  //       permanent: false,
-  //     },
-  //   ];
-  // },
+  // ✅ Image Optimization
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
   
-  // Headers for SEO and Security
+  // ✅ Compression
+  compress: true,
+  
+  // ✅ Headers for caching
   async headers() {
     return [
-      // Sitemap headers
-      {
-        source: '/sitemap.xml',
-        headers: [
-          { key: 'Content-Type', value: 'application/xml' },
-          { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
-        ],
-      },
-      {
-        source: '/sitemap_index.xml',
-        headers: [
-          { key: 'Content-Type', value: 'application/xml' },
-          { key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' },
-        ],
-      },
-      // Robots.txt headers
-      {
-        source: '/robots.txt',
-        headers: [
-          { key: 'Content-Type', value: 'text/plain' },
-          { key: 'Cache-Control', value: 'public, max-age=86400' },
-        ],
-      },
-      // Security headers for all pages
       {
         source: '/(.*)',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'X-Robots-Tag', value: 'index, follow' },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
+          },
         ],
       },
-      // Login page - noindex
       {
-        source: '/login',
+        source: '/_next/static/(.*)',
         headers: [
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
         ],
       },
-      // Admin pages - noindex
       {
-        source: '/admin/:path*',
+        source: '/images/(.*)',
         headers: [
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-        ],
-      },
-      // Admin login - noindex
-      {
-        source: '/admin-login',
-        headers: [
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-        ],
-      },
-      // API routes - noindex
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
         ],
       },
     ];
   },
   
-  // Image optimization
-  images: {
-    domains: ['localhost', 'www.kannadaexampro.com', 'kannadaexampro.com'],
-    formats: ['image/avif', 'image/webp'],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.kannadaexampro.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'avatars.githubusercontent.com',
-      },
-    ],
-  },
+  // ✅ Enable SWC minification
+  swcMinify: true,
   
-  // Compiler options
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  
-  // Powered by header removal
+  // ✅ Disable x-powered-by
   poweredByHeader: false,
+  
+  // ✅ React strict mode
+  reactStrictMode: true,
 };
 
 module.exports = nextConfig;

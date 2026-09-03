@@ -1,11 +1,14 @@
 // app/utils/api.js
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kannadaexampro.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kannadaexampro.com';
 
 export async function fetchData(endpoint) {
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       next: { revalidate: 3600 } // Revalidate every hour
     });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch ${endpoint}: ${res.status}`);
+    }
     return await res.json();
   } catch (error) {
     console.error(`Error fetching ${endpoint}:`, error);

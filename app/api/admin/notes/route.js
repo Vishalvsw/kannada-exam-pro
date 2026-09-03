@@ -2,15 +2,35 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+// ✅ Disable caching for admin notes API
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     const notes = await db.collection("notes").find({}).sort({ createdAt: -1 }).toArray();
-    return NextResponse.json(notes);
+    
+    return NextResponse.json(notes, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
   } catch (error) {
     console.error('Admin Notes GET Error:', error);
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: 'Failed to fetch notes' },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   }
 }
 
@@ -31,10 +51,21 @@ export async function POST(request) {
     };
     
     const result = await db.collection("notes").insertOne(newNote);
-    return NextResponse.json({ success: true, _id: result.insertedId });
+    
+    return NextResponse.json(
+      { success: true, _id: result.insertedId },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin Notes POST Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -68,10 +99,20 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Note not found' }, { status: 404 });
     }
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin Notes PUT Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -93,9 +134,19 @@ export async function DELETE(request) {
     
     await db.collection("notes").deleteOne({ _id: new ObjectId(id) });
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Admin Notes DELETE Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }

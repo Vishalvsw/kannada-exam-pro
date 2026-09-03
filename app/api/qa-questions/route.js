@@ -2,21 +2,39 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
+// ✅ Disable caching for Q&A API
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db("kannada_exam_pro");
     
-    // Use the correct collection with 50 questions
     const collection = db.collection('qaquestions');
     const questions = await collection.find({}).sort({ createdAt: -1 }).toArray();
     
     console.log(`Public Q&A: Found ${questions.length} questions`);
     
-    return NextResponse.json(questions);
+    return NextResponse.json(questions, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
   } catch (error) {
     console.error('Q&A GET error:', error);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch Q&A questions' },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   }
 }
 
@@ -40,9 +58,20 @@ export async function POST(request) {
     };
     
     const result = await collection.insertOne(newQuestion);
-    return NextResponse.json({ success: true, id: result.insertedId });
+    
+    return NextResponse.json(
+      { success: true, id: result.insertedId },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -69,9 +98,19 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Question not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -95,8 +134,18 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Question not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }

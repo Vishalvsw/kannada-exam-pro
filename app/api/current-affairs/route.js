@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
+// ✅ Disable caching for current affairs API
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const client = await clientPromise;
@@ -43,10 +47,25 @@ export async function GET() {
       }
     }
     
-    return NextResponse.json(currentAffairs);
+    return NextResponse.json(currentAffairs, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store',
+      },
+    });
   } catch (error) {
     console.error('Current Affairs GET error:', error);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch current affairs' },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   }
 }
 
@@ -66,9 +85,20 @@ export async function POST(request) {
     
     const result = await collection.insertOne(newAffair);
     console.log(`✅ Added new current affair: ${result.insertedId}`);
-    return NextResponse.json({ success: true, id: result.insertedId });
+    
+    return NextResponse.json(
+      { success: true, id: result.insertedId },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error('Current Affairs POST error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 }
