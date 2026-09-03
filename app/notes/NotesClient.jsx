@@ -10,10 +10,8 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('qa');
   const [selectedSubject, setSelectedSubject] = useState('all');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  // ✅ Force refresh on mount and every 10 seconds
+  // ✅ Auto refresh every 10 seconds
   useEffect(() => {
     refreshData();
     
@@ -46,9 +44,8 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
       
       setNotes(Array.isArray(notesData) ? notesData : []);
       setQaQuestions(Array.isArray(qaData) ? qaData : []);
-      setLastUpdated(new Date());
       
-      console.log('✅ Refreshed data:', {
+      console.log('✅ Auto-refreshed:', {
         notes: notesData.length,
         qa: qaData.length,
         time: new Date().toLocaleTimeString()
@@ -58,13 +55,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
       console.error('Refresh error:', error);
     }
   }, []);
-
-  // ✅ Manual refresh handler
-  const handleManualRefresh = async () => {
-    setIsRefreshing(true);
-    await refreshData();
-    setIsRefreshing(false);
-  };
 
   const subjects = [...new Set(notes.map(note => note.subject).filter(Boolean))];
 
@@ -106,30 +96,8 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
-      {/* Refresh Button & Last Updated */}
-      <div className="max-w-6xl mx-auto px-5 mt-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="text-xs text-gray-400">
-          Last updated: {lastUpdated.toLocaleTimeString()}
-        </div>
-        <button
-          onClick={handleManualRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm"
-        >
-          {isRefreshing ? (
-            <>
-              <span className="animate-spin">⏳</span> Refreshing...
-            </>
-          ) : (
-            <>
-              🔄 Refresh
-            </>
-          )}
-        </button>
-      </div>
-
       {/* Tab Navigation */}
-      <div className="max-w-6xl mx-auto px-5 mt-2">
+      <div className="max-w-6xl mx-auto px-5 mt-4">
         <div className="bg-white rounded-2xl shadow-md p-1 flex gap-1">
           <button
             onClick={() => setActiveTab('qa')}
@@ -206,7 +174,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
-      {/* Q&A Content - Direct Display */}
+      {/* Q&A Content */}
       <div className="max-w-4xl mx-auto px-5 py-6">
         {activeTab === 'qa' ? (
           filteredQA.length > 0 ? (
@@ -268,7 +236,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
             </div>
           )
         ) : (
-          // Notes Section
           filteredNotes.length > 0 ? (
             <>
               <div className="text-sm text-gray-500 mb-3">
