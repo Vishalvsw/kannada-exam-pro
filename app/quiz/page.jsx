@@ -19,7 +19,7 @@ export default function QuizPage() {
   const [userAnswers, setUserAnswers] = useState([]);
   const [user, setUser] = useState(null);
   
-  // Full test timer - 2 minutes (120 seconds) total
+  // ✅ Per question timer - 2 minutes (120 seconds) per question
   const TOTAL_TIME = 120;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [timerActive, setTimerActive] = useState(true);
@@ -100,7 +100,7 @@ export default function QuizPage() {
     }
   };
 
-  // Timer effect - runs continuously until time runs out or quiz completes
+  // ✅ Timer effect - runs per question
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
@@ -155,6 +155,8 @@ export default function QuizPage() {
       
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
+        // ✅ Reset timer for next question
+        setTimeLeft(TOTAL_TIME);
       } else {
         calculateScore();
       }
@@ -714,7 +716,7 @@ export default function QuizPage() {
         </div>
 
         <p className="text-center text-[9px] text-gray-400 mt-4">
-          ⏱️ You have 2 minutes to complete the quiz • One attempt
+          ⏱️ You have 2 minutes per question • One attempt
         </p>
       </div>
 
