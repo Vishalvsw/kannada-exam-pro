@@ -271,7 +271,6 @@ export default function CurrentAffairsPage() {
             ))}
           </div>
         ) : (
-          // ✅ Instant display - no loading, just show empty state
           <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
             <div className="text-6xl mb-3">📰</div>
             <p className="text-gray-600 font-medium">No current affairs for this date</p>
