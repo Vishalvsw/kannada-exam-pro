@@ -18,13 +18,9 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState([]);
   const [userAnswers, setUserAnswers] = useState([]);
   const [user, setUser] = useState(null);
-  
-  // ✅ Full test timer - 2 minutes (120 seconds) total
-  const TOTAL_TIME = 120;
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [timerActive, setTimerActive] = useState(true);
   const [startTime, setStartTime] = useState(null);
-  
   const [showExplanation, setShowExplanation] = useState(false);
   const [reviewFilter, setReviewFilter] = useState('all');
   const [quizLocked, setQuizLocked] = useState(false);
@@ -92,24 +88,17 @@ export default function QuizPage() {
         setQuizCompleted(false);
         setAnsweredQuestions({});
         setFinalTimeTaken('00:00');
-        // ✅ Reset timer when questions load
-        setTimeLeft(TOTAL_TIME);
-        setTimerActive(true);
       }
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
-  // ✅ Timer effect - runs continuously until time runs out or quiz completes
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
-      timer = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
+      timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
-      // ✅ Auto-submit when time runs out
       handleSubmitAnswer();
     }
     return () => clearTimeout(timer);
@@ -157,7 +146,7 @@ export default function QuizPage() {
       
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
-        // ✅ Don't reset timer - keep running for the whole test
+        setTimeLeft(120);
       } else {
         calculateScore();
       }
@@ -720,7 +709,7 @@ export default function QuizPage() {
         </div>
 
         <p className="text-center text-[9px] text-gray-400 mt-4">
-          ⏱️ You have 2 minutes to complete the quiz • One attempt
+          🔒 One attempt per question set • New quiz when admin adds questions
         </p>
       </div>
 
