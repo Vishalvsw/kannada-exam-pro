@@ -222,16 +222,16 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Results - Instant display, no loading */}
-      <div className="max-w-md mx-auto px-4 mt-4">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold text-gray-800">📅 {formatDate(selectedDate)}</h2>
-          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-            {filteredAffairs.length} {filteredAffairs.length === 1 ? 'update' : 'updates'}
-          </span>
-        </div>
+      {/* Results - Show only if there are affairs, no empty state */}
+      {filteredAffairs.length > 0 && (
+        <div className="max-w-md mx-auto px-4 mt-4">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold text-gray-800">📅 {formatDate(selectedDate)}</h2>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {filteredAffairs.length} {filteredAffairs.length === 1 ? 'update' : 'updates'}
+            </span>
+          </div>
 
-        {filteredAffairs.length > 0 ? (
           <div className="space-y-3">
             {filteredAffairs.map((affair, idx) => (
               <div key={affair._id || idx} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -270,13 +270,8 @@ export default function CurrentAffairsPage() {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-            <div className="text-6xl mb-3">📰</div>
-            <p className="text-gray-600 font-medium">No current affairs for this date</p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Daily Quiz Link */}
       <div className="max-w-md mx-auto px-4 mt-6">
