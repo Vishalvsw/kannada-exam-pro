@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 
@@ -11,50 +11,41 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   const [activeTab, setActiveTab] = useState('qa');
   const [selectedSubject, setSelectedSubject] = useState('all');
 
-  // ✅ Auto refresh every 10 seconds
+  // Only fetch if initial data is empty (no loading spinner)
   useEffect(() => {
-    refreshData();
-    
-    const interval = setInterval(refreshData, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // ✅ Refresh function with cache busting
-  const refreshData = useCallback(async () => {
-    try {
-      const timestamp = Date.now();
-      
-      const [notesRes, qaRes] = await Promise.all([
-        fetch(`/api/notes?_=${timestamp}`, {
-          headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        }),
-        fetch(`/api/qa-questions?_=${timestamp}`, {
-          headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        })
-      ]);
-      
-      const notesData = await notesRes.json();
-      const qaData = await qaRes.json();
-      
-      setNotes(Array.isArray(notesData) ? notesData : []);
-      setQaQuestions(Array.isArray(qaData) ? qaData : []);
-      
-      console.log('✅ Auto-refreshed:', {
-        notes: notesData.length,
-        qa: qaData.length,
-        time: new Date().toLocaleTimeString()
-      });
-      
-    } catch (error) {
-      console.error('Refresh error:', error);
+    if (initialNotes.length === 0) {
+      fetchNotes();
+    }
+    if (initialQA.length === 0) {
+      fetchQAQuestions();
     }
   }, []);
+
+  const fetchNotes = async () => {
+    try {
+      const res = await fetch('/api/notes', {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const data = await res.json();
+      setNotes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      setNotes([]);
+    }
+  };
+
+  const fetchQAQuestions = async () => {
+    try {
+      const res = await fetch('/api/qa-questions', {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const data = await res.json();
+      setQaQuestions(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching QA questions:', error);
+      setQaQuestions([]);
+    }
+  };
 
   const subjects = [...new Set(notes.map(note => note.subject).filter(Boolean))];
 
@@ -174,7 +165,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
-      {/* Q&A Content */}
+      {/* Content */}
       <div className="max-w-4xl mx-auto px-5 py-6">
         {activeTab === 'qa' ? (
           filteredQA.length > 0 ? (
