@@ -589,32 +589,25 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Question Number - Left */}
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-sm font-semibold text-gray-600">
+        {/* ✅ Question Number | Progress Bar | Timer - All in One Row */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">
             {currentQuestion + 1}/{totalQuestions}
           </span>
-        </div>
-
-        {/* Progress Bar with Timer on Right */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
-              <div 
-                className="h-2.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500" 
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex items-center gap-1 whitespace-nowrap">
-              <span className="text-[10px] text-gray-500">{Math.round(progress)}%</span>
-              <span className="text-gray-300">|</span>
-              <div className="flex items-center gap-0.5">
-                <span className="text-[10px] text-gray-400">⏱️</span>
-                <span className={`text-[10px] font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
-            </div>
+          <span className="text-gray-300">|</span>
+          <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+            <div 
+              className="h-2.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500" 
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-gray-500 whitespace-nowrap">{Math.round(progress)}%</span>
+          <span className="text-gray-300">|</span>
+          <div className="flex items-center gap-0.5 whitespace-nowrap">
+            <span className="text-[10px] text-gray-400">⏱️</span>
+            <span className={`text-[10px] font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+              {formatTime(timeLeft)}
+            </span>
           </div>
         </div>
 
