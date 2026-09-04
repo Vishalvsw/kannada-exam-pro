@@ -19,7 +19,7 @@ export default function QuizPage() {
   const [userAnswers, setUserAnswers] = useState([]);
   const [user, setUser] = useState(null);
   
-  // ✅ Full test timer - 2 minutes (120 seconds) total
+  // Full test timer - 2 minutes (120 seconds) total
   const TOTAL_TIME = 120;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [timerActive, setTimerActive] = useState(true);
@@ -92,7 +92,6 @@ export default function QuizPage() {
         setQuizCompleted(false);
         setAnsweredQuestions({});
         setFinalTimeTaken('00:00');
-        // ✅ Reset timer when questions load
         setTimeLeft(TOTAL_TIME);
         setTimerActive(true);
       }
@@ -101,7 +100,7 @@ export default function QuizPage() {
     }
   };
 
-  // ✅ Timer effect - runs continuously until time runs out or quiz completes
+  // Timer effect - runs continuously until time runs out or quiz completes
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
@@ -109,7 +108,6 @@ export default function QuizPage() {
         setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
-      // ✅ Auto-submit when time runs out
       handleSubmitAnswer();
     }
     return () => clearTimeout(timer);
@@ -157,7 +155,6 @@ export default function QuizPage() {
       
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
-        // ✅ Don't reset timer - keep running for the whole test
       } else {
         calculateScore();
       }
@@ -592,24 +589,27 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Question Number & Timer - One Row */}
+        {/* Question Number */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-semibold text-gray-600">
             Question {currentQuestion + 1} of {totalQuestions}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-400">⏱️</span>
-            <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-              {formatTime(timeLeft)}
-            </span>
-          </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar with Timer on Right */}
         <div className="mb-4">
-          <div className="flex justify-between text-xs mb-1">
+          <div className="flex justify-between items-center text-xs mb-1">
             <span className="text-gray-500">Progress</span>
-            <span className="text-green-600 font-bold">{Math.round(progress)}%</span>
+            <div className="flex items-center gap-2">
+              <span className="text-green-600 font-bold">{Math.round(progress)}%</span>
+              <span className="text-gray-300">|</span>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-400">⏱️</span>
+                <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div className="h-1.5 rounded-full bg-gradient-to-r from-green-500 to-green-600" style={{ width: `${progress}%` }}></div>
@@ -708,11 +708,11 @@ export default function QuizPage() {
         <div className="flex gap-2 mt-2">
           <button 
             onClick={handleSubmitAnswer} 
-            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${(
+            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               showExplanation ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
               'bg-gray-100 text-gray-400 cursor-not-allowed'
-            )}`} 
+            }`} 
             disabled={(!showExplanation && !selectedAnswer) || quizLocked}
           >
             {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →') : '✓ Submit Answer'}
