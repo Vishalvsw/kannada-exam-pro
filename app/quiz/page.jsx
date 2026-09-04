@@ -581,10 +581,23 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
+        {/* Question Number & Timer - One Row */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold text-gray-600">
+            Question {currentQuestion + 1} of {totalQuestions}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-400">⏱️</span>
+            <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+              {formatTime(timeLeft)}
+            </span>
+          </div>
+        </div>
+
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-gray-500">Question {currentQuestion + 1} of {totalQuestions}</span>
+            <span className="text-gray-500">Progress</span>
             <span className="text-green-600 font-bold">{Math.round(progress)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -596,22 +609,18 @@ export default function QuizPage() {
         {/* Question Card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-start gap-2">
-                <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
+            <div className="flex items-start gap-2">
+              <div className="w-7 h-7 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-white text-xs font-bold">{currentQuestion + 1}</span>
+              </div>
+              <h2 className="font-semibold text-gray-800 text-sm flex-1 leading-relaxed whitespace-pre-line">
+                {currentQ?.question}
+              </h2>
+              {isQuestionAnswered && (
+                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-[10px]">✓</span>
                 </div>
-                <h2 className="font-semibold text-gray-800 text-sm flex-1 leading-relaxed whitespace-pre-line">
-                  {currentQ?.question}
-                </h2>
-              </div>
-              {/* Timer on Right Side */}
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <span className="text-xs text-gray-500">⏱️</span>
-                <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
+              )}
             </div>
             {currentQ?.subject && (
               <div className="mt-2 flex gap-2">
