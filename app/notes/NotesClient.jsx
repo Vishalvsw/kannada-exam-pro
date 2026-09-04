@@ -165,10 +165,10 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-5 py-6">
-        {activeTab === 'qa' ? (
-          filteredQA.length > 0 ? (
+      {/* Content - Show only if data exists */}
+      {activeTab === 'qa' ? (
+        filteredQA.length > 0 && (
+          <div className="max-w-4xl mx-auto px-5 py-6">
             <div className="space-y-3">
               <div className="text-sm text-gray-500 mb-3">
                 Showing {filteredQA.length} Q&A {searchTerm && `matching "${searchTerm}"`}
@@ -219,58 +219,46 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-              <div className="text-6xl mb-4">❓</div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No Q&A Available</h3>
-              <p className="text-gray-500 text-sm">Questions and answers will appear here once added.</p>
+          </div>
+        )
+      ) : (
+        filteredNotes.length > 0 && (
+          <div className="max-w-4xl mx-auto px-5 py-6">
+            <div className="text-sm text-gray-500 mb-3">
+              Showing {filteredNotes.length} notes {searchTerm && `matching "${searchTerm}"`}
+              {selectedSubject !== 'all' && ` in "${selectedSubject}"`}
             </div>
-          )
-        ) : (
-          filteredNotes.length > 0 ? (
-            <>
-              <div className="text-sm text-gray-500 mb-3">
-                Showing {filteredNotes.length} notes {searchTerm && `matching "${searchTerm}"`}
-                {selectedSubject !== 'all' && ` in "${selectedSubject}"`}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredNotes.map((note) => (
-                  <Link key={note._id} href={`/notes/${note._id}`}>
-                    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-1">
-                      <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 text-white">
-                        <div className="text-2xl">📖</div>
-                        <h3 className="font-bold text-sm mt-2 line-clamp-2">{note.title}</h3>
-                        {note.subject && (
-                          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full inline-block mt-1">
-                            {note.subject}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="text-gray-600 text-xs line-clamp-2">
-                          {note.content?.substring(0, 80)}...
-                        </p>
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-[10px] text-gray-400">📅 {new Date(note.createdAt).toLocaleDateString()}</span>
-                          <button className="text-green-600 font-semibold text-xs group-hover:translate-x-1 transition">
-                            Read →
-                          </button>
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredNotes.map((note) => (
+                <Link key={note._id} href={`/notes/${note._id}`}>
+                  <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group transform hover:-translate-y-1">
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 p-3 text-white">
+                      <div className="text-2xl">📖</div>
+                      <h3 className="font-bold text-sm mt-2 line-clamp-2">{note.title}</h3>
+                      {note.subject && (
+                        <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full inline-block mt-1">
+                          {note.subject}
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="text-gray-600 text-xs line-clamp-2">
+                        {note.content?.substring(0, 80)}...
+                      </p>
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-[10px] text-gray-400">📅 {new Date(note.createdAt).toLocaleDateString()}</span>
+                        <button className="text-green-600 font-semibold text-xs group-hover:translate-x-1 transition">
+                          Read →
+                        </button>
                       </div>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-              <div className="text-6xl mb-4">📖</div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No Notes Available</h3>
-              <p className="text-gray-500 text-sm">Study notes will appear here once added.</p>
+                  </div>
+                </Link>
+              ))}
             </div>
-          )
-        )}
-      </div>
+          </div>
+        )
+      )}
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 
