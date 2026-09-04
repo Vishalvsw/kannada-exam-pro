@@ -589,28 +589,33 @@ export default function QuizPage() {
       
       <div className="max-w-md mx-auto px-4 py-3">
         
-        {/* Question Number - Left & Timer - Right in One Row */}
-        <div className="flex items-center justify-between mb-2">
+        {/* Question Number - Left */}
+        <div className="flex justify-between items-center mb-1">
           <span className="text-sm font-semibold text-gray-600">
             {currentQuestion + 1}/{totalQuestions}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-400">⏱️</span>
-            <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
-              {formatTime(timeLeft)}
-            </span>
-          </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar with Timer on Right */}
         <div className="mb-4">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="h-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500" 
-              style={{ width: `${progress}%` }}
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="h-2.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex items-center gap-1 whitespace-nowrap">
+              <span className="text-[10px] text-gray-500">{Math.round(progress)}%</span>
+              <span className="text-gray-300">|</span>
+              <div className="flex items-center gap-0.5">
+                <span className="text-[10px] text-gray-400">⏱️</span>
+                <span className={`text-[10px] font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+            </div>
           </div>
-          <p className="text-right text-[10px] text-gray-400 mt-1">{Math.round(progress)}%</p>
         </div>
 
         {/* Question Card */}
@@ -666,13 +671,13 @@ export default function QuizPage() {
                   className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${isDisabled ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-start gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${(
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
                       showCorrect ? 'bg-green-600 text-white' : 
                       showWrong ? 'bg-red-600 text-white' : 
                       (isSelected && !isDisabled) ? 'bg-green-600 text-white' :
                       (isQuestionAnswered && answers[currentQuestion] === opt) ? 'bg-green-600 text-white' :
                       'bg-gray-100 text-gray-600'
-                    )}`}>
+                    }`}>
                       {letter}
                     </div>
                     <span className="text-sm text-gray-700 flex-1 leading-relaxed whitespace-pre-line">
