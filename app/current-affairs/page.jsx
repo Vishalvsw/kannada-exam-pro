@@ -12,7 +12,7 @@ export default function CurrentAffairsPage() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load data instantly on mount
+  // ✅ Load data instantly on mount - no loading state
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setSelectedDate(today);
@@ -222,7 +222,7 @@ export default function CurrentAffairsPage() {
         </div>
       </div>
 
-      {/* Results */}
+      {/* Results - Instant display, no loading */}
       <div className="max-w-md mx-auto px-4 mt-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-bold text-gray-800">📅 {formatDate(selectedDate)}</h2>
@@ -274,12 +274,6 @@ export default function CurrentAffairsPage() {
           <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
             <div className="text-6xl mb-3">📰</div>
             <p className="text-gray-600 font-medium">No current affairs for this date</p>
-            <button 
-              onClick={goToToday}
-              className="mt-4 text-sm text-green-600 underline hover:text-green-700 transition"
-            >
-              📅 Go to Today
-            </button>
           </div>
         )}
       </div>
