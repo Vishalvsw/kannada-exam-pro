@@ -197,13 +197,11 @@ export default function Home() {
       {/* ✅ Top Ad Banner - Google AdSense */}
       <div className="max-w-4xl mx-auto px-4 pt-2">
         <AdSenseBanner 
-          adSlot="5293436655"  // ← Replace with your Ad Slot ID
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME}  // ← Replace with your Ad Slot ID
           adFormat="auto"
           className="mb-2"
         />
       </div>
-
-
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
