@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export default function AdSenseBanner({
-  adSlot = '5293436655',
+  adSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT || '5293436655',
   adFormat = 'auto',
   fullWidthResponsive = true,
   className = '',

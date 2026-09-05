@@ -272,7 +272,6 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
                 adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
                 className="mx-4 my-2"
               />
-
       <AdSenseBanner className="mx-4 mt-6 mb-4" />
 
       {/* Bottom Navigation */}
