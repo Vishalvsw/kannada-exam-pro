@@ -1,4 +1,3 @@
-
 // app/layout.jsx
 import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
@@ -62,7 +61,7 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-// ✅ Environment variables
+// ✅ Get AdSense client ID from environment variable
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-3976598981288611';
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
 
