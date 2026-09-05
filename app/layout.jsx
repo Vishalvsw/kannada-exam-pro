@@ -5,6 +5,8 @@ import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
 import Script from 'next/script';
 import './globals.css';
+import AdSenseBanner from '@/components/AdSenseBanner';
+
 
 // ✅ Metadata for SEO - Server Component
 export const metadata = {
@@ -75,10 +77,15 @@ export default function RootLayout({ children }) {
         
         {/* ====== ✅ GOOGLE ADSENSE ====== */}
         {/* ✅ REMOVED data-nscript attribute - Fixed */}
+
+
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           strategy="afterInteractive"
         />
+
+
+        
       </head>
       <body suppressHydrationWarning>
         <ClientOnly>

@@ -76,3 +76,6 @@ data/*.json
 .vercel
 .env*
 public/sitemap.xml
+.env.local
+.env
+.env.*

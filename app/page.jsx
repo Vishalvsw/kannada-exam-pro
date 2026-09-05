@@ -166,9 +166,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       {/* ✅ Top Ad Banner */}
-      <div className="max-w-4xl mx-auto px-4 pt-2">
-        <AdSenseBanner className="mb-2" />
-      </div>
+      <AdSenseBanner 
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
+          className="mx-4 my-2"
+      />
+      <AdSenseBanner className="mx-4 mt-6 mb-4" />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
