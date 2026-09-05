@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import AdSpace from '@/components/AdSpace';
 import Image from 'next/image';
 import AdSenseBanner from '@/components/AdSenseBanner';
 
@@ -29,36 +28,26 @@ export default function Home() {
     { title: 'Leaderboard', icon: '🏆', color: 'from-yellow-500 to-yellow-600', href: '/leaderboard', desc: 'Top Winners' },
   ], []);
 
-  // Load user from localStorage instantly
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+      if (storedUser) setUser(JSON.parse(storedUser));
     } catch (e) {
       setUser(null);
     }
   }, []);
 
-  // Check cache first, then fetch
   useEffect(() => {
-    // Try to load from cache first
     const cachedData = localStorage.getItem('leaderboard_cache');
     if (cachedData) {
       try {
         const parsed = JSON.parse(cachedData);
-        // Use cache if less than 5 minutes old
         if (Date.now() - parsed.timestamp < 300000) {
           setTopUsers(parsed.data.slice(0, 5));
           setIsDataLoaded(true);
         }
-      } catch (e) {
-        // Cache invalid, will fetch
-      }
+      } catch (e) {}
     }
-    
-    // Always fetch fresh data in background
     fetchData();
   }, []);
 
@@ -66,25 +55,13 @@ export default function Home() {
     try {
       const usersRes = await fetch('/api/leaderboard');
       const users = await usersRes.json();
-      
       let usersArray = [];
-      if (Array.isArray(users)) {
-        usersArray = users;
-      } else if (users && Array.isArray(users.users)) {
-        usersArray = users.users;
-      } else if (users && users.success && Array.isArray(users.users)) {
-        usersArray = users.users;
-      }
-      
+      if (Array.isArray(users)) usersArray = users;
+      else if (users && Array.isArray(users.users)) usersArray = users.users;
+      else if (users && users.success && Array.isArray(users.users)) usersArray = users.users;
       const topFive = usersArray.slice(0, 5);
       setTopUsers(topFive);
-      
-      // Save to cache
-      localStorage.setItem('leaderboard_cache', JSON.stringify({
-        data: usersArray,
-        timestamp: Date.now()
-      }));
-      
+      localStorage.setItem('leaderboard_cache', JSON.stringify({ data: usersArray, timestamp: Date.now() }));
       setIsDataLoaded(true);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -92,7 +69,6 @@ export default function Home() {
     }
   }, []);
 
-  // Start logo animation
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentLogoIndex((prev) => (prev + 1) % slidingLogos.length);
@@ -103,7 +79,6 @@ export default function Home() {
   const currentLogo = slidingLogos[currentLogoIndex];
   const maxScore = topUsers.length > 0 ? Math.max(...topUsers.map(u => u.score || 0)) : 100;
 
-  // Leaderboard component
   const LeaderboardSection = useMemo(() => {
     if (topUsers.length === 0) {
       return (
@@ -137,7 +112,6 @@ export default function Home() {
             {topUsers.map((user, idx) => {
               const rank = idx + 1;
               const scorePercentage = maxScore > 0 ? Math.min((user.score / maxScore) * 100, 100) : 0;
-              
               const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
               const rankColor = { 1: 'text-yellow-600', 2: 'text-gray-600', 3: 'text-orange-600' };
               const barColor = {
@@ -147,7 +121,6 @@ export default function Home() {
                 4: 'bg-gradient-to-r from-blue-400 to-blue-500',
                 5: 'bg-gradient-to-r from-green-400 to-green-500',
               };
-              
               return (
                 <div key={user._id || idx} className="group">
                   <div className="flex items-center justify-between mb-1">
@@ -166,7 +139,6 @@ export default function Home() {
                       <p className="text-sm font-bold text-purple-600">{user.score || 0}</p>
                     </div>
                   </div>
-                  
                   <div className="relative w-full bg-gray-200 rounded-full h-7 overflow-hidden">
                     <div 
                       className={`h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out ${
@@ -183,7 +155,6 @@ export default function Home() {
               );
             })}
           </div>
-          
           <div className="mt-4 pt-3 border-t border-purple-200 text-center">
             <p className="text-xs text-gray-500">🏆 Keep practicing to reach the top!</p>
           </div>
@@ -194,13 +165,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      {/* ✅ Top Ad Banner - Google AdSense */}
+      {/* ✅ Top Ad Banner */}
       <div className="max-w-4xl mx-auto px-4 pt-2">
-        <AdSenseBanner 
-          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}  // ← Replace with your Ad Slot ID
-          adFormat="auto"
-          className="mb-2"
-        />
+        <AdSenseBanner className="mb-2" />
       </div>
 
       {/* Hero Section */}
@@ -291,18 +258,11 @@ export default function Home() {
         </div>
       </div>
 
-      <AdSpace type="inArticle" className="mx-4 my-6" />
-
-      {/* ✅ In-Article Ad Banner - Google AdSense */}
+      {/* ✅ In-Article Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner 
-          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}  // ← Replace with your Ad Slot ID
-          adFormat="rectangle"
-          className="my-4"
-        />
+        <AdSenseBanner className="my-4" />
       </div>
 
-      {/* Leaderboard - Rendered with useMemo */}
       {isDataLoaded && LeaderboardSection}
 
       <div className="px-5 mt-8 mb-4 text-center">
@@ -344,16 +304,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ Bottom Ad Banner - Google AdSense */}
+      {/* ✅ Bottom Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner 
-          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}  // ← Replace with your Ad Slot ID
-          adFormat="auto"
-          className="mt-4"
-        />
+        <AdSenseBanner className="mt-4" />
       </div>
-
-      <AdSpace type="banner" className="mx-4 mt-4 mb-4" />
 
       <style jsx>{`
         @keyframes slideLeft {

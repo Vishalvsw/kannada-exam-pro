@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export default function AdSenseBanner({
-  adSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT, // ← Your real Ad Slot ID
+  adSlot = '5293436655', // ← Your REAL Ad Slot ID
   adFormat = 'auto',
   fullWidthResponsive = true,
   className = '',
@@ -38,7 +38,7 @@ export default function AdSenseBanner({
     <div 
       className={`ad-banner ${className}`} 
       style={{ 
-        minHeight: '90px',
+        minHeight: '100px',
         width: '100%',
         maxWidth: '100%',
         overflow: 'hidden',
@@ -50,7 +50,7 @@ export default function AdSenseBanner({
         style={{ 
           display: 'block',
           width: '100%',
-          minHeight: '90px',
+          minHeight: '100px',
         }}
         data-ad-client={clientId}
         data-ad-slot={adSlot}
