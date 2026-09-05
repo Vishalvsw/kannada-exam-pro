@@ -3,30 +3,35 @@
 import { useEffect, useState } from 'react';
 
 export default function AdSenseBanner({
-  adSlot = '5293436655', // ← Your REAL Ad Slot ID
+  adSlot = '5293436655',
   adFormat = 'auto',
   fullWidthResponsive = true,
   className = '',
   style = {},
 }) {
   const [isClient, setIsClient] = useState(false);
+  const [adPushed, setAdPushed] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || adPushed) return;
 
     try {
       if (window.adsbygoogle) {
-        window.adsbygoogle.push({});
-        console.log('✅ Ad pushed for slot:', adSlot);
+        // ✅ Wait for DOM to be ready
+        setTimeout(() => {
+          window.adsbygoogle.push({});
+          setAdPushed(true);
+          console.log('✅ Ad pushed for slot:', adSlot);
+        }, 300);
       }
     } catch (error) {
       console.error('AdSense error:', error);
     }
-  }, [adSlot, isClient]);
+  }, [adSlot, isClient, adPushed]);
 
   if (!isClient) {
     return null;
