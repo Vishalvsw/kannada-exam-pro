@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSpace';
 
 export const metadata = {
   title: 'About Us - Kannada Exam Pro | Our Mission & Vision',

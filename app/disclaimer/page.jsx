@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSpace';
 
 export const metadata = {
   title: 'Disclaimer - Kannada Exam Pro',

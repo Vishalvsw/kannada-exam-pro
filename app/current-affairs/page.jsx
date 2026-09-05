@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSpace';
 import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default function CurrentAffairsPage() {

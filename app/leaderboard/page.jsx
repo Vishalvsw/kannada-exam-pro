@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSpace';
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);

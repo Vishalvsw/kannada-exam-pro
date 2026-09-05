@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSpace';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
