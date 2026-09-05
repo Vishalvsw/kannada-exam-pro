@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import AdSenseBanner from '@/components/AdSpace';
-
+import AdSenseBanner from '@/components/AdSenseBanner';
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('all');

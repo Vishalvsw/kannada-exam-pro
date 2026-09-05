@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import AdSenseBanner from '@/components/AdSpace';
 import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default function ProfilePage() {
