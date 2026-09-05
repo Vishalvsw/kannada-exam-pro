@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 
 export default function AdSenseBanner({
   adSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT || '5293436655',
-  adFormat = 'auto',
-  fullWidthResponsive = true,
+  adFormat = 'vertical',
+  fullWidthResponsive = false,
   className = '',
   style = {},
 }) {
@@ -21,7 +21,6 @@ export default function AdSenseBanner({
 
     try {
       if (window.adsbygoogle) {
-        // ✅ Wait for DOM to be ready
         setTimeout(() => {
           window.adsbygoogle.push({});
           setAdPushed(true);
@@ -43,10 +42,11 @@ export default function AdSenseBanner({
     <div 
       className={`ad-banner ${className}`} 
       style={{ 
-        minHeight: '100px',
+        minHeight: '250px',
         width: '100%',
-        maxWidth: '100%',
+        maxWidth: '300px',
         overflow: 'hidden',
+        margin: '0 auto',
         ...style 
       }}
     >
@@ -55,7 +55,7 @@ export default function AdSenseBanner({
         style={{ 
           display: 'block',
           width: '100%',
-          minHeight: '100px',
+          minHeight: '250px',
         }}
         data-ad-client={clientId}
         data-ad-slot={adSlot}
