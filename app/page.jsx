@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
 import Image from 'next/image';
+import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
@@ -193,6 +194,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
+      {/* ✅ Top Ad Banner - Google AdSense */}
+      <div className="max-w-4xl mx-auto px-4 pt-2">
+        <AdSenseBanner 
+          adSlot="1234567890"  // ← Replace with your Ad Slot ID
+          adFormat="auto"
+          className="mb-2"
+        />
+      </div>
+
       <AdSpace type="banner" className="mx-4 mt-2" />
 
       {/* Hero Section */}
@@ -285,6 +295,15 @@ export default function Home() {
 
       <AdSpace type="inArticle" className="mx-4 my-6" />
 
+      {/* ✅ In-Article Ad Banner - Google AdSense */}
+      <div className="max-w-4xl mx-auto px-4">
+        <AdSenseBanner 
+          adSlot="0987654321"  // ← Replace with your Ad Slot ID
+          adFormat="rectangle"
+          className="my-4"
+        />
+      </div>
+
       {/* Leaderboard - Rendered with useMemo */}
       {isDataLoaded && LeaderboardSection}
 
@@ -326,6 +345,15 @@ export default function Home() {
           </Link>
         </div>
       )}
+
+      {/* ✅ Bottom Ad Banner - Google AdSense */}
+      <div className="max-w-4xl mx-auto px-4">
+        <AdSenseBanner 
+          adSlot="1122334455"  // ← Replace with your Ad Slot ID
+          adFormat="auto"
+          className="mt-4"
+        />
+      </div>
 
       <AdSpace type="banner" className="mx-4 mt-4 mb-4" />
 

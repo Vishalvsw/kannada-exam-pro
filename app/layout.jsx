@@ -1,3 +1,4 @@
+
 // app/layout.jsx
 import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
@@ -61,9 +62,11 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
+// ✅ Environment variables
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-3976598981288611';
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
+
 export default function RootLayout({ children }) {
-  const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
-  
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
@@ -101,9 +104,9 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         
-        {/* ====== ✅ ADSENSE ====== */}
+        {/* ====== ✅ GOOGLE ADSENSE ====== */}
         <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3976598981288611"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           strategy="afterInteractive"
           crossOrigin="anonymous"
         />
