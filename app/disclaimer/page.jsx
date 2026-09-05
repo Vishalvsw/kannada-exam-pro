@@ -11,6 +11,13 @@ export default function DisclaimerPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <AdSenseBanner className="mx-4 mt-2" />
+      {/* ✅ AdSense Banner - Bottom of Quiz */}
+                  <div className="max-w-md mx-auto px-4">
+                    <AdSenseBanner 
+                      adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_BOTTOM}
+                      className="mt-2"
+                    />
+                  </div>
       
       <div className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-5 pt-8 pb-6">
         <div className="max-w-4xl mx-auto">
