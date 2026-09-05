@@ -6,7 +6,6 @@ import ClientOnly from '@/components/ClientOnly';
 import Script from 'next/script';
 import './globals.css';
 
-// ✅ Metadata for SEO - Server Component
 export const metadata = {
   title: 'ಕನ್ನಡ ಎಕ್ಸಾಂ ಪ್ರೋ - ಕೆಎಎಸ್ | ಪಿಎಸ್ಐ | ಪಿಡಿಒ ಪರೀಕ್ಷಾ ತಯಾರಿ',
   description: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳೊಂದಿಗೆ ತಯಾರಿ ಮಾಡಿ',
@@ -39,7 +38,6 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-// ✅ Environment variables
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-3976598981288611';
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
 
@@ -47,23 +45,19 @@ export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
-        {/* ====== ✅ SITEMAP & ICONS ====== */}
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
         
-        {/* ====== ✅ DNS PREFETCH ====== */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
-        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         
-        {/* ====== ✅ FONT PRELOAD ====== */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* ====== ✅ GOOGLE ANALYTICS ====== */}
+        {/* Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -77,7 +71,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         
-        {/* ====== ✅ GOOGLE ADSENSE ====== */}
+        {/* ✅ GOOGLE ADSENSE - NO data-nscript attribute */}
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           strategy="afterInteractive"
