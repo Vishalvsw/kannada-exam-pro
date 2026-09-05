@@ -306,7 +306,7 @@ export default function Home() {
 
       {/* ✅ Bottom Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner className="mt-4" />
+        <AdSenseBanner className="my-4" />
       </div>
 
       <style jsx>{`
