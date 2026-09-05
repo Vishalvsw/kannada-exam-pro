@@ -296,7 +296,7 @@ export default function Home() {
       {/* ✅ In-Article Ad Banner - Google AdSense */}
       <div className="max-w-4xl mx-auto px-4">
         <AdSenseBanner 
-          adSlot="0987654321"  // ← Replace with your Ad Slot ID
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_TOP}  // ← Replace with your Ad Slot ID
           adFormat="rectangle"
           className="my-4"
         />
@@ -347,7 +347,7 @@ export default function Home() {
       {/* ✅ Bottom Ad Banner - Google AdSense */}
       <div className="max-w-4xl mx-auto px-4">
         <AdSenseBanner 
-          adSlot="1122334455"  // ← Replace with your Ad Slot ID
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_BOTTOM}  // ← Replace with your Ad Slot ID
           adFormat="auto"
           className="mt-4"
         />

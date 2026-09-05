@@ -19,14 +19,7 @@ export const metadata = {
     description: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳು, ಅಧ್ಯಯನ ಟಿಪ್ಪಣಿಗಳು ಮತ್ತು ಪ್ರಸ್ತುತ ವಿದ್ಯಮಾನಗಳು',
     url: 'https://www.kannadaexampro.com',
     siteName: 'Kannada Exam Pro',
-    images: [
-      {
-        url: '/icons/logo.ico',
-        width: 800,
-        height: 600,
-        alt: 'Kannada Exam Pro Logo',
-      },
-    ],
+    images: [{ url: '/icons/logo.ico', width: 800, height: 600, alt: 'Kannada Exam Pro Logo' }],
     locale: 'kn_IN',
     type: 'website',
   },
@@ -36,23 +29,10 @@ export const metadata = {
     description: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸಂವಾದಾತ್ಮಕ ರಸಪ್ರಶ್ನೆಗಳು',
     images: ['/icons/logo.ico'],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  verification: {
-    google: 'y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs',
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 } },
+  verification: { google: 'y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs' },
 };
 
-// ✅ Viewport configuration
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -61,7 +41,6 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-// ✅ Get AdSense client ID from environment variable
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-3976598981288611';
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
 
@@ -69,25 +48,20 @@ export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
-        {/* ====== ✅ SITEMAP ====== */}
         <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-        
-        {/* ====== ✅ ICONS ====== */}
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
         
-        {/* ====== ✅ DNS PREFETCH ====== */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         
-        {/* ====== ✅ PRELOAD CRITICAL FONTS ====== */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* ====== ✅ GOOGLE ANALYTICS ====== */}
+        {/* Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -97,28 +71,20 @@ export default function RootLayout({ children }) {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_ID}', {
-              page_path: window.location.pathname,
-            });
+            gtag('config', '${GA_ID}', { page_path: window.location.pathname });
           `}
         </Script>
         
-        {/* ====== ✅ GOOGLE ADSENSE ====== */}
+        {/* ✅ GOOGLE ADSENSE - FIXED */}
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           strategy="afterInteractive"
-          crossOrigin="anonymous"
         />
-        
-        {/* ====== ✅ EZOIC - REMOVED TO FIX ERRORS ====== */}
-        {/* Ezoic scripts removed to prevent removeChild errors */}
       </head>
       <body suppressHydrationWarning>
         <ClientOnly>
           <DemoAuthProvider>
-            <ResponsiveNav>
-              {children}
-            </ResponsiveNav>
+            <ResponsiveNav>{children}</ResponsiveNav>
             <Footer />
           </DemoAuthProvider>
         </ClientOnly>
