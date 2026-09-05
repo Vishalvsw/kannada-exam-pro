@@ -75,7 +75,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
                 className="mx-4 my-2"
               />
 
-      <AdSpace type="banner" className="mx-4 mt-2" />
+      <AdSenseBanner className="mx-4 mt-2" />
 
       {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 pt-8 pb-6">
@@ -157,7 +157,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xl">🔍</span>
             <input
-              type="text"
+             
               placeholder={activeTab === 'notes' ? "Search notes..." : "Search Q&A..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -274,7 +274,7 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
                 className="mx-4 my-2"
               />
 
-      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
+      <AdSenseBanner className="mx-4 mt-6 mb-4" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">

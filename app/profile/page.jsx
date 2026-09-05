@@ -321,7 +321,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <span className="absolute left-3 top-3 text-gray-400">@</span>
                 <input 
-                  type="text" 
+                  
                   value={newInstagramId} 
                   onChange={(e) => setNewInstagramId(e.target.value.replace('@', ''))} 
                   className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"

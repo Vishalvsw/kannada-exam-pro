@@ -121,7 +121,7 @@ export default function SetupInstagramPage() {
               <div className="relative">
                 <span className="absolute left-3 top-3 text-gray-400">@</span>
                 <input
-                  type="text"
+                 
                   value={instagramId}
                   onChange={(e) => setInstagramId(e.target.value.replace('@', ''))}
                   className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -140,7 +140,7 @@ export default function SetupInstagramPage() {
             )}
 
             <button
-              type="submit"
+             
               disabled={loading}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50"
             >

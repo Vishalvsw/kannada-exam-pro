@@ -71,7 +71,7 @@ export default function DemoLoginPage() {
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <input
-                type="email"
+               
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -81,7 +81,7 @@ export default function DemoLoginPage() {
             </div>
 
             <button
-              type="submit"
+             
               disabled={false}
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50"
             >

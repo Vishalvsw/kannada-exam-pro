@@ -10,7 +10,7 @@ export const metadata = {
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <AdSpace type="banner" className="mx-4 mt-2" />
+      <AdSenseBanner className="mx-4 mt-2" />
       
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">
         <div className="max-w-4xl mx-auto">
@@ -270,7 +270,7 @@ export default function TermsPage() {
         </div>
       </div>
 
-      <AdSpace type="banner" className="mx-4 mt-8 mb-4" />
+      <AdSenseBanner className="mx-4 mt-8 mb-4" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">

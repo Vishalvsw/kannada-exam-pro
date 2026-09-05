@@ -125,7 +125,7 @@ export default function CurrentAffairsPage() {
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-xl">🔍</span>
             <input
-              type="text"
+             
               placeholder="Search current affairs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -288,7 +288,7 @@ export default function CurrentAffairsPage() {
         </Link>
       </div>
 
-      <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
+      <AdSenseBanner className="mx-4 mt-6 mb-4" />
       {/* ✅ AdSense Banner on Review Page */}
               <AdSenseBanner 
                 adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}

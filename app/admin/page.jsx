@@ -344,7 +344,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
           <div><label className="block text-sm font-medium mb-2">Title (English)</label><input className="w-full p-2 border rounded-lg" value={formData.title_en || ''} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="5" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="5" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
-          <div><label className="block text-sm font-medium mb-2">Date *</label><input type="date" required className="w-full p-2 border rounded-lg" value={formData.date || new Date().toISOString().split('T')[0]} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Date *</label><input required className="w-full p-2 border rounded-lg" value={formData.date || new Date().toISOString().split('T')[0]} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Category</label><input className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Important</label><select className="w-full p-2 border rounded-lg" value={formData.important || false} onChange={(e) => setFormData({ ...formData, important: e.target.value === 'true' })}><option value="false">No</option><option value="true">⭐ Important</option></select></div>
         </>
@@ -629,8 +629,8 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
               <form onSubmit={handleSubmit} className="space-y-4">
                 {getFormFields()}
                 <div className="flex gap-3 pt-4">
-                  <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
-                  <button type="button" onClick={() => { setShowModal(false); setEditingItem(null); }} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+                  <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
                 </div>
               </form>
             </div>

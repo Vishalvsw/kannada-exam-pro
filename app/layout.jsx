@@ -46,7 +46,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
-        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+        <link rel="sitemap" href="/sitemap.xml" />
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
