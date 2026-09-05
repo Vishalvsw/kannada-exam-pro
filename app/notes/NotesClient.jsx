@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default function NotesClient({ initialNotes = [], initialQA = [] }) {
   const [notes, setNotes] = useState(initialNotes);
@@ -68,6 +69,12 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
+        {/* ✅ AdSense Banner on Review Page */}
+              <AdSenseBanner 
+                adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
+                className="mx-4 my-2"
+              />
+
       <AdSpace type="banner" className="mx-4 mt-2" />
 
       {/* Header */}
@@ -259,6 +266,13 @@ export default function NotesClient({ initialNotes = [], initialQA = [] }) {
           </div>
         )
       )}
+
+        
+              {/* ✅ AdSense Banner on Review Page */}
+              <AdSenseBanner 
+                adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
+                className="mx-4 my-2"
+              />
 
       <AdSpace type="banner" className="mx-4 mt-6 mb-4" />
 

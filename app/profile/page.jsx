@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdSpace from '@/components/AdSpace';
+import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -92,7 +93,10 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <AdSpace type="banner" className="mx-4 mt-2" />
+      <AdSenseBanner 
+        adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
+        className="mx-4 mt-2"
+      />
 
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white pt-8 pb-12">
