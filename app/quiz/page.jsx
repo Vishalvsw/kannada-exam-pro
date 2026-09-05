@@ -1,6 +1,3 @@
-
-
-// cat > app/quiz/page.jsx << 'EOF'
 'use client';
 
 import { useState, useEffect } from 'react';
