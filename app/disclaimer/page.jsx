@@ -10,7 +10,6 @@ export const metadata = {
 export default function DisclaimerPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <AdSenseBanner className="mx-4 mt-2" />
       {/* ✅ AdSense Banner - Bottom of Quiz */}
                   <div className="max-w-md mx-auto px-4">
                     <AdSenseBanner 
@@ -196,7 +195,7 @@ export default function DisclaimerPage() {
         </div>
       </div>
 
-      <AdSenseBanner className="mx-4 mt-8 mb-4" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-8 mb-4" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">

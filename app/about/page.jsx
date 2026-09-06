@@ -10,17 +10,16 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <AdSenseBanner className="mx-4 mt-2" />
-       {/* ✅ AdSense Banner - Bottom of Quiz */}
-            <div className="max-w-md mx-auto px-4">
-              <AdSenseBanner 
-                adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_BOTTOM}
-                className="mt-2"
-              />
-            </div>
-
+      {/* ✅ AdSense Banner - Top */}
+      <div className="max-w-4xl mx-auto px-5 py-4">
+        <AdSenseBanner 
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
+          className="mt-2"
+        />
+      </div>
 
       
+
       <div className="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-5 pt-8 pb-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="text-sm text-white/80 hover:text-white mb-4 inline-block">
@@ -109,6 +108,19 @@ export default function AboutPage() {
             </div>
           </section>
 
+
+
+
+
+    {/* ✅ AdSense Banner - Bottom of Quiz */}
+      <div className="max-w-4xl mx-auto px-5 py-4">
+        <AdSenseBanner 
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_BOTTOM}
+          className="mt-2"
+        />
+      </div>
+
+      
           {/* Why Choose Us */}
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">⭐ Why Choose Kannada Exam Pro</h2>
@@ -165,7 +177,13 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <AdSenseBanner className="mx-4 mt-8 mb-4" />
+      {/* ✅ AdSense Banner - Bottom */}
+      <div className="max-w-4xl mx-auto px-5 py-4">
+        <AdSenseBanner 
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
+          className="mt-2"
+        />
+      </div>
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">

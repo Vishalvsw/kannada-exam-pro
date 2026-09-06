@@ -32,7 +32,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      <AdSenseBanner className="mx-4 mt-2" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-2" />
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 pt-8 pb-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="text-5xl mb-3">📞</div>
@@ -86,7 +86,7 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <AdSenseBanner className="mx-4 mt-8 mb-4" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-8 mb-4" />
     </div>
   );
 }

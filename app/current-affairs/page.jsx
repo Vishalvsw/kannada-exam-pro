@@ -287,7 +287,7 @@ export default function CurrentAffairsPage() {
         </Link>
       </div>
 
-      <AdSenseBanner className="mx-4 mt-6 mb-4" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-6 mb-4" />
       {/* ✅ AdSense Banner on Review Page */}
               <AdSenseBanner 
                 adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}

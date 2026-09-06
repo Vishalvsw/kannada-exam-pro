@@ -170,7 +170,7 @@ export default function Home() {
           adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
           className="mx-4 my-2"
       />
-      <AdSenseBanner className="mx-4 mt-6 mb-4" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-6 mb-4" />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
@@ -262,7 +262,7 @@ export default function Home() {
 
       {/* ✅ In-Article Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner className="my-4" />
+        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="my-4" />
       </div>
 
       {isDataLoaded && LeaderboardSection}
@@ -308,7 +308,7 @@ export default function Home() {
 
       {/* ✅ Bottom Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner className="my-4" />
+        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="my-4" />
       </div>
 
       <style jsx>{`

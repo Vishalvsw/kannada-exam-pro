@@ -292,7 +292,7 @@ export default function QuizPage() {
     
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
-        <AdSenseBanner className="mx-4 mt-2" />
+        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-2" />
         
         {/* ✅ AdSense Banner on Result Page */}
         <AdSenseBanner 
@@ -444,7 +444,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <AdSenseBanner className="mx-4 mt-2" />
+        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-2" />
         
         {/* ✅ AdSense Banner Bottom on Result Page */}
         <AdSenseBanner 
@@ -512,7 +512,7 @@ export default function QuizPage() {
     
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <AdSenseBanner className="mx-4 mt-2" />
+        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-2" />
         
         {/* ✅ AdSense Banner on Review Page */}
         <AdSenseBanner 
@@ -605,7 +605,7 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      <AdSenseBanner className="mx-4 mt-2" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-2" />
       
       {/* ✅ AdSense Banner - Top of Quiz */}
       <div className="max-w-md mx-auto px-4">
@@ -746,7 +746,7 @@ export default function QuizPage() {
         </p>
       </div>
 
-      <AdSenseBanner className="mx-4 mt-2" />
+      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-2" />
       
       {/* ✅ AdSense Banner - Bottom of Quiz */}
       <div className="max-w-md mx-auto px-4">
