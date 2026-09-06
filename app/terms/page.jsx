@@ -1,5 +1,5 @@
+import AdSenseBanner from "@/components/AdSenseBanner";
 import Link from 'next/link';
-import AdSenseBanner from '@/components/AdSenseBanner';
 
 export const metadata = {
   title: 'Terms & Conditions - Kannada Exam Pro',

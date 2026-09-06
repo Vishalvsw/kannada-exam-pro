@@ -406,4 +406,4 @@ export default function LeaderboardPage() {
       </div>
     </div>
   );
-}
+}export const dynamic = 'force-dynamic';

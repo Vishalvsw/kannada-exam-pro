@@ -1,3 +1,4 @@
+import AdSenseBanner from "@/components/AdSenseBanner";
 // app/notes/page.jsx - Server Component with SEO
 import NotesClient from './NotesClient';
 
@@ -58,3 +59,4 @@ export default async function NotesPage() {
     return <NotesClient initialNotes={[]} initialQA={[]} />;
   }
 }
+export const dynamic = 'force-dynamic';

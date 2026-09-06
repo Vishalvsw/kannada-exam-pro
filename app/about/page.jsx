@@ -1,5 +1,5 @@
+import AdSenseBanner from "@/components/AdSenseBanner";
 import Link from 'next/link';
-import AdSenseBanner from '@/components/AdSenseBanner';
 
 export const metadata = {
   title: 'About Us - Kannada Exam Pro | Our Mission & Vision',

@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import AdSenseBanner from '@/components/AdSenseBanner';
+import AdSenseBanner from "@/components/AdSenseBanner";
+
 
 export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
