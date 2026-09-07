@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AnswerExplanation from '@/components/AnswerExplanation';
+import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default function QuizPage() {
   const router = useRouter();
