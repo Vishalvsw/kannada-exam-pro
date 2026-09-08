@@ -6,6 +6,9 @@ import Link from 'next/link';
 import AnswerExplanation from '@/components/AnswerExplanation';
 import AdSenseBanner from '@/components/AdSenseBanner';
 
+
+
+
 export default function QuizPage() {
   const router = useRouter();
   const [questions, setQuestions] = useState([]);

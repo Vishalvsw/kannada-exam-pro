@@ -59,7 +59,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* ✅ Google Ad Manager (GPT) - NEW */}
+        {/* ✅ Google Ad Manager (GPT) - Fixed */}
         <Script
           async
           src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
@@ -67,14 +67,17 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
         
-        {/* ✅ Google Ad Manager Initialization - NEW */}
+        {/* ✅ GPT Initialization - Updated */}
         <Script id="gpt-init" strategy="afterInteractive">
           {`
             window.googletag = window.googletag || {cmd: []};
             googletag.cmd.push(function() {
+              // ✅ New config method
+              googletag.setConfig({
+                singleRequest: true
+              });
               googletag.defineSlot('${AD_UNIT}', [[320, 100], [320, 50]], '${AD_DIV_ID}')
                 .addService(googletag.pubads());
-              googletag.pubads().enableSingleRequest();
               googletag.enableServices();
             });
           `}
@@ -94,7 +97,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         
-        {/* ✅ Google AdSense (Fallback) */}
+        {/* ✅ Google AdSense - Fixed */}
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           strategy="afterInteractive"

@@ -1,4 +1,3 @@
-import AdSenseBanner from "@/components/AdSenseBanner";
 import Link from 'next/link';
 
 export const metadata = {
@@ -10,15 +9,6 @@ export const metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-        {/* ✅ AdSense Banner - Bottom of Quiz */}
-                    <div className="max-w-md mx-auto px-4">
-                      <AdSenseBanner 
-                        adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_BOTTOM}
-                        className="mt-2"
-                      />
-                    </div>
-      
-      
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="text-sm text-white/80 hover:text-white mb-4 inline-block">
@@ -337,25 +327,28 @@ export default function PrivacyPolicyPage() {
         </div>
       </div>
 
-      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-8 mb-4" />
-
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🏠</span><span className="text-[10px]">Home</span>
+            <span className="text-xl">🏠</span>
+            <span className="text-[10px]">Home</span>
           </Link>
           <Link href="/quiz" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">🎯</span><span className="text-[10px]">Quiz</span>
+            <span className="text-xl">🎯</span>
+            <span className="text-[10px]">Quiz</span>
           </Link>
           <Link href="/notes" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">📖</span><span className="text-[10px]">Study</span>
+            <span className="text-xl">📖</span>
+            <span className="text-[10px]">Study</span>
           </Link>
           <Link href="/gallery" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">📸</span><span className="text-[10px]">Gallery</span>
+            <span className="text-xl">📸</span>
+            <span className="text-[10px]">Gallery</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center text-gray-500 hover:text-blue-600 transition">
-            <span className="text-xl">👤</span><span className="text-[10px]">Profile</span>
+            <span className="text-xl">👤</span>
+            <span className="text-[10px]">Profile</span>
           </Link>
         </div>
       </div>
