@@ -38,8 +38,10 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-3976598981288611';
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9119771130084938';
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
+const AD_UNIT = process.env.NEXT_PUBLIC_AD_UNIT || '/23369396230/MCQup';
+const AD_DIV_ID = process.env.NEXT_PUBLIC_AD_DIV_ID || 'div-gpt-ad-1788864007233-0';
 
 export default function RootLayout({ children }) {
   return (
@@ -57,6 +59,27 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
+        {/* ✅ Google Ad Manager (GPT) - NEW */}
+        <Script
+          async
+          src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        
+        {/* ✅ Google Ad Manager Initialization - NEW */}
+        <Script id="gpt-init" strategy="afterInteractive">
+          {`
+            window.googletag = window.googletag || {cmd: []};
+            googletag.cmd.push(function() {
+              googletag.defineSlot('${AD_UNIT}', [[320, 100], [320, 50]], '${AD_DIV_ID}')
+                .addService(googletag.pubads());
+              googletag.pubads().enableSingleRequest();
+              googletag.enableServices();
+            });
+          `}
+        </Script>
+        
         {/* Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
@@ -71,7 +94,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
         
-        {/* ✅ GOOGLE ADSENSE - NO data-nscript attribute */}
+        {/* ✅ Google AdSense (Fallback) */}
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           strategy="afterInteractive"

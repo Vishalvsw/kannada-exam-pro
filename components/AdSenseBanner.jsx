@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from 'react';
 
 export default function AdSenseBanner({
   adSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT || '5293436655',
+  adUnit = '/23369396230/MCQup', // New: Google Ad Manager ad unit
+  adSizes = [[320, 100], [320, 50]], // New: Ad sizes
+  divId = 'div-gpt-ad-1788864007233-0', // New: Div ID
   className = '',
   style = {},
 }) {
@@ -19,24 +22,28 @@ export default function AdSenseBanner({
     if (!isClient) return;
     if (adPushedRef.current) return;
 
-    const pushAd = () => {
+    const loadAd = () => {
       try {
-        if (window.adsbygoogle && containerRef.current) {
-          if (document.contains(containerRef.current)) {
-            window.adsbygoogle.push({});
-            adPushedRef.current = true;
-          }
+        // Check if GPT is loaded
+        if (window.googletag && window.googletag.cmd) {
+          window.googletag.cmd.push(() => {
+            if (containerRef.current) {
+              window.googletag.display(divId);
+              adPushedRef.current = true;
+            }
+          });
         } else {
-          setTimeout(pushAd, 500);
+          // Retry after a delay
+          setTimeout(loadAd, 500);
         }
       } catch (error) {
-        console.error('AdSense error:', error);
+        console.error('Ad Manager error:', error);
       }
     };
 
-    const timer = setTimeout(pushAd, 500);
+    const timer = setTimeout(loadAd, 500);
     return () => clearTimeout(timer);
-  }, [isClient]);
+  }, [isClient, divId]);
 
   // Show placeholder while loading
   if (!isClient) {
@@ -44,8 +51,8 @@ export default function AdSenseBanner({
       <div 
         className={`ad-placeholder ${className}`}
         style={{ 
-          width: '300px',
-          height: '250px',
+          width: '320px',
+          height: '100px',
           maxWidth: '100%',
           ...style 
         }}
@@ -57,33 +64,40 @@ export default function AdSenseBanner({
     );
   }
 
-  const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9119771130084938';
-
   return (
     <div 
       ref={containerRef}
       className={`ad-banner ${className}`} 
       style={{ 
-        width: '300px',
-        height: '250px',
-        maxWidth: '100%',
+        width: '100%',
+        maxWidth: '320px',
+        minHeight: '50px',
         overflow: 'hidden',
         margin: '0 auto',
         ...style 
       }}
     >
-      <ins
-        className="adsbygoogle"
+      {/* Google Ad Manager Ad Unit */}
+      <div 
+        id={divId} 
         style={{ 
-          display: 'block',
-          width: '300px',
-          height: '250px',
+          minWidth: '320px', 
+          minHeight: '50px',
+          width: '100%',
+          maxWidth: '320px',
+          margin: '0 auto',
         }}
-        data-ad-client={clientId}
-        data-ad-slot={adSlot}
-        data-ad-format="rectangle"
-        data-full-width-responsive="false"
-      />
+      >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              googletag.cmd.push(function() {
+                googletag.display('${divId}');
+              });
+            `
+          }}
+        />
+      </div>
     </div>
   );
 }
