@@ -1,2 +1,7 @@
-google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
-# Add your ad network publisher ID here
+tapmind.com, TMP10456, DIRECT
+google.com, pub-1714061154748628, RESELLER, f08c47fec0942fa0
+google.com, pub-8686615022940025, RESELLER, f08c47fec0942fa0
+kickads.mobi, 97, DIRECT
+google.com, pub-2915053785761950, RESELLER, f08c47fec0942fa0
+rtbdemand.com, 22903361807, DIRECT
+google.com, pub-3872674820285626, RESELLER, f08c47fec0942fa0
