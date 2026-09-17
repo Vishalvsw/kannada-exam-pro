@@ -2,17 +2,12 @@
   "name": "kannada-exam-pro",
   "version": "1.0.0",
   "private": true,
-  "engines": {
-    "node": ">=18.17.0"
-  },
   "scripts": {
+    "sitemap": "node scripts/generate-sitemap.js",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "sitemap": "node scripts/generate-sitemap.js",
-    "postbuild": "npm run sitemap",
-    "deploy": "vercel --prod"
+    "lint": "next lint"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.1",
