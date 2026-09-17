@@ -3,8 +3,7 @@
 import { useEffect } from 'react';
 
 export default function GptAd({
-  unit = '/23369396230/MCQ_ad',
-  divId = 'div-gpt-ad-1789651646990-0',
+  divId = process.env.NEXT_PUBLIC_GPT_DIV_ID || 'div-gpt-ad-1789651646990-0',
   width = 320,
   height = 50,
 }) {

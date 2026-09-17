@@ -48,36 +48,50 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-// ✅ AdSense (publisher ID)
+/* =========================================================
+   ENVIRONMENT VARIABLES (with safe fallbacks)
+   ========================================================= */
+
+// ✅ AdSense Publisher ID
 const ADSENSE_CLIENT =
   process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9119771130084938';
 
 // ✅ Google Ad Manager (GPT)
-const GPT_UNIT = process.env.NEXT_PUBLIC_GPT_UNIT || '/23369396230/MCQ_ad';
-const GPT_DIV_ID = process.env.NEXT_PUBLIC_GPT_DIV_ID || 'div-gpt-ad-1789651646990-0';
+const GPT_UNIT =
+  process.env.NEXT_PUBLIC_GPT_UNIT || '/23369396230/MCQ_ad';
+const GPT_DIV_ID =
+  process.env.NEXT_PUBLIC_GPT_DIV_ID || 'div-gpt-ad-1789651646990-0';
 
 // ✅ Google Analytics
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
 
+/* =========================================================
+   ROOT LAYOUT
+   ========================================================= */
 export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
+        {/* ===== Icons & Sitemap ===== */}
         <link rel="sitemap" href="/sitemap.xml" />
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
 
+        {/* ===== DNS Prefetch ===== */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
 
+        {/* ===== Preconnect Fonts ===== */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* ✅ Google Ad Manager (GPT) */}
+        {/* =====================================================
+            ✅ Google Ad Manager (GPT)
+           ===================================================== */}
         <Script
           async
           src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
@@ -98,7 +112,9 @@ export default function RootLayout({ children }) {
           `}
         </Script>
 
-        {/* ✅ Google Analytics */}
+        {/* =====================================================
+            ✅ Google Analytics (GA4)
+           ===================================================== */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -112,7 +128,9 @@ export default function RootLayout({ children }) {
           `}
         </Script>
 
-        {/* ✅ Google AdSense */}
+        {/* =====================================================
+            ✅ Google AdSense
+           ===================================================== */}
         <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
           crossOrigin="anonymous"
