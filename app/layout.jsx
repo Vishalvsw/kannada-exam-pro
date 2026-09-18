@@ -86,7 +86,7 @@ export default function RootLayout({ children }) {
             window.googletag = window.googletag || { cmd: [] };
             window.googletag.cmd = window.googletag.cmd || [];
             window.googletag.cmd.push(function () {
-              window.googletag.pubads().enableSingleRequest();
+              window.googletag.setConfig({ singleRequest: true });
               window.googletag.pubads().enableAsyncRendering();
               window.googletag.enableServices();
             });
