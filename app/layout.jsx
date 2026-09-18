@@ -48,21 +48,9 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-/* =========================================================
-   ENVIRONMENT VARIABLES (with safe fallbacks)
-   ========================================================= */
-
-// ✅ AdSense Publisher ID
-const ADSENSE_CLIENT =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9119771130084938';
-
-
 // ✅ Google Analytics
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
 
-/* =========================================================
-   ROOT LAYOUT
-   ========================================================= */
 export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
@@ -78,11 +66,32 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net" />
-        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
 
         {/* ===== Preconnect Fonts ===== */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* =====================================================
+            ✅ Google Ad Manager (GPT) — AdX
+           ===================================================== */}
+        <Script
+          async
+          src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+
+        <Script id="gpt-init" strategy="afterInteractive">
+          {`
+            window.googletag = window.googletag || { cmd: [] };
+            window.googletag.cmd = window.googletag.cmd || [];
+            window.googletag.cmd.push(function () {
+              window.googletag.pubads().enableSingleRequest();
+              window.googletag.pubads().enableAsyncRendering();
+              window.googletag.enableServices();
+            });
+          `}
+        </Script>
 
         {/* =====================================================
             ✅ Google Analytics (GA4)
@@ -99,15 +108,6 @@ export default function RootLayout({ children }) {
             gtag('config', '${GA_ID}', { page_path: window.location.pathname });
           `}
         </Script>
-
-        {/* =====================================================
-            ✅ Google AdSense
-           ===================================================== */}
-        <Script
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </head>
 
       <body suppressHydrationWarning>

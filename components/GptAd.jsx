@@ -21,6 +21,7 @@ export default function GptAd({
       if (cancelled || !containerRef.current) return;
 
       window.googletag = window.googletag || { cmd: [] };
+    window.googletag.cmd = window.googletag.cmd || [];
 
       window.googletag.cmd.push(() => {
         if (cancelled || !containerRef.current) return;
