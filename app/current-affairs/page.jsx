@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import AdSenseBanner from '@/components/AdSenseBanner';
+import GptAd from '@/components/GptAd';
 
 export default function CurrentAffairsPage() {
   const [affairs, setAffairs] = useState([]);
@@ -104,10 +104,7 @@ export default function CurrentAffairsPage() {
     <div className="min-h-screen bg-gray-50 pb-20">
 
       {/* ✅ AdSense Banner on Review Page */}
-              <AdSenseBanner 
-                adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
-                className="mx-4 my-2"
-              />
+              <GptAd className="mx-4 my-2" />
 
       {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 pt-6 pb-8">
@@ -287,12 +284,9 @@ export default function CurrentAffairsPage() {
         </Link>
       </div>
 
-      <AdSenseBanner className="mx-4 mt-6 mb-4" />
+      <GptAd className="mx-4 mt-6 mb-4" />
       {/* ✅ AdSense Banner on Review Page */}
-              <AdSenseBanner 
-                adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
-                className="mx-4 my-2"
-              />
+              <GptAd className="mx-4 my-2" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">

@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import AdSenseBanner from "@/components/AdSenseBanner";
+import GptAd from "@/components/GptAd";
 
 
 export default function Home() {
@@ -167,11 +167,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
       {/* ✅ Top Ad Banner */}
-      <AdSenseBanner 
-          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
-          className="mx-4 my-2"
-      />
-      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-6 mb-4" />
+      <GptAd className="mx-4 my-2" />
+      <GptAd className="mx-4 mt-6 mb-4" />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
@@ -263,7 +260,7 @@ export default function Home() {
 
       {/* ✅ In-Article Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="my-4" />
+        <GptAd className="my-4" />
       </div>
 
       {isDataLoaded && LeaderboardSection}
@@ -309,7 +306,7 @@ export default function Home() {
 
       {/* ✅ Bottom Ad Banner */}
       <div className="max-w-4xl mx-auto px-4">
-        <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="my-4" />
+        <GptAd className="my-4" />
       </div>
 
       <style jsx>{`

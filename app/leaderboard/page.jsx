@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import AdSenseBanner from '@/components/AdSenseBanner';
+import GptAd from '@/components/GptAd';
 export default function LeaderboardPage() {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
@@ -170,10 +170,7 @@ export default function LeaderboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
       {/* ✅ AdSense Banner on Review Page */}
-              <AdSenseBanner 
-                adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
-                className="mx-4 my-2"
-              />
+              <GptAd className="mx-4 my-2" />
       
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">

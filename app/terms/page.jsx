@@ -1,4 +1,4 @@
-import AdSenseBanner from "@/components/AdSenseBanner";
+import GptAd from "@/components/GptAd";
 import Link from 'next/link';
 
 export const metadata = {
@@ -12,10 +12,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* ✅ AdSense Banner - Bottom of Quiz */}
                   <div className="max-w-md mx-auto px-4">
-                    <AdSenseBanner 
-                      adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ_BOTTOM}
-                      className="mt-2"
-                    />
+                    <GptAd className="mt-2" />
                   </div>
       
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white px-5 pt-8 pb-6">
@@ -276,7 +273,7 @@ export default function TermsPage() {
         </div>
       </div>
 
-      <AdSenseBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT} className="mx-4 mt-8 mb-4" />
+      <GptAd className="mx-4 mt-8 mb-4" />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">

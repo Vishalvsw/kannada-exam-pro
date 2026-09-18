@@ -12,12 +12,15 @@ export default function GptAd({
 }) {
   const containerRef = useRef(null);
   const slotRef = useRef(null);
-  const idRef = useRef(`div-gpt-ad-${Date.now()}-${++adCounter}`);
+
+  const idRef = useRef(
+    `div-gpt-ad-${Date.now()}-${++adCounter}`
+  );
 
   useEffect(() => {
     let cancelled = false;
 
-    const setupAd = () => {
+    const loadAd = () => {
       if (cancelled || !containerRef.current) return;
 
       window.googletag = window.googletag || { cmd: [] };
@@ -26,17 +29,15 @@ export default function GptAd({
         if (cancelled || !containerRef.current) return;
 
         try {
-          const pubads = window.googletag.pubads();
+          const existingSlots =
+            window.googletag.pubads().getSlots();
 
-          const existing = pubads
-            .getSlots()
-            .find(
-              (slot) =>
-                slot.getSlotElementId() === idRef.current
-            );
+          const existingSlot = existingSlots.find(
+            (slot) => slot.getSlotElementId() === idRef.current
+          );
 
-          if (existing) {
-            slotRef.current = existing;
+          if (existingSlot) {
+            slotRef.current = existingSlot;
             window.googletag.display(idRef.current);
             return;
           }
@@ -47,7 +48,9 @@ export default function GptAd({
               sizes,
               idRef.current
             )
-            ?.addService(pubads);
+            ?.addService(
+              window.googletag.pubads()
+            );
 
           if (!slot) {
             console.error(
@@ -68,17 +71,19 @@ export default function GptAd({
       });
     };
 
-    window.googletag =
-      window.googletag || { cmd: [] };
-
-    window.googletag.cmd.push(setupAd);
+    if (window.googletag?.apiReady) {
+      loadAd();
+    } else {
+      window.googletag = window.googletag || { cmd: [] };
+      window.googletag.cmd.push(loadAd);
+    }
 
     return () => {
       cancelled = true;
 
       if (
-        slotRef.current &&
-        window.googletag
+        window.googletag &&
+        slotRef.current
       ) {
         window.googletag.cmd.push(() => {
           try {

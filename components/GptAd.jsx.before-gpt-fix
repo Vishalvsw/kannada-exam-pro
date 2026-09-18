@@ -12,7 +12,10 @@ export default function GptAd({
 }) {
   const containerRef = useRef(null);
   const slotRef = useRef(null);
-  const idRef = useRef(`div-gpt-ad-${Date.now()}-${++adCounter}`);
+
+  const idRef = useRef(
+    `div-gpt-ad-${Date.now()}-${++adCounter}`
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -26,17 +29,14 @@ export default function GptAd({
         if (cancelled || !containerRef.current) return;
 
         try {
-          const pubads = window.googletag.pubads();
+          const slots = window.googletag.pubads().getSlots();
 
-          const existing = pubads
-            .getSlots()
-            .find(
-              (slot) =>
-                slot.getSlotElementId() === idRef.current
-            );
+          const existingSlot = slots.find(
+            (slot) => slot.getSlotElementId() === idRef.current
+          );
 
-          if (existing) {
-            slotRef.current = existing;
+          if (existingSlot) {
+            slotRef.current = existingSlot;
             window.googletag.display(idRef.current);
             return;
           }
@@ -47,11 +47,13 @@ export default function GptAd({
               sizes,
               idRef.current
             )
-            ?.addService(pubads);
+            ?.addService(
+              window.googletag.pubads()
+            );
 
           if (!slot) {
             console.error(
-              'Google Ad Manager: defineSlot returned null'
+              'Google Ad Manager: Unable to create ad slot'
             );
             return;
           }
@@ -59,6 +61,12 @@ export default function GptAd({
           slotRef.current = slot;
 
           window.googletag.display(idRef.current);
+
+          console.log(
+            'Google Ad Manager slot displayed:',
+            idRef.current,
+            adUnit
+          );
         } catch (error) {
           console.error(
             'Google Ad Manager error:',
@@ -68,18 +76,17 @@ export default function GptAd({
       });
     };
 
-    window.googletag =
-      window.googletag || { cmd: [] };
-
-    window.googletag.cmd.push(setupAd);
+    if (window.googletag?.apiReady) {
+      setupAd();
+    } else {
+      window.googletag = window.googletag || { cmd: [] };
+      window.googletag.cmd.push(setupAd);
+    }
 
     return () => {
       cancelled = true;
 
-      if (
-        slotRef.current &&
-        window.googletag
-      ) {
+      if (slotRef.current && window.googletag) {
         window.googletag.cmd.push(() => {
           try {
             window.googletag.destroySlots([

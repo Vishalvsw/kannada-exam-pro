@@ -56,6 +56,11 @@ export const viewport = {
 const ADSENSE_CLIENT =
   process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9119771130084938';
 
+// ✅ Google Ad Manager (GPT)
+const GPT_UNIT =
+  process.env.NEXT_PUBLIC_GPT_UNIT || '/23369396230/MCQ_ad';
+const GPT_DIV_ID =
+  process.env.NEXT_PUBLIC_GPT_DIV_ID || 'div-gpt-ad-1789651646990-0';
 
 // ✅ Google Analytics
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
@@ -83,6 +88,29 @@ export default function RootLayout({ children }) {
         {/* ===== Preconnect Fonts ===== */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* =====================================================
+            ✅ Google Ad Manager (GPT)
+           ===================================================== */}
+        <Script
+          async
+          src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+
+        <Script id="gpt-init" strategy="afterInteractive">
+          {`
+            window.googletag = window.googletag || { cmd: [] };
+            googletag.cmd.push(function () {
+              googletag.setConfig({ singleRequest: true });
+              googletag
+                .defineSlot('${GPT_UNIT}', [[320, 50], [320, 100]], '${GPT_DIV_ID}')
+                .addService(googletag.pubads());
+              googletag.enableServices();
+            });
+          `}
+        </Script>
 
         {/* =====================================================
             ✅ Google Analytics (GA4)
