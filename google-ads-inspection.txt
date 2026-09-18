@@ -1,0 +1,25 @@
+./app/layout.jsx:83:        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+./app/layout.jsx:85:        <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net" />
+./app/layout.jsx:97:          src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
+./app/layout.jsx:104:            window.googletag = window.googletag || { cmd: [] };
+./app/layout.jsx:105:            googletag.cmd.push(function () {
+./app/layout.jsx:106:              googletag.setConfig({ singleRequest: true });
+./app/layout.jsx:107:              googletag
+./app/layout.jsx:108:                .defineSlot('${GPT_UNIT}', [[320, 50], [320, 100]], '${GPT_DIV_ID}')
+./app/layout.jsx:109:                .addService(googletag.pubads());
+./app/layout.jsx:110:              googletag.enableServices();
+./app/layout.jsx:119:          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+./app/layout.jsx:135:          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+./components/AdSenseBanner.jsx:8:  adUnit = process.env.NEXT_PUBLIC_AD_UNIT || '/23369396230/MCQup',
+./components/AdSenseBanner.jsx:31:          if (window.googletag && window.googletag.cmd) {
+./components/AdSenseBanner.jsx:34:              window.googletag.cmd.push(() => {
+./components/AdSenseBanner.jsx:36:                  window.googletag.display(divId);
+./components/AdSenseBanner.jsx:47:          if (window.adsbygoogle && containerRef.current) {
+./components/AdSenseBanner.jsx:49:              window.adsbygoogle.push({});
+./components/AdSenseBanner.jsx:131:        className="adsbygoogle"
+./components/GptAd.jsx:12:    window.googletag = window.googletag || { cmd: [] };
+./components/GptAd.jsx:13:    window.googletag.cmd.push(function () {
+./components/GptAd.jsx:14:      window.googletag.display(divId);
+./package-lock.json:4515:      "integrity": "sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==",
+./package-lock.json:5223:      "integrity": "sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==",
+./package-lock.json:5266:      "integrity": "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==",
