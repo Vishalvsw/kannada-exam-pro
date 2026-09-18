@@ -1,65 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  trailingSlash: false,
-  
-  // ✅ Image Optimization
-  images: {
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 31536000,
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: '**',
-      },
-    ],
-  },
-  
-  // ✅ Compression
-  compress: true,
-  
-  // ✅ Headers for caching
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, stale-while-revalidate=86400',
-          },
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
         ],
       },
       {
-        source: '/_next/static/(.*)',
+        source: '/_next/static/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-      {
-        source: '/images/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+      { source: '/ads.txt', headers: [{ key: 'Content-Type', value: 'text/plain' }] },
+      { source: '/robots.txt', headers: [{ key: 'Content-Type', value: 'text/plain' }] },
     ];
   },
-  
-  // ✅ Enable SWC minification
-  swcMinify: true,
-  
-  // ✅ Disable x-powered-by
-  poweredByHeader: false,
-  
-  // ✅ React strict mode
-  reactStrictMode: true,
 };
 
 module.exports = nextConfig;
