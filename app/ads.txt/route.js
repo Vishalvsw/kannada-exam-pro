@@ -18,6 +18,7 @@ export async function GET() {
     'google.com, pub-1409218547787175, DIRECT, f08c47fec0942fa0',
     'google.com, pub-1661229542422591, DIRECT, f08c47fec0942fa0',
     'google.com, pub-2990964355293172, DIRECT, f08c47fec0942fa0',
+    'google.com, pub-3976598981288611, DIRECT, f08c47fec0942fa0',
     '',
 
     '# ============================================',
