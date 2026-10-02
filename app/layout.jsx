@@ -38,6 +38,7 @@ export const metadata = {
     },
   },
   verification: { google: 'y3RNc-UfL5d1OHtf5yKYej6AwqkRySGjNyhuUAPlOJs' },
+  
 };
 
 export const viewport = {
@@ -60,6 +61,9 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
+
+        {/* ===== Domain Verification ===== */}
+        <meta name="profiton-domain-verification" content="c759445c472db95db5da2fb73c70dcf9d23763b37bccc8f2e5f01757dc4678bb" />
 
         {/* ===== DNS Prefetch ===== */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
