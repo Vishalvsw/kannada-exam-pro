@@ -3,6 +3,7 @@ import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
+import BannerAd320x50 from '@/components/BannerAd320x50';  // ✅ THIS LINE WAS MISSING
 import Script from 'next/script';
 import './globals.css';
 
@@ -118,6 +119,14 @@ export default function RootLayout({ children }) {
         <ClientOnly>
           <DemoAuthProvider>
             <ResponsiveNav>{children}</ResponsiveNav>
+
+            {/* =====================================================
+                ✅ Adsterra 320×50 Banner — shows on every page
+               ===================================================== */}
+            <div className="flex justify-center items-center py-4 bg-gray-50 border-t border-gray-200">
+              <BannerAd320x50 />
+            </div>
+
             <Footer />
           </DemoAuthProvider>
         </ClientOnly>
