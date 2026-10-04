@@ -166,9 +166,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      {/* ✅ Top Ad Banner */}
-      <GptAd className="mx-4 my-2" />
-      <GptAd className="mx-4 mt-6 mb-4" />
+      {/* ✅ In-Article Ad Banner */}
+      <div className="max-w-4xl mx-auto px-4">
+        <GptAd className="my-4" />
+      </div>
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">

@@ -1,18 +1,13 @@
 User-agent: *
 Allow: /
 
-# Allow AdSense crawler
-User-agent: Mediapartners-Google
-Allow: /
-
-# Allow Googlebot to crawl
-User-agent: Googlebot
-Allow: /
-
-# Disallow admin pages (optional)
 Disallow: /admin/
-Disallow: /api/
-Disallow: /_next/
+Disallow: /admin-login/
+Disallow: /debug/
+Disallow: /demo-login/
+Disallow: /instagram-login/
+Disallow: /setup-instagram/
+Disallow: /profile/
+Disallow: /session/
 
-# Sitemap location
-Sitemap: https://kannadaexampro.com/sitemap.xml
+Sitemap: https://www.kannadaexampro.com/sitemap.xml
