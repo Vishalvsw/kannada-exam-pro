@@ -1,10 +1,10 @@
+// app/page.jsx
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import GptAd from "@/components/GptAd";
-
+import GptAd from '@/components/GptAd';
 
 export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
@@ -102,12 +102,12 @@ export default function Home() {
       <div className="px-5 mt-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            🏆 Top Winners 
+            🏆 Top Winners
             <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Top {topUsers.length}</span>
           </h2>
           <Link href="/leaderboard" className="text-xs text-blue-600 hover:underline">View All →</Link>
         </div>
-        
+
         <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-lg p-5">
           <div className="space-y-4">
             {topUsers.map((user, idx) => {
@@ -141,7 +141,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="relative w-full bg-gray-200 rounded-full h-7 overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full rounded-full flex items-center justify-end pr-3 transition-all duration-1000 ease-out ${
                         barColor[rank] || 'bg-gradient-to-r from-purple-400 to-purple-500'
                       }`}
@@ -166,9 +166,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      {/* ✅ In-Article Ad Banner */}
-      <div className="max-w-4xl mx-auto px-4">
-        <GptAd className="my-4" />
+
+      {/* ============================================================
+          ✅ AD SLOT 1 — TOP (below navbar)
+         ============================================================ */}
+      <div className="max-w-4xl mx-auto px-4 pt-3">
+        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
+        <GptAd className="my-2" />
       </div>
 
       {/* Hero Section */}
@@ -177,13 +181,13 @@ export default function Home() {
           <h1 className="text-3xl font-bold">Kannada Exam Pro</h1>
           <p className="text-blue-100 text-sm mt-1">KAS | PSI | PDO | FDA | SDA</p>
         </div>
-        
+
         <div className="flex justify-center">
           <div className="bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 animate-slide-left inline-block shadow-xl">
             <div className="flex items-center justify-center gap-3">
               <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${currentLogo.color} flex items-center justify-center p-1 shadow-lg ring-4 ring-white/50`}>
-                <Image 
-                  src={currentLogo.image} 
+                <Image
+                  src={currentLogo.image}
                   alt={currentLogo.name}
                   width={56}
                   height={56}
@@ -202,10 +206,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex justify-center gap-2 mt-4">
           {slidingLogos.map((_, idx) => (
-            <div 
+            <div
               key={idx}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 idx === currentLogoIndex ? 'bg-white w-4' : 'bg-white/50'
@@ -219,9 +223,9 @@ export default function Home() {
         <div className="px-5 -mt-4">
           <div className="bg-white rounded-2xl shadow-lg p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img 
-                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=80`} 
-                className="w-12 h-12 rounded-full border-2 border-blue-500 object-cover" 
+              <img
+                src={user.profileImage || user.picture || `https://ui-avatars.com/api/?name=${user.name}&background=3B82F6&color=fff&size=80`}
+                className="w-12 h-12 rounded-full border-2 border-blue-500 object-cover"
                 alt={user.name}
                 loading="lazy"
                 onError={(e) => {
@@ -243,6 +247,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* Categories */}
       <div className="px-5 mt-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {categories.map((cat, idx) => (
@@ -259,9 +264,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ✅ In-Article Ad Banner */}
-      <div className="max-w-4xl mx-auto px-4">
-        <GptAd className="my-4" />
+      {/* ============================================================
+          ✅ AD SLOT 2 — MID-CONTENT (between categories and leaderboard)
+         ============================================================ */}
+      <div className="max-w-4xl mx-auto px-4 mt-6">
+        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
+        <GptAd className="my-2" />
       </div>
 
       {isDataLoaded && LeaderboardSection}
@@ -269,7 +277,7 @@ export default function Home() {
       <div className="px-5 mt-8 mb-4 text-center">
         <p className="text-sm text-gray-500">For Daily Quiz and Updates</p>
         <p className="text-xs text-gray-400 mb-3">Join More Channels</p>
-        
+
         <div className="flex justify-center gap-5">
           <a
             href="https://whatsapp.com/channel/0029VbCnlxq3wtbEGjkxIM2M"
@@ -282,7 +290,7 @@ export default function Home() {
             </div>
             <span className="text-xs text-gray-600 mt-1 group-hover:text-green-600 transition">WhatsApp</span>
           </a>
-          
+
           <a
             href="https://www.instagram.com/kannada_exam_pro"
             target="_blank"
@@ -297,18 +305,21 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ============================================================
+          ✅ AD SLOT 3 — BOTTOM (above Admin/Login link)
+         ============================================================ */}
+      <div className="max-w-4xl mx-auto px-4 mt-6">
+        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
+        <GptAd className="my-2" />
+      </div>
+
       {!user && (
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <Link href="/login" className="text-xs text-gray-400 hover:text-blue-500 transition">
             🔐 Admin / Login
           </Link>
         </div>
       )}
-
-      {/* ✅ Bottom Ad Banner */}
-      <div className="max-w-4xl mx-auto px-4">
-        <GptAd className="my-4" />
-      </div>
 
       <style jsx>{`
         @keyframes slideLeft {
@@ -317,7 +328,7 @@ export default function Home() {
           88% { transform: translateX(0); opacity: 1; }
           100% { transform: translateX(-30%); opacity: 0; }
         }
-        .animate-slide-left { 
+        .animate-slide-left {
           animation: slideLeft 5s ease-in-out infinite;
           box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
