@@ -1,4 +1,3 @@
-import GptAd from "@/components/GptAd";
 // app/notes/page.jsx - Server Component with SEO
 import NotesClient from './NotesClient';
 

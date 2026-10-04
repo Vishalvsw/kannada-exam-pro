@@ -3,7 +3,6 @@ import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
-import BannerAd320x50 from '@/components/BannerAd320x50'; // ✅ Adsterra banner
 import Script from 'next/script';
 import './globals.css';
 
@@ -124,7 +123,6 @@ export default function RootLayout({ children }) {
                 ✅ Adsterra 320×50 Banner (global, above footer)
                ===================================================== */}
             <div className="flex justify-center items-center py-4 bg-gray-50 border-t border-gray-200">
-              <BannerAd320x50 />
             </div>
 
             <Footer />
