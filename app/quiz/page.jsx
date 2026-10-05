@@ -729,7 +729,7 @@ export default function QuizPage() {
   const isQuestionAnswered = answeredQuestions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-32">
       {/* ✅ GPT Ad - Top Quiz */}
       <GptAd className="mx-4 mt-2" />
 

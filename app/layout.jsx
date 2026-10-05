@@ -112,7 +112,7 @@ export default function RootLayout({ children }) {
             <ResponsiveNav>{children}</ResponsiveNav>
 
             {/* ✅ Dynamic Adsterra — controlled by adConfig.js */}
-            <DynamicAdsterra />
+            <DynamicAdsterra position="fixed-bottom" />
 
             <Footer />
           </DemoAuthProvider>
