@@ -1,81 +1,47 @@
-# dependencies
-/node_modules
-/.pnp
+# Dependencies
+node_modules/
+.pnp
 .pnp.js
-.yarn/install-state.gz
 
-# testing
-/coverage
+# Next.js
+.next/
+out/
+build/
+dist/
 
-# next.js
-/.next/
-/out/
+# Environment
+.env
+.env.local
+.env*.local
+.env.local.backup
+.env.local.final-backup
 
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
-.env
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
 
-# OS
-Thumbs.db
-.DS_Store
-
-# Backup files
-backups/
-*.bak
-
-# Logs
-logs/
-*.log
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-backend/__pycache__/
-
+# Vercel
 .vercel
-.env.production
 
-.env*.local
-data/*.json
-data/*.json
-data/*.json
-.env*
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 
-.vercel
-.env*
+# Backups
+.adfix-backup/
+.backup/
 
-.vercel
-.env*
-.vercel
-.env*
-public/sitemap.xml
-.env.local
-.env
-.env.*
+# Test/debug files
+test-*.js
+final-test.js
+*-test.js
+find-all-loading.sh
