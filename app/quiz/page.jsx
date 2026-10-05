@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AnswerExplanation from '@/components/AnswerExplanation';
 import GptAd from '@/components/GptAd';
+import DynamicAdsterra from '@/components/DynamicAdsterra';
 
 export default function QuizPage() {
   const router = useRouter();
@@ -21,7 +22,6 @@ export default function QuizPage() {
   const [userAnswers, setUserAnswers] = useState([]);
   const [user, setUser] = useState(null);
 
-  // Per question timer — 2 minutes (120 seconds) per question
   const TOTAL_TIME = 120;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [timerActive, setTimerActive] = useState(true);
@@ -102,7 +102,6 @@ export default function QuizPage() {
     }
   };
 
-  // ✅ Timer — auto-advances to next question on timeout
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
@@ -342,9 +341,8 @@ export default function QuizPage() {
     const displayTime = finalTimeTaken || '00:00';
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
-        {/* ✅ GPT Ad - Top Result */}
-        <GptAd className="mx-4 mt-2" />
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-32">
+        <DynamicAdsterra position="top" />
 
         {showCelebration && (
           <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
@@ -353,12 +351,6 @@ export default function QuizPage() {
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="text-8xl animate-bounce">🎉</div>
               </div>
-              <div className="absolute -top-20 left-1/4 text-4xl animate-ping">✨</div>
-              <div className="absolute -top-10 right-1/4 text-3xl animate-pulse">⭐</div>
-              <div className="absolute bottom-20 left-1/4 text-3xl animate-bounce">🌟</div>
-              <div className="absolute bottom-10 right-1/4 text-2xl animate-ping">💫</div>
-              <div className="absolute top-10 left-10 text-3xl animate-spin">🎊</div>
-              <div className="absolute bottom-32 right-10 text-2xl animate-pulse">🎈</div>
             </div>
           </div>
         )}
@@ -474,13 +466,9 @@ export default function QuizPage() {
                           Q{originalIndex + 1}
                         </span>
                         {item.isCorrect ? (
-                          <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
-                            ✓
-                          </span>
+                          <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">✓</span>
                         ) : (
-                          <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
-                            ✗
-                          </span>
+                          <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">✗</span>
                         )}
                       </div>
                       <p className="text-[11px] font-medium text-gray-700 line-clamp-3 whitespace-pre-line">
@@ -527,8 +515,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* ✅ GPT Ad - Bottom Result */}
-        <GptAd className="mx-4 mt-2" />
+        <DynamicAdsterra position="bottom" />
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
           <div className="flex justify-around max-w-md mx-auto">
@@ -589,9 +576,8 @@ export default function QuizPage() {
     const correctCount = userAnswers.filter((a) => a && a.isCorrect).length;
 
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        {/* ✅ GPT Ad - Top Review */}
-        <GptAd className="mx-4 mt-2" />
+      <div className="min-h-screen bg-gray-50 pb-32">
+        <DynamicAdsterra position="top" />
 
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-6 pb-5">
           <div className="text-center">
@@ -631,7 +617,7 @@ export default function QuizPage() {
             </button>
           </div>
 
-          <div className="space-y-3 mb-24">
+          <div className="space-y-3 mb-32">
             {filteredQuestions.map((item, idx) => {
               const originalIndex = userAnswers.findIndex((a) => a === item);
               return (
@@ -728,18 +714,18 @@ export default function QuizPage() {
   const isQuestionAnswered = answeredQuestions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-40">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-24">
 
       {/* ============================================================
-          ✅ AD #1 — TOP OF QUIZ
+          ✅ AD #1 — TOP (Adsterra 320×50)
          ============================================================ */}
-      <div className="max-w-md mx-auto px-4 pt-3">
+      <div className="max-w-md mx-auto pt-3">
         <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
-        <GptAd className="my-2" />
+        <DynamicAdsterra position="top" />
       </div>
 
       <div className="max-w-md mx-auto px-4 py-3">
-        {/* Question Number | Progress | Timer */}
+        {/* Progress bar */}
         <div className="flex items-center gap-2 mb-4">
           <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">
             {currentQuestion + 1}/{totalQuestions}
@@ -767,7 +753,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Question Card */}
+        {/* Question card */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4 border border-gray-100">
           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-start gap-2">
@@ -872,7 +858,6 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Explanation */}
         {showExplanation && (
           <AnswerExplanation
             correctAnswer={currentQ?.answer}
@@ -909,14 +894,14 @@ export default function QuizPage() {
       </div>
 
       {/* ============================================================
-          ✅ AD #2 — BOTTOM OF QUIZ
+          ✅ AD #2 — BOTTOM (Adsterra 468×60)
          ============================================================ */}
-      <div className="max-w-md mx-auto px-4 mt-4 mb-20">
+      <div className="max-w-md mx-auto mt-4 mb-20">
         <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
-        <GptAd className="my-2" />
+        <DynamicAdsterra position="bottom" />
       </div>
 
-      {/* Bottom Nav */}
+      {/* Bottom nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center py-1">

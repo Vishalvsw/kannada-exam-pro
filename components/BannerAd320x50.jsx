@@ -1,9 +1,7 @@
-// components/BannerAd320x50.jsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 
-// Module-level flag — prevents duplicate script loads across component instances
 const loadedKeys = new Set();
 
 export default function BannerAd320x50({
@@ -20,19 +18,17 @@ export default function BannerAd320x50({
     const container = containerRef.current;
     if (!container) return;
 
-    // Already rendered an iframe → don't re-inject
     if (container.querySelector('iframe')) {
       setLoaded(true);
       return;
     }
 
-    // Global guard — only inject once per adKey for the entire page
     if (loadedKeys.has(adKey)) {
+      console.log(`[BannerAd] Skipping duplicate key: ${adKey.slice(0, 8)}...`);
       return;
     }
     loadedKeys.add(adKey);
 
-    // 1. Set atOptions BEFORE loading script (sync, no queue)
     window.atOptions = {
       key: adKey,
       format: 'iframe',
@@ -41,7 +37,6 @@ export default function BannerAd320x50({
       params: {},
     };
 
-    // 2. Create the ad script
     const adScript = document.createElement('script');
     adScript.type = 'text/javascript';
     adScript.src = `https://bauval.org/22/${adKey}`;
@@ -49,31 +44,27 @@ export default function BannerAd320x50({
 
     adScript.onload = () => {
       setLoaded(true);
-      // Adsterra usually injects an iframe; give it a moment
       setTimeout(() => {
         const iframe = container.querySelector('iframe');
         if (iframe) {
-          console.log('✅ Adsterra iframe rendered:', iframe.src);
+          console.log(`✅ Adsterra rendered: ${width}×${height} key=${adKey.slice(0, 8)}...`);
         } else {
-          console.warn('⚠️ Adsterra script loaded but no iframe — likely no fill for this key');
+          console.warn(`⚠️ Adsterra loaded but no iframe — key=${adKey.slice(0, 8)}...`);
         }
       }, 2500);
     };
 
     adScript.onerror = () => {
-      console.warn('[BannerAd] Script failed to load:', adKey);
-      loadedKeys.delete(adKey);   // allow retry
+      console.warn(`[BannerAd] Failed: ${adKey.slice(0, 8)}...`);
+      loadedKeys.delete(adKey);
     };
 
     container.appendChild(adScript);
-
-    // ✅ NO cleanup — let Adsterra own the container once it starts rendering
-    // React Strict Mode will remount, but the loadedKeys guard prevents re-injection
   }, [adKey, width, height]);
 
   return (
     <div
-      className={`flex justify-center items-center my-4 ${className}`}
+      className={`flex justify-center items-center my-2 ${className}`}
       style={{
         minHeight: `${height}px`,
         minWidth: `${width}px`,
@@ -82,16 +73,11 @@ export default function BannerAd320x50({
       aria-label="Advertisement"
     >
       {!loaded && (
-        <span className="text-xs text-gray-400 animate-pulse">
-          Loading ad…
-        </span>
+        <span className="text-xs text-gray-400 animate-pulse">Loading ad…</span>
       )}
       <div
         ref={containerRef}
-        style={{
-          width: `${width}px`,
-          height: `${height}px`,
-        }}
+        style={{ width: `${width}px`, height: `${height}px` }}
       />
     </div>
   );
