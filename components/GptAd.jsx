@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { shouldShowAds } from '@/lib/adConfig';
 
 let adCounter = 0;
 
@@ -9,73 +11,53 @@ export default function GptAd({
   sizes = [[320, 100], [320, 50]],
   className = '',
   style = {},
-  fallback = null,   // ← NEW: JSX to render if GPT doesn't fill
 }) {
+  const pathname = usePathname();
   const containerRef = useRef(null);
   const slotRef = useRef(null);
   const idRef = useRef(`div-gpt-ad-${Date.now()}-${++adCounter}`);
-  const [isEmpty, setIsEmpty] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setShow(shouldShowAds('gpt', pathname || '/'));
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mounted || !show) return;
+
     let cancelled = false;
 
-    const setupAd = () => {
+    window.googletag = window.googletag || { cmd: [] };
+    window.googletag.cmd = window.googletag.cmd || [];
+
+    window.googletag.cmd.push(() => {
       if (cancelled || !containerRef.current) return;
 
-      window.googletag = window.googletag || { cmd: [] };
-      window.googletag.cmd = window.googletag.cmd || [];
+      try {
+        const pubads = window.googletag.pubads();
+        const existing = pubads
+          .getSlots()
+          .find((slot) => slot.getSlotElementId() === idRef.current);
 
-      window.googletag.cmd.push(() => {
-        if (cancelled || !containerRef.current) return;
-
-        try {
-          const pubads = window.googletag.pubads();
-
-          const existing = pubads
-            .getSlots()
-            .find((slot) => slot.getSlotElementId() === idRef.current);
-
-          if (existing) {
-            slotRef.current = existing;
-            window.googletag.display(idRef.current);
-            return;
-          }
-
-          const slot = window.googletag
-            .defineSlot(adUnit, sizes, idRef.current)
-            ?.addService(pubads);
-
-          if (!slot) {
-            console.error('Google Ad Manager: defineSlot returned null');
-            setIsEmpty(true);
-            return;
-          }
-
-          slotRef.current = slot;
-
-          // ✅ Listen for the render result
-          pubads.addEventListener('slotRenderEnded', (e) => {
-            if (e.slot.getSlotElementId() === idRef.current) {
-              if (e.isEmpty) {
-                console.warn(`⚠️ GPT slot ${idRef.current} returned empty`);
-                setIsEmpty(true);
-              } else {
-                console.log(`✅ GPT slot ${idRef.current} filled`);
-                setIsEmpty(false);
-              }
-            }
-          });
-
+        if (existing) {
+          slotRef.current = existing;
           window.googletag.display(idRef.current);
-        } catch (error) {
-          console.error('Google Ad Manager error:', error);
-          setIsEmpty(true);
+          return;
         }
-      });
-    };
 
-    window.googletag = window.googletag || { cmd: [] };
-    window.googletag.cmd.push(setupAd);
+        const slot = window.googletag
+          .defineSlot(adUnit, sizes, idRef.current)
+          ?.addService(pubads);
+
+        if (!slot) return;
+        slotRef.current = slot;
+        window.googletag.display(idRef.current);
+      } catch (error) {
+        console.error('GPT error:', error);
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -83,14 +65,14 @@ export default function GptAd({
         window.googletag.cmd.push(() => {
           try {
             window.googletag.destroySlots([slotRef.current]);
-          } catch (error) {
-            console.warn('GPT cleanup warning:', error);
-          }
+          } catch {}
         });
       }
       slotRef.current = null;
     };
-  }, [adUnit, JSON.stringify(sizes)]);
+  }, [adUnit, JSON.stringify(sizes), mounted, show]);
+
+  if (!mounted || !show) return null;
 
   return (
     <div
@@ -105,22 +87,10 @@ export default function GptAd({
         ...style,
       }}
     >
-      {/* GPT renders into this div */}
       <div
         id={idRef.current}
-        style={{
-          width: '100%',
-          minHeight: '50px',
-          margin: '0 auto',
-        }}
+        style={{ width: '100%', minHeight: '50px', margin: '0 auto' }}
       />
-
-      {/* Fallback if GPT returned empty */}
-      {isEmpty && fallback && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
-          {fallback}
-        </div>
-      )}
     </div>
   );
 }

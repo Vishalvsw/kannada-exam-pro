@@ -3,7 +3,7 @@ import { DemoAuthProvider } from '@/components/DemoAuth';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import Footer from '@/components/Footer';
 import ClientOnly from '@/components/ClientOnly';
-import BannerAd320x50 from '@/components/BannerAd320x50';
+import DynamicAdsterra from '@/components/DynamicAdsterra';
 import Script from 'next/script';
 import './globals.css';
 
@@ -49,36 +49,29 @@ export const viewport = {
   themeColor: '#3B82F6',
 };
 
-// ✅ Google Analytics
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-M47FVGQELK';
 
 export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
-        {/* ===== Icons & Sitemap ===== */}
         <link rel="sitemap" href="/sitemap.xml" />
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
 
-        {/* ===== Domain Verification ===== */}
         <meta name="profiton-domain-verification" content="c759445c472db95db5da2fb73c70dcf9d23763b37bccc8f2e5f01757dc4678bb" />
 
-        {/* ===== DNS Prefetch ===== */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net" />
         <link rel="dns-prefetch" href="https://bauval.org" />
 
-        {/* ===== Preconnect Fonts ===== */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* =====================================================
-            ✅ Google Ad Manager (GPT) — AdX
-           ===================================================== */}
+        {/* GPT script (loads always — component decides whether to use it) */}
         <Script
           async
           src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
@@ -98,9 +91,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
 
-        {/* =====================================================
-            ✅ Google Analytics (GA4)
-           ===================================================== */}
+        {/* GA4 */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -120,16 +111,8 @@ export default function RootLayout({ children }) {
           <DemoAuthProvider>
             <ResponsiveNav>{children}</ResponsiveNav>
 
-            {/* =====================================================
-                ✅ Adsterra 468×60 Banner — shows on every page
-               ===================================================== */}
-            <div className="flex justify-center items-center py-4 bg-gray-50 border-t border-gray-200">
-              <BannerAd320x50
-                adKey="ff70388742670dbabb2b9342020cea75"
-                width={468}
-                height={60}
-              />
-            </div>
+            {/* ✅ Dynamic Adsterra — controlled by adConfig.js */}
+            <DynamicAdsterra />
 
             <Footer />
           </DemoAuthProvider>
