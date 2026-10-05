@@ -115,7 +115,6 @@ export default function QuizPage() {
       !quizLocked &&
       !quizCompleted
     ) {
-      // ✅ FIXED: force-submit answer (empty if none selected) and advance
       const autoAnswer = selectedAnswer || null;
       const isCorrect = autoAnswer
         ? normalizeAnswer(autoAnswer) === normalizeAnswer(questions[currentQuestion]?.answer)
@@ -729,9 +728,15 @@ export default function QuizPage() {
   const isQuestionAnswered = answeredQuestions[currentQuestion];
 
   return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-32">
-      {/* ✅ GPT Ad - Top Quiz */}
-      <GptAd className="mx-4 mt-2" />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-40">
+
+      {/* ============================================================
+          ✅ AD #1 — TOP OF QUIZ
+         ============================================================ */}
+      <div className="max-w-md mx-auto px-4 pt-3">
+        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
+        <GptAd className="my-2" />
+      </div>
 
       <div className="max-w-md mx-auto px-4 py-3">
         {/* Question Number | Progress | Timer */}
@@ -903,9 +908,12 @@ export default function QuizPage() {
         </p>
       </div>
 
-      {/* GPT Ad — Bottom */}
-      <div className="mx-auto mt-2">
-        <GptAd className="mx-4" />
+      {/* ============================================================
+          ✅ AD #2 — BOTTOM OF QUIZ
+         ============================================================ */}
+      <div className="max-w-md mx-auto px-4 mt-4 mb-20">
+        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
+        <GptAd className="my-2" />
       </div>
 
       {/* Bottom Nav */}
