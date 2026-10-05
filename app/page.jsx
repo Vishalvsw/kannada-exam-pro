@@ -4,6 +4,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Script from 'next/script';
 
 export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
@@ -165,6 +166,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
+
+      {/* ============================================================
+          ✅ Third-party ad script (homepage only)
+         ============================================================ */}
+      <Script
+        data-cfasync="false"
+        async
+        type="text/javascript"
+        src="//qv.ithielalture.com/tksXkTMuqSK6s1d3W/156034"
+        strategy="afterInteractive"
+      />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
