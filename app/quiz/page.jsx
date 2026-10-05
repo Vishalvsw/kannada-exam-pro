@@ -727,8 +727,7 @@ export default function QuizPage() {
         </p>
       </div>
 
-      {/* ✅ AdSense Banner - Bottom Quiz */}
-      <GptAd className="mx-4 mt-2" />
+ 
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
