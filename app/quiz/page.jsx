@@ -1,13 +1,12 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AnswerExplanation from '@/components/AnswerExplanation';
 import GptAd from '@/components/GptAd';
-
-
-
 
 export default function QuizPage() {
   const router = useRouter();
@@ -21,13 +20,13 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState([]);
   const [userAnswers, setUserAnswers] = useState([]);
   const [user, setUser] = useState(null);
-  
-  // ✅ Per question timer - 2 minutes (120 seconds) per question
+
+  // Per question timer — 2 minutes (120 seconds) per question
   const TOTAL_TIME = 120;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [timerActive, setTimerActive] = useState(true);
   const [startTime, setStartTime] = useState(null);
-  
+
   const [showExplanation, setShowExplanation] = useState(false);
   const [reviewFilter, setReviewFilter] = useState('all');
   const [quizLocked, setQuizLocked] = useState(false);
@@ -68,12 +67,12 @@ export default function QuizPage() {
     try {
       const res = await fetch('/api/questions');
       const serverQuestions = await res.json();
-      const serverHash = serverQuestions.map(q => q._id).join(',');
+      const serverHash = serverQuestions.map((q) => q._id).join(',');
       setQuestionsHash(serverHash);
-      
+
       const savedResults = localStorage.getItem(`quizResults_${userData?.instagramId}`);
       const savedHash = localStorage.getItem(`quizQuestionsHash_${userData?.instagramId}`);
-      
+
       if (savedResults && savedHash === serverHash) {
         const parsed = JSON.parse(savedResults);
         setUserAnswers(parsed.userAnswers || []);
@@ -85,7 +84,7 @@ export default function QuizPage() {
         setQuizCompleted(true);
         return;
       }
-      
+
       if (serverQuestions && serverQuestions.length > 0) {
         setQuestions(serverQuestions);
         setAnswers(new Array(serverQuestions.length).fill(null));
@@ -103,15 +102,57 @@ export default function QuizPage() {
     }
   };
 
-  // ✅ Timer effect - runs per question
+  // ✅ Timer — auto-advances to next question on timeout
   useEffect(() => {
     let timer;
     if (timerActive && !showResults && !showReview && timeLeft > 0 && !quizLocked && !quizCompleted) {
-      timer = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !showResults && !showReview && !showExplanation && !quizLocked) {
-      handleSubmitAnswer();
+      timer = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
+    } else if (
+      timeLeft === 0 &&
+      !showResults &&
+      !showReview &&
+      !showExplanation &&
+      !quizLocked &&
+      !quizCompleted
+    ) {
+      // ✅ FIXED: force-submit answer (empty if none selected) and advance
+      const autoAnswer = selectedAnswer || null;
+      const isCorrect = autoAnswer
+        ? normalizeAnswer(autoAnswer) === normalizeAnswer(questions[currentQuestion]?.answer)
+        : false;
+
+      if (isCorrect) setScore((prev) => prev + 1);
+
+      const newAnswers = [...answers];
+      newAnswers[currentQuestion] = autoAnswer;
+      setAnswers(newAnswers);
+
+      const newUserAnswers = [...userAnswers];
+      newUserAnswers[currentQuestion] = {
+        selected: autoAnswer || '(no answer — time ran out)',
+        selectedIndex: selectedOptionIndex,
+        isCorrect,
+        correctAnswer: questions[currentQuestion]?.answer,
+        question: questions[currentQuestion]?.question,
+        options: questions[currentQuestion]?.options,
+        explanation: questions[currentQuestion]?.explanation,
+        examTip: questions[currentQuestion]?.examTip,
+        subject: questions[currentQuestion]?.subject,
+        difficulty: questions[currentQuestion]?.difficulty,
+      };
+      setUserAnswers(newUserAnswers);
+
+      setAnsweredQuestions((prev) => ({ ...prev, [currentQuestion]: true }));
+      setShowExplanation(false);
+      setSelectedAnswer(null);
+      setSelectedOptionIndex(null);
+
+      if (currentQuestion + 1 < questions.length) {
+        setCurrentQuestion(currentQuestion + 1);
+        setTimeLeft(TOTAL_TIME);
+      } else {
+        calculateScore();
+      }
     }
     return () => clearTimeout(timer);
   }, [timeLeft, timerActive, showResults, showReview, showExplanation, quizLocked, quizCompleted]);
@@ -127,38 +168,38 @@ export default function QuizPage() {
     if (!selectedAnswer && !showExplanation) return;
 
     if (!showExplanation && selectedAnswer) {
-      const isCorrect = normalizeAnswer(selectedAnswer) === normalizeAnswer(questions[currentQuestion]?.answer);
-      if (isCorrect) setScore(prev => prev + 1);
-      
+      const isCorrect =
+        normalizeAnswer(selectedAnswer) === normalizeAnswer(questions[currentQuestion]?.answer);
+      if (isCorrect) setScore((prev) => prev + 1);
+
       const newAnswers = [...answers];
       newAnswers[currentQuestion] = selectedAnswer;
       setAnswers(newAnswers);
-      
+
       const newUserAnswers = [...userAnswers];
       newUserAnswers[currentQuestion] = {
         selected: selectedAnswer,
         selectedIndex: selectedOptionIndex,
-        isCorrect: isCorrect,
+        isCorrect,
         correctAnswer: questions[currentQuestion]?.answer,
         question: questions[currentQuestion]?.question,
         options: questions[currentQuestion]?.options,
         explanation: questions[currentQuestion]?.explanation,
         examTip: questions[currentQuestion]?.examTip,
         subject: questions[currentQuestion]?.subject,
-        difficulty: questions[currentQuestion]?.difficulty
+        difficulty: questions[currentQuestion]?.difficulty,
       };
       setUserAnswers(newUserAnswers);
-      
+
       setShowExplanation(true);
     } else {
       setShowExplanation(false);
       setSelectedAnswer(null);
       setSelectedOptionIndex(null);
-      setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
-      
+      setAnsweredQuestions((prev) => ({ ...prev, [currentQuestion]: true }));
+
       if (currentQuestion + 1 < questions.length) {
         setCurrentQuestion(currentQuestion + 1);
-        // ✅ Reset timer for next question
         setTimeLeft(TOTAL_TIME);
       } else {
         calculateScore();
@@ -169,16 +210,20 @@ export default function QuizPage() {
   const calculateScore = () => {
     let finalScore = 0;
     answers.forEach((answer, idx) => {
-      if (answer && questions[idx] && normalizeAnswer(answer) === normalizeAnswer(questions[idx].answer)) {
+      if (
+        answer &&
+        questions[idx] &&
+        normalizeAnswer(answer) === normalizeAnswer(questions[idx].answer)
+      ) {
         finalScore++;
       }
     });
-    
+
     const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     const timeSpent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    
+
     setFinalTimeTaken(timeSpent);
     setScore(finalScore);
     setShowResults(true);
@@ -187,36 +232,40 @@ export default function QuizPage() {
     setQuizLocked(true);
     setShowCelebration(true);
     setTimeout(() => setShowCelebration(false), 3000);
-    
+
     if (user) {
       const finalUserAnswers = [...userAnswers];
       for (let i = 0; i < answers.length; i++) {
         if (answers[i] && !finalUserAnswers[i]) {
           finalUserAnswers[i] = {
             selected: answers[i],
-            isCorrect: normalizeAnswer(answers[i]) === normalizeAnswer(questions[i]?.answer),
+            isCorrect:
+              normalizeAnswer(answers[i]) === normalizeAnswer(questions[i]?.answer),
             correctAnswer: questions[i]?.answer,
             question: questions[i]?.question,
             options: questions[i]?.options,
             explanation: questions[i]?.explanation,
             examTip: questions[i]?.examTip,
             subject: questions[i]?.subject,
-            difficulty: questions[i]?.difficulty
+            difficulty: questions[i]?.difficulty,
           };
         }
       }
-      
-      const hash = questions.map(q => q._id).join(',');
+
+      const hash = questions.map((q) => q._id).join(',');
       localStorage.setItem(`quizQuestionsHash_${user.instagramId}`, hash);
-      localStorage.setItem(`quizResults_${user.instagramId}`, JSON.stringify({
-        userAnswers: finalUserAnswers,
-        score: finalScore,
-        questions: questions,
-        completedAt: Date.now(),
-        timeTaken: timeSpent
-      }));
+      localStorage.setItem(
+        `quizResults_${user.instagramId}`,
+        JSON.stringify({
+          userAnswers: finalUserAnswers,
+          score: finalScore,
+          questions: questions,
+          completedAt: Date.now(),
+          timeTaken: timeSpent,
+        })
+      );
     }
-    
+
     saveQuizResult(finalScore, timeSpent);
   };
 
@@ -237,13 +286,13 @@ export default function QuizPage() {
           timeFormatted: timeSpent,
           correctCount: finalScore,
           wrongCount: questions.length - finalScore,
-          completedAt: new Date()
-        })
+          completedAt: new Date(),
+        }),
       });
-      
+
       const newTotalScore = (user.score || 0) + finalScore;
       const newQuizzesTaken = (user.totalQuizzesTaken || 0) + 1;
-      
+
       await fetch('/api/users/update-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,17 +303,17 @@ export default function QuizPage() {
           newScore: finalScore,
           totalScore: newTotalScore,
           quizzesTaken: newQuizzesTaken,
-          percentage: Math.round((finalScore / questions.length) * 100)
-        })
+          percentage: Math.round((finalScore / questions.length) * 100),
+        }),
       });
-      
+
       await fetch('/api/leaderboard/sync', { method: 'POST' });
-      
-      const updatedUser = { 
-        ...user, 
-        score: newTotalScore, 
+
+      const updatedUser = {
+        ...user,
+        score: newTotalScore,
         totalQuizzesTaken: newQuizzesTaken,
-        lastQuizDate: new Date()
+        lastQuizDate: new Date(),
       };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
@@ -274,9 +323,9 @@ export default function QuizPage() {
   };
 
   const getFilteredQuestions = () => {
-    if (reviewFilter === 'wrong') return userAnswers.filter(a => a && !a.isCorrect);
-    if (reviewFilter === 'correct') return userAnswers.filter(a => a && a.isCorrect);
-    return userAnswers.filter(a => a !== null);
+    if (reviewFilter === 'wrong') return userAnswers.filter((a) => a && !a.isCorrect);
+    if (reviewFilter === 'correct') return userAnswers.filter((a) => a && a.isCorrect);
+    return userAnswers.filter((a) => a !== null);
   };
 
   const formatTime = (seconds) => {
@@ -292,12 +341,12 @@ export default function QuizPage() {
     const percentage = Math.round((score / (questions.length || 1)) * 100);
     const wrongCount = (questions.length || 0) - score;
     const displayTime = finalTimeTaken || '00:00';
-    
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-16">
-        {/* ✅ AdSense Banner - Top Result */}
+        {/* ✅ GPT Ad - Top Result */}
         <GptAd className="mx-4 mt-2" />
-        
+
         {showCelebration && (
           <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30 animate-fadeOut"></div>
@@ -316,7 +365,6 @@ export default function QuizPage() {
         )}
 
         <div className="max-w-md mx-auto px-4 py-3">
-          
           <div className="bg-white rounded-xl shadow-md p-3 mb-3 border border-gray-100">
             <div className="flex justify-around items-center">
               <div className="text-center">
@@ -379,13 +427,17 @@ export default function QuizPage() {
           </div>
 
           <div className="bg-yellow-50 rounded-lg p-2 mb-3 border border-yellow-200">
-            <div className="flex items-center gap-2"> 
+            <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
                 <span className="text-yellow-600 text-sm font-bold">🔒</span>
               </div>
               <div>
-                <p className="text-xs font-semibold text-yellow-800">You already completed this quiz</p>
-                <p className="text-[10px] text-yellow-600">New quiz when admin adds questions</p>
+                <p className="text-xs font-semibold text-yellow-800">
+                  You already completed this quiz
+                </p>
+                <p className="text-[10px] text-yellow-600">
+                  New quiz when admin adds questions
+                </p>
               </div>
             </div>
           </div>
@@ -398,53 +450,87 @@ export default function QuizPage() {
               <h2 className="text-sm font-bold text-gray-700">Your Answers</h2>
             </div>
             <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto">
-              {userAnswers.filter(a => a !== null).map((item, idx) => {
-                const originalIndex = userAnswers.findIndex(a => a === item);
-                return (
-                  <div 
-                    key={originalIndex} 
-                    className={`bg-white rounded-lg p-2 shadow-sm border-l-3 cursor-pointer hover:shadow-md transition-all ${item.isCorrect ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}`}
-                    onClick={() => { setCurrentQuestion(originalIndex); setShowResults(false); setQuizCompleted(false); setQuizLocked(false); setShowReview(true); }}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-bold text-gray-500">Q{originalIndex + 1}</span>
-                      {item.isCorrect ? 
-                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">✓</span> : 
-                        <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">✗</span>
-                      }
+              {userAnswers
+                .filter((a) => a !== null)
+                .map((item, idx) => {
+                  const originalIndex = userAnswers.findIndex((a) => a === item);
+                  return (
+                    <div
+                      key={originalIndex}
+                      className={`bg-white rounded-lg p-2 shadow-sm border-l-3 cursor-pointer hover:shadow-md transition-all ${
+                        item.isCorrect
+                          ? 'border-l-4 border-green-500'
+                          : 'border-l-4 border-red-500'
+                      }`}
+                      onClick={() => {
+                        setCurrentQuestion(originalIndex);
+                        setShowResults(false);
+                        setQuizCompleted(false);
+                        setQuizLocked(false);
+                        setShowReview(true);
+                      }}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-bold text-gray-500">
+                          Q{originalIndex + 1}
+                        </span>
+                        {item.isCorrect ? (
+                          <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                            ✓
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
+                            ✗
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] font-medium text-gray-700 line-clamp-3 whitespace-pre-line">
+                        {item.question}
+                      </p>
+                      <div className="mt-1 flex items-center gap-1">
+                        <span className="text-[9px] text-gray-400">Your Ans:</span>
+                        <span
+                          className={`text-[10px] font-medium ${
+                            item.isCorrect ? 'text-green-600' : 'text-red-600'
+                          }`}
+                        >
+                          {item.selected}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-center">
+                        <span className="text-[9px] text-blue-500">View Details →</span>
+                      </div>
                     </div>
-                    <p className="text-[11px] font-medium text-gray-700 line-clamp-3 whitespace-pre-line">{item.question}</p>
-                    <div className="mt-1 flex items-center gap-1">
-                      <span className="text-[9px] text-gray-400">Your Ans:</span>
-                      <span className={`text-[10px] font-medium ${item.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                        {item.selected}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-center">
-                      <span className="text-[9px] text-blue-500">View Details →</span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
 
           <div className="flex gap-2">
-            <button onClick={() => setShowReview(true)} className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+            <button
+              onClick={() => setShowReview(true)}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+            >
               Review All
             </button>
-            <Link href="/" className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-semibold text-center hover:bg-green-700 transition">
+            <Link
+              href="/"
+              className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-semibold text-center hover:bg-green-700 transition"
+            >
               Go Home
             </Link>
-            <Link href="/notes" className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-semibold text-center hover:bg-gray-300 transition">
+            <Link
+              href="/notes"
+              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-semibold text-center hover:bg-gray-300 transition"
+            >
               Study
             </Link>
           </div>
         </div>
 
-        {/* ✅ AdSense Banner - Bottom Result */}
+        {/* ✅ GPT Ad - Bottom Result */}
         <GptAd className="mx-4 mt-2" />
-        
+
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
           <div className="flex justify-around max-w-md mx-auto">
             <Link href="/" className="flex flex-col items-center py-1">
@@ -500,14 +586,14 @@ export default function QuizPage() {
   // ========== DETAILED REVIEW PAGE ==========
   if (showReview) {
     const filteredQuestions = getFilteredQuestions();
-    const wrongCount = userAnswers.filter(a => a && !a.isCorrect).length;
-    const correctCount = userAnswers.filter(a => a && a.isCorrect).length;
-    
+    const wrongCount = userAnswers.filter((a) => a && !a.isCorrect).length;
+    const correctCount = userAnswers.filter((a) => a && a.isCorrect).length;
+
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        {/* ✅ AdSense Banner - Top Review */}
+        {/* ✅ GPT Ad - Top Review */}
         <GptAd className="mx-4 mt-2" />
-        
+
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-6 pb-5">
           <div className="text-center">
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
@@ -517,42 +603,83 @@ export default function QuizPage() {
             <p className="text-blue-100 text-xs">Detailed explanations</p>
           </div>
         </div>
-        
+
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex gap-2 mb-4 bg-white rounded-xl p-1 shadow-sm">
-            <button onClick={() => setReviewFilter('all')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>All ({userAnswers.filter(a => a !== null).length})</button>
-            <button onClick={() => setReviewFilter('wrong')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'wrong' ? 'bg-red-600 text-white' : 'bg-gray-100'}`}>Wrong ({wrongCount})</button>
-            <button onClick={() => setReviewFilter('correct')} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${reviewFilter === 'correct' ? 'bg-green-600 text-white' : 'bg-gray-100'}`}>Correct ({correctCount})</button>
+            <button
+              onClick={() => setReviewFilter('all')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${
+                reviewFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100'
+              }`}
+            >
+              All ({userAnswers.filter((a) => a !== null).length})
+            </button>
+            <button
+              onClick={() => setReviewFilter('wrong')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${
+                reviewFilter === 'wrong' ? 'bg-red-600 text-white' : 'bg-gray-100'
+              }`}
+            >
+              Wrong ({wrongCount})
+            </button>
+            <button
+              onClick={() => setReviewFilter('correct')}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold ${
+                reviewFilter === 'correct' ? 'bg-green-600 text-white' : 'bg-gray-100'
+              }`}
+            >
+              Correct ({correctCount})
+            </button>
           </div>
-          
+
           <div className="space-y-3 mb-24">
             {filteredQuestions.map((item, idx) => {
-              const originalIndex = userAnswers.findIndex(a => a === item);
+              const originalIndex = userAnswers.findIndex((a) => a === item);
               return (
-                <div key={originalIndex} className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-blue-500">
+                <div
+                  key={originalIndex}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-blue-500"
+                >
                   <div className="p-3">
                     <div className="flex justify-between mb-2">
-                      <span className="text-[11px] font-bold text-blue-600">Q{originalIndex + 1}</span>
-                      {item.isCorrect ? 
-                        <span className="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Correct</span> : 
-                        <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full">✗ Wrong</span>
-                      }
+                      <span className="text-[11px] font-bold text-blue-600">
+                        Q{originalIndex + 1}
+                      </span>
+                      {item.isCorrect ? (
+                        <span className="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          ✓ Correct
+                        </span>
+                      ) : (
+                        <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                          ✗ Wrong
+                        </span>
+                      )}
                     </div>
-                    <h3 className="font-semibold text-gray-800 text-sm mb-2 whitespace-pre-line leading-relaxed">{item.question}</h3>
+                    <h3 className="font-semibold text-gray-800 text-sm mb-2 whitespace-pre-line leading-relaxed">
+                      {item.question}
+                    </h3>
                     <div className="space-y-1 mb-2">
                       {item.options?.map((opt, optIdx) => {
                         const letter = String.fromCharCode(65 + optIdx);
-                        const isUserAnswer = normalizeAnswer(item.selected) === normalizeAnswer(opt);
-                        const isCorrectAnswer = normalizeAnswer(item.correctAnswer) === normalizeAnswer(opt);
+                        const isUserAnswer =
+                          normalizeAnswer(item.selected) === normalizeAnswer(opt);
+                        const isCorrectAnswer =
+                          normalizeAnswer(item.correctAnswer) === normalizeAnswer(opt);
                         let bgClass = 'bg-gray-50';
                         if (isCorrectAnswer) bgClass = 'bg-green-100';
                         if (isUserAnswer && !isCorrectAnswer) bgClass = 'bg-red-100';
                         return (
                           <div key={optIdx} className={`p-1.5 rounded-lg ${bgClass} text-xs`}>
-                            <span className="font-medium">{letter}.</span> 
+                            <span className="font-medium">{letter}.</span>{' '}
                             <span className="whitespace-pre-line">{opt}</span>
-                            {isCorrectAnswer && <span className="text-green-600 text-[10px] ml-1">✓</span>}
-                            {isUserAnswer && !isCorrectAnswer && <span className="text-red-600 text-[10px] ml-1">✗ Your Answer</span>}
+                            {isCorrectAnswer && (
+                              <span className="text-green-600 text-[10px] ml-1">✓</span>
+                            )}
+                            {isUserAnswer && !isCorrectAnswer && (
+                              <span className="text-red-600 text-[10px] ml-1">
+                                ✗ Your Answer
+                              </span>
+                            )}
                           </div>
                         );
                       })}
@@ -570,11 +697,21 @@ export default function QuizPage() {
             })}
           </div>
         </div>
-        
+
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t py-2 px-4">
           <div className="flex gap-3 max-w-md mx-auto">
-            <button onClick={() => setShowReview(false)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold">← Back to Results</button>
-            <Link href="/notes" className="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm font-semibold text-center">Study</Link>
+            <button
+              onClick={() => setShowReview(false)}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold"
+            >
+              ← Back to Results
+            </button>
+            <Link
+              href="/notes"
+              className="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm font-semibold text-center"
+            >
+              Study
+            </Link>
           </div>
         </div>
       </div>
@@ -593,28 +730,33 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
-      {/* ✅ AdSense Banner - Top Quiz */}
+      {/* ✅ GPT Ad - Top Quiz */}
       <GptAd className="mx-4 mt-2" />
-      
+
       <div className="max-w-md mx-auto px-4 py-3">
-        
-        {/* ✅ Question Number | Progress Bar | Timer - All in One Row */}
+        {/* Question Number | Progress | Timer */}
         <div className="flex items-center gap-2 mb-4">
           <span className="text-sm font-semibold text-gray-600 whitespace-nowrap">
             {currentQuestion + 1}/{totalQuestions}
           </span>
           <span className="text-gray-300">|</span>
           <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
-            <div 
-              className="h-2.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500" 
+            <div
+              className="h-2.5 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[10px] text-gray-500 whitespace-nowrap">{Math.round(progress)}%</span>
+          <span className="text-[10px] text-gray-500 whitespace-nowrap">
+            {Math.round(progress)}%
+          </span>
           <span className="text-gray-300">|</span>
           <div className="flex items-center gap-0.5 whitespace-nowrap">
             <span className="text-[10px] text-gray-400">⏱️</span>
-            <span className={`text-[10px] font-bold ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'}`}>
+            <span
+              className={`text-[10px] font-bold ${
+                timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-green-600'
+              }`}
+            >
               {formatTime(timeLeft)}
             </span>
           </div>
@@ -649,47 +791,75 @@ export default function QuizPage() {
               </div>
             )}
           </div>
-          
+
           {/* Options */}
           <div className="p-3 space-y-2">
             {currentQ?.options?.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx);
               const isSelected = selectedAnswer === opt;
-              const showCorrect = showExplanation && normalizeAnswer(opt) === normalizeAnswer(currentQ?.answer);
-              const showWrong = showExplanation && isSelected && normalizeAnswer(opt) !== normalizeAnswer(currentQ?.answer);
+              const showCorrect =
+                showExplanation &&
+                normalizeAnswer(opt) === normalizeAnswer(currentQ?.answer);
+              const showWrong =
+                showExplanation &&
+                isSelected &&
+                normalizeAnswer(opt) !== normalizeAnswer(currentQ?.answer);
               const isDisabled = showExplanation || quizLocked || isQuestionAnswered;
-              
-              let bgClass = 'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
+
+              let bgClass =
+                'bg-white border border-gray-200 hover:border-green-300 hover:bg-green-50';
               if (showCorrect) bgClass = 'bg-green-50 border-green-400';
               if (showWrong) bgClass = 'bg-red-50 border-red-400';
-              if (isSelected && !showExplanation && !isQuestionAnswered) bgClass = 'bg-green-50 border-green-400';
-              if (isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation) bgClass = 'bg-green-50 border-green-400';
-              
+              if (isSelected && !showExplanation && !isQuestionAnswered)
+                bgClass = 'bg-green-50 border-green-400';
+              if (
+                isQuestionAnswered &&
+                answers[currentQuestion] === opt &&
+                !showExplanation
+              )
+                bgClass = 'bg-green-50 border-green-400';
+
               return (
-                <button 
-                  key={idx} 
-                  onClick={() => !isDisabled && handleAnswerSelect(opt, idx)} 
-                  disabled={isDisabled} 
-                  className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${isDisabled ? 'opacity-75 cursor-not-allowed' : ''}`}
+                <button
+                  key={idx}
+                  onClick={() => !isDisabled && handleAnswerSelect(opt, idx)}
+                  disabled={isDisabled}
+                  className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${bgClass} ${
+                    isDisabled ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
                 >
                   <div className="flex items-start gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
-                      showCorrect ? 'bg-green-600 text-white' : 
-                      showWrong ? 'bg-red-600 text-white' : 
-                      (isSelected && !isDisabled) ? 'bg-green-600 text-white' :
-                      (isQuestionAnswered && answers[currentQuestion] === opt) ? 'bg-green-600 text-white' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
+                        showCorrect
+                          ? 'bg-green-600 text-white'
+                          : showWrong
+                          ? 'bg-red-600 text-white'
+                          : isSelected && !isDisabled
+                          ? 'bg-green-600 text-white'
+                          : isQuestionAnswered && answers[currentQuestion] === opt
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
                       {letter}
                     </div>
                     <span className="text-sm text-gray-700 flex-1 leading-relaxed whitespace-pre-line">
                       {opt}
                     </span>
-                    {showCorrect && <span className="text-green-600 text-xs flex-shrink-0">✓ Correct</span>}
-                    {showWrong && <span className="text-red-600 text-xs flex-shrink-0">✗ Wrong</span>}
-                    {isQuestionAnswered && answers[currentQuestion] === opt && !showExplanation && (
-                      <span className="text-green-600 text-xs flex-shrink-0">✓ Your Answer</span>
+                    {showCorrect && (
+                      <span className="text-green-600 text-xs flex-shrink-0">✓ Correct</span>
                     )}
+                    {showWrong && (
+                      <span className="text-red-600 text-xs flex-shrink-0">✗ Wrong</span>
+                    )}
+                    {isQuestionAnswered &&
+                      answers[currentQuestion] === opt &&
+                      !showExplanation && (
+                        <span className="text-green-600 text-xs flex-shrink-0">
+                          ✓ Your Answer
+                        </span>
+                      )}
                   </div>
                 </button>
               );
@@ -697,7 +867,7 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Enhanced Explanation */}
+        {/* Explanation */}
         {showExplanation && (
           <AnswerExplanation
             correctAnswer={currentQ?.answer}
@@ -709,16 +879,22 @@ export default function QuizPage() {
         )}
 
         <div className="flex gap-2 mt-2">
-          <button 
-            onClick={handleSubmitAnswer} 
+          <button
+            onClick={handleSubmitAnswer}
             className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              showExplanation ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
-              selectedAnswer ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md' : 
-              'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`} 
+              showExplanation
+                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                : selectedAnswer
+                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-md'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
             disabled={(!showExplanation && !selectedAnswer) || quizLocked}
           >
-            {showExplanation ? (currentQuestion + 1 === totalQuestions ? '🏆 Finish Quiz' : 'Next →') : '✓ Submit Answer'}
+            {showExplanation
+              ? currentQuestion + 1 === totalQuestions
+                ? '🏆 Finish Quiz'
+                : 'Next →'
+              : '✓ Submit Answer'}
           </button>
         </div>
 
@@ -727,8 +903,12 @@ export default function QuizPage() {
         </p>
       </div>
 
- 
+      {/* GPT Ad — Bottom */}
+      <div className="mx-auto mt-2">
+        <GptAd className="mx-4" />
+      </div>
 
+      {/* Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-1 px-4 shadow-lg">
         <div className="flex justify-around max-w-md mx-auto">
           <Link href="/" className="flex flex-col items-center py-1">
@@ -772,4 +952,3 @@ export default function QuizPage() {
     </div>
   );
 }
-export const dynamic = 'force-dynamic';

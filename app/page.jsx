@@ -4,7 +4,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import GptAd from '@/components/GptAd';
 
 export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
@@ -167,14 +166,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
 
-      {/* ============================================================
-          ✅ AD SLOT 1 — TOP (below navbar)
-         ============================================================ */}
-      <div className="max-w-4xl mx-auto px-4 pt-3">
-        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
-        <GptAd className="my-2" />
-      </div>
-
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-5 pt-8 pb-10 text-center">
         <div className="mb-4">
@@ -264,14 +255,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ============================================================
-          ✅ AD SLOT 2 — MID-CONTENT (between categories and leaderboard)
-         ============================================================ */}
-      <div className="max-w-4xl mx-auto px-4 mt-6">
-        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
-        <GptAd className="my-2" />
-      </div>
-
       {isDataLoaded && LeaderboardSection}
 
       <div className="px-5 mt-8 mb-4 text-center">
@@ -303,14 +286,6 @@ export default function Home() {
             <span className="text-xs text-gray-600 mt-1 group-hover:text-pink-600 transition">Instagram</span>
           </a>
         </div>
-      </div>
-
-      {/* ============================================================
-          ✅ AD SLOT 3 — BOTTOM (above Admin/Login link)
-         ============================================================ */}
-      <div className="max-w-4xl mx-auto px-4 mt-6">
-        <p className="text-[10px] text-gray-400 text-center mb-1">Advertisement</p>
-        <GptAd className="my-2" />
       </div>
 
       {!user && (
