@@ -55,23 +55,31 @@ export default function RootLayout({ children }) {
   return (
     <html lang="kn" suppressHydrationWarning>
       <head>
+        {/* Icons & Meta */}
         <link rel="sitemap" href="/sitemap.xml" />
         <link rel="icon" href="/icons/logo.ico" />
         <link rel="shortcut icon" href="/icons/logo.ico" />
         <link rel="apple-touch-icon" href="/icons/logo.ico" />
 
-        <meta name="profiton-domain-verification" content="c759445c472db95db5da2fb73c70dcf9d23763b37bccc8f2e5f01757dc4678bb" />
+        <meta
+          name="profiton-domain-verification"
+          content="c759445c472db95db5da2fb73c70dcf9d23763b37bccc8f2e5f01757dc4678bb"
+        />
 
+        {/* DNS Prefetch — speed up first request to ad/analytics domains */}
         <link rel="dns-prefetch" href="https://api.vercel.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net" />
         <link rel="dns-prefetch" href="https://bauval.org" />
 
+        {/* Preconnect Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* GPT script (loads always — component decides whether to use it) */}
+        {/* ============================================================
+            Google Ad Manager (GPT) — loads script; components decide slots
+            ============================================================ */}
         <Script
           async
           src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"
@@ -91,7 +99,9 @@ export default function RootLayout({ children }) {
           `}
         </Script>
 
-        {/* GA4 */}
+        {/* ============================================================
+            Google Analytics 4
+            ============================================================ */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
@@ -111,7 +121,7 @@ export default function RootLayout({ children }) {
           <DemoAuthProvider>
             <ResponsiveNav>{children}</ResponsiveNav>
 
-            {/* ✅ Dynamic Adsterra — controlled by adConfig.js */}
+            {/* ✅ Adsterra banner — shows only on routes enabled in lib/adConfig.js */}
             <DynamicAdsterra position="fixed-bottom" />
 
             <Footer />
