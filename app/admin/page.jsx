@@ -1,3 +1,674 @@
+// 'use client';
+
+// import { useState, useEffect, useCallback } from 'react';
+// import { useRouter } from 'next/navigation';
+// import Link from 'next/link';
+
+// export default function AdminPanel() {
+//   const router = useRouter();
+//   const [activeTab, setActiveTab] = useState('dashboard');
+//   const [admin, setAdmin] = useState(null);
+  
+//   // Data states
+//   const [questions, setQuestions] = useState([]);
+//   const [qaQuestions, setQaQuestions] = useState([]);
+//   const [notes, setNotes] = useState([]);
+//   const [currentAffairs, setCurrentAffairs] = useState([]);
+//   const [users, setUsers] = useState([]);
+//   const [quizResults, setQuizResults] = useState([]);
+  
+//   // Form states
+//   const [showModal, setShowModal] = useState(false);
+//   const [editingItem, setEditingItem] = useState(null);
+//   const [formData, setFormData] = useState({});
+//   const [message, setMessage] = useState(null);
+//   const [refreshKey, setRefreshKey] = useState(0);
+  
+//   // Explanation Editor states
+//   const [showExplanationModal, setShowExplanationModal] = useState(false);
+//   const [explanationQuestion, setExplanationQuestion] = useState(null);
+//   const [explanationText, setExplanationText] = useState('');
+
+//   useEffect(() => {
+//     const token = localStorage.getItem('adminToken');
+//     const adminData = localStorage.getItem('admin');
+//     if (!token || !adminData) {
+//       router.push('/admin-login');
+//       return;
+//     }
+//     setAdmin(JSON.parse(adminData));
+//   }, [router]);
+
+//   // Fetch data with cache busting
+//   const fetchData = useCallback(async () => {
+//     const timestamp = Date.now();
+//     try {
+//       if (activeTab === 'dashboard') {
+//         const [qRes, qaRes, nRes, caRes, uRes, rRes] = await Promise.all([
+//           fetch(`/api/questions?t=${timestamp}`).catch(() => ({ json: () => [] })),
+//           fetch(`/api/admin/qa-questions?t=${timestamp}`).catch(() => ({ json: () => [] })),
+//           fetch(`/api/admin/notes?t=${timestamp}`).catch(() => ({ json: () => [] })),
+//           fetch(`/api/admin/current-affairs?t=${timestamp}`).catch(() => ({ json: () => [] })),
+//           fetch(`/api/admin/users?t=${timestamp}`).catch(() => ({ json: () => [] })),
+//           fetch(`/api/quiz-results?t=${timestamp}`).catch(() => ({ json: () => [] }))
+//         ]);
+//         setQuestions(await qRes.json());
+//         setQaQuestions(await qaRes.json());
+//         setNotes(await nRes.json());
+//         setCurrentAffairs(await caRes.json());
+//         setUsers(await uRes.json());
+//         setQuizResults(await rRes.json());
+//       } else if (activeTab === 'questions') {
+//         const res = await fetch(`/api/questions?t=${timestamp}`);
+//         setQuestions(await res.json());
+//       } else if (activeTab === 'qa-questions') {
+//         const res = await fetch(`/api/admin/qa-questions?t=${timestamp}`);
+//         setQaQuestions(await res.json());
+//       } else if (activeTab === 'notes') {
+//         const res = await fetch(`/api/admin/notes?t=${timestamp}`);
+//         setNotes(await res.json());
+//       } else if (activeTab === 'current-affairs') {
+//         const res = await fetch(`/api/admin/current-affairs?t=${timestamp}`);
+//         setCurrentAffairs(await res.json());
+//       } else if (activeTab === 'users') {
+//         const res = await fetch(`/api/admin/users?t=${timestamp}`);
+//         setUsers(await res.json());
+//       } else if (activeTab === 'results') {
+//         const res = await fetch(`/api/quiz-results?t=${timestamp}`);
+//         setQuizResults(await res.json());
+//       }
+//     } catch (error) {
+//       console.error('Error fetching data:', error);
+//     }
+//   }, [activeTab, refreshKey]);
+
+//   useEffect(() => {
+//     fetchData();
+//   }, [fetchData]);
+
+//   const refreshData = () => {
+//     setRefreshKey(prev => prev + 1);
+//     showToast('🔄 Refreshing data...', 'info');
+//   };
+
+//   const showToast = (text, type = 'success') => {
+//     setMessage({ text, type });
+//     setTimeout(() => setMessage(null), 3000);
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const method = editingItem ? 'PUT' : 'POST';
+//     let url = '';
+    
+//     if (activeTab === 'questions') url = editingItem ? `/api/questions?id=${editingItem._id}` : '/api/questions';
+//     else if (activeTab === 'qa-questions') url = editingItem ? `/api/admin/qa-questions?id=${editingItem._id}` : '/api/admin/qa-questions';
+//     else if (activeTab === 'notes') url = editingItem ? `/api/admin/notes?id=${editingItem._id}` : '/api/admin/notes';
+//     else if (activeTab === 'current-affairs') url = editingItem ? `/api/admin/current-affairs?id=${editingItem._id}` : '/api/admin/current-affairs';
+    
+//     try {
+//       const response = await fetch(url, {
+//         method,
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(formData),
+//       });
+//       if (response.ok) {
+//         setShowModal(false);
+//         setEditingItem(null);
+//         setFormData({});
+//         await fetchData();
+//         showToast(editingItem ? '✅ Updated successfully!' : '✅ Added successfully!');
+//       } else {
+//         showToast('❌ Error saving', 'error');
+//       }
+//     } catch (error) {
+//       showToast('❌ Error saving', 'error');
+//     }
+//   };
+
+//   const handleDelete = async (id) => {
+//     if (confirm('Delete this item? This cannot be undone.')) {
+//       let url = '';
+//       if (activeTab === 'questions') url = `/api/questions?id=${id}`;
+//       else if (activeTab === 'qa-questions') url = `/api/admin/qa-questions?id=${id}`;
+//       else if (activeTab === 'notes') url = `/api/admin/notes?id=${id}`;
+//       else if (activeTab === 'current-affairs') url = `/api/admin/current-affairs?id=${id}`;
+      
+//       try {
+//         const response = await fetch(url, { method: 'DELETE' });
+//         if (response.ok) {
+//           await fetchData();
+//           showToast('🗑️ Deleted successfully!');
+//         } else {
+//           showToast('❌ Error deleting', 'error');
+//         }
+//       } catch (error) {
+//         showToast('❌ Error deleting', 'error');
+//       }
+//     }
+//   };
+
+//   const handleUpdateExplanation = async () => {
+//     if (!explanationQuestion) return;
+    
+//     try {
+//       const response = await fetch('/api/admin/update-explanation', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           questionId: explanationQuestion._id,
+//           explanation: explanationText
+//         })
+//       });
+      
+//       if (response.ok) {
+//         showToast('📖 Explanation updated successfully!');
+//         setShowExplanationModal(false);
+//         await fetchData();
+//       } else {
+//         showToast('❌ Error updating explanation', 'error');
+//       }
+//     } catch (error) {
+//       showToast('❌ Error updating explanation', 'error');
+//     }
+//   };
+
+//   const getFormFields = () => {
+//     if (activeTab === 'questions') {
+//       return (
+//         <>
+//           {/* UPDATED: Question with multiline support */}
+//           <div>
+//             <label className="block text-sm font-medium mb-2">
+//               Question *
+//               <span className="text-xs text-gray-400 ml-2 font-normal">
+//                 (Preserves line breaks - press Enter for new line)
+//               </span>
+//             </label>
+//             <textarea 
+//               required 
+//               className="w-full p-3 border rounded-lg font-sans text-gray-800 leading-relaxed resize-y" 
+//               rows="8" 
+//               value={formData.question || ''} 
+//               onChange={(e) => setFormData({ ...formData, question: e.target.value })} 
+//               placeholder={`Example format:
+// ಕೆಳಗಿನವುಗಳಲ್ಲಿ ದೇಶ ಮತ್ತು ಗಡಿರೇಖೆಗಳ ಸರಿಯಾದ ಹೊಂದಾಣಿಕೆಯಾಗುವ ಜೋಡಿಗಳಾವುವು?
+
+// a) ಭಾರತ-ಚೀನಾ : ಮ್ಯಾಕ್ ಮೋಹನ್ ರೇಖೆ
+// b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತರ ರೇಖೆ
+
+// ಕೆಳಗೆ ಕೊಟ್ಟಿರುವ ಸಂಕೇತಗಳನ್ನು ಬಳಸಿ ಸರಿಯಾದ ಉತ್ತರವನ್ನು ಆಯ್ಕೆಮಾಡಿ.`}
+//             />
+//             <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+//               <span>💡</span> Press <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded text-xs">Enter</kbd> for new line
+//             </p>
+//           </div>
+          
+//           {/* UPDATED: Options with better styling */}
+//           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Option A *</label>
+//               <textarea 
+//                 required 
+//                 className="w-full p-2 border rounded-lg resize-y" 
+//                 rows="2"
+//                 value={formData.options?.[0] || ''} 
+//                 onChange={(e) => setFormData({ ...formData, options: [e.target.value, formData.options?.[1] || '', formData.options?.[2] || '', formData.options?.[3] || ''] })} 
+//                 placeholder="Option A"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Option B *</label>
+//               <textarea 
+//                 required 
+//                 className="w-full p-2 border rounded-lg resize-y" 
+//                 rows="2"
+//                 value={formData.options?.[1] || ''} 
+//                 onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', e.target.value, formData.options?.[2] || '', formData.options?.[3] || ''] })} 
+//                 placeholder="Option B"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Option C *</label>
+//               <textarea 
+//                 required 
+//                 className="w-full p-2 border rounded-lg resize-y" 
+//                 rows="2"
+//                 value={formData.options?.[2] || ''} 
+//                 onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', e.target.value, formData.options?.[3] || ''] })} 
+//                 placeholder="Option C"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Option D *</label>
+//               <textarea 
+//                 required 
+//                 className="w-full p-2 border rounded-lg resize-y" 
+//                 rows="2"
+//                 value={formData.options?.[3] || ''} 
+//                 onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', formData.options?.[2] || '', e.target.value] })} 
+//                 placeholder="Option D"
+//               />
+//             </div>
+//           </div>
+          
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Correct Answer *</label>
+//             <input required className="w-full p-2 border rounded-lg" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Correct answer" />
+//           </div>
+          
+//           <div>
+//             <label className="block text-sm font-medium mb-2">📖 Explanation</label>
+//             <textarea className="w-full p-3 border rounded-lg bg-blue-50 resize-y" rows="4" value={formData.explanation || ''} onChange={(e) => setFormData({ ...formData, explanation: e.target.value })} placeholder="Explain why this answer is correct..." />
+//           </div>
+          
+//           <div className="grid grid-cols-2 gap-3">
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Category</label>
+//               <select className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+//                 <option>General</option>
+//                 <option>Karnataka GK</option>
+//                 <option>History</option>
+//                 <option>Geography</option>
+//                 <option>Polity</option>
+//                 <option>Science</option>
+//                 <option>Current Affairs</option>
+//               </select>
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Difficulty</label>
+//               <select className="w-full p-2 border rounded-lg" value={formData.difficulty || 'medium'} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}>
+//                 <option>easy</option>
+//                 <option>medium</option>
+//                 <option>hard</option>
+//               </select>
+//             </div>
+//           </div>
+//         </>
+//       );
+//     } else if (activeTab === 'qa-questions') {
+//       return (
+//         <>
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Question (Kannada) *</label>
+//             <textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.question || ''} onChange={(e) => setFormData({ ...formData, question: e.target.value })} placeholder="Enter question in Kannada" />
+//           </div>
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Question (English)</label>
+//             <textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.question_en || ''} onChange={(e) => setFormData({ ...formData, question_en: e.target.value })} placeholder="Enter question in English" />
+//           </div>
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Answer (Kannada) *</label>
+//             <textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Enter answer in Kannada" />
+//           </div>
+//           <div>
+//             <label className="block text-sm font-medium mb-2">Answer (English)</label>
+//             <textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.answer_en || ''} onChange={(e) => setFormData({ ...formData, answer_en: e.target.value })} placeholder="Enter answer in English" />
+//           </div>
+//           <div className="grid grid-cols-2 gap-3">
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Category</label>
+//               <select className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+//                 <option>General</option>
+//                 <option>History</option>
+//                 <option>Geography</option>
+//                 <option>Polity</option>
+//                 <option>Science</option>
+//                 <option>Current Affairs</option>
+//               </select>
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium mb-2">Important</label>
+//               <select className="w-full p-2 border rounded-lg" value={formData.important || false} onChange={(e) => setFormData({ ...formData, important: e.target.value === 'true' })}>
+//                 <option value="false">No</option>
+//                 <option value="true">⭐ Important</option>
+//               </select>
+//             </div>
+//           </div>
+//         </>
+//       );
+//     } else if (activeTab === 'notes') {
+//       return (
+//         <>
+//           <div><label className="block text-sm font-medium mb-2">Title (Kannada) *</label><input required className="w-full p-2 border rounded-lg" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Title (English)</label><input className="w-full p-2 border rounded-lg" value={formData.title_en || ''} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="6" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="6" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Category</label><input className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })} /></div>
+//         </>
+//       );
+//     } else if (activeTab === 'current-affairs') {
+//       return (
+//         <>
+//           <div><label className="block text-sm font-medium mb-2">Title (Kannada) *</label><input required className="w-full p-2 border rounded-lg" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Title (English)</label><input className="w-full p-2 border rounded-lg" value={formData.title_en || ''} onChange={(e) => setFormData({ ...formData, title_en: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Content (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="5" value={formData.content || ''} onChange={(e) => setFormData({ ...formData, content: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Content (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="5" value={formData.content_en || ''} onChange={(e) => setFormData({ ...formData, content_en: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Date *</label><input required className="w-full p-2 border rounded-lg" value={formData.date || new Date().toISOString().split('T')[0]} onChange={(e) => setFormData({ ...formData, date: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Category</label><input className="w-full p-2 border rounded-lg" value={formData.category || 'General'} onChange={(e) => setFormData({ ...formData, category: e.target.value })} /></div>
+//           <div><label className="block text-sm font-medium mb-2">Important</label><select className="w-full p-2 border rounded-lg" value={formData.important || false} onChange={(e) => setFormData({ ...formData, important: e.target.value === 'true' })}><option value="false">No</option><option value="true">⭐ Important</option></select></div>
+//         </>
+//       );
+//     }
+//     return null;
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-100">
+//       {/* Header */}
+//       <div className="bg-gradient-to-r from-blue-800 to-indigo-800 text-white shadow-lg sticky top-0 z-50">
+//         <div className="container mx-auto px-6 py-4">
+//           <div className="flex justify-between items-center">
+//             <div>
+//               <h1 className="text-2xl font-bold">🎯 Kannada Exam Pro Admin</h1>
+//               <p className="text-blue-200 text-sm">Complete Content Management System</p>
+//             </div>
+//             <div className="flex items-center gap-4">
+//               <button onClick={refreshData} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm transition flex items-center gap-1">
+//                 🔄 Refresh
+//               </button>
+//               <div className="text-right">
+//                 <p className="font-semibold">{admin?.name || 'Admin'}</p>
+//                 <p className="text-xs text-blue-200">Administrator</p>
+//               </div>
+//               <button onClick={() => { localStorage.removeItem('adminToken'); localStorage.removeItem('admin'); router.push('/'); }} className="bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg transition">Logout</button>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Toast Message */}
+//       {message && (
+//         <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${message.type === 'success' ? 'bg-green-500 text-white' : message.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+//           {message.text}
+//         </div>
+//       )}
+
+//       {/* Navigation Tabs */}
+//       <div className="bg-white shadow-md sticky top-0 z-40">
+//         <div className="container mx-auto px-6">
+//           <div className="flex flex-wrap gap-1 py-2 overflow-x-auto">
+//             <button onClick={() => setActiveTab('dashboard')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📊 Dashboard</button>
+//             <button onClick={() => setActiveTab('questions')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'questions' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>❓ Quiz Questions ({questions.length})</button>
+//             <button onClick={() => setActiveTab('qa-questions')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'qa-questions' ? 'bg-green-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📝 Q&A Bank ({qaQuestions.length})</button>
+//             <button onClick={() => setActiveTab('notes')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
+//             <button onClick={() => setActiveTab('current-affairs')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
+//             <button onClick={() => setActiveTab('users')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
+//             <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({quizResults.length})</button>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Main Content */}
+//       <div className="container mx-auto px-6 py-8">
+//         {/* Dashboard */}
+//         {activeTab === 'dashboard' && (
+//           <div>
+//             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+//               <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-blue-100">Quiz Questions</p><p className="text-4xl font-bold">{questions.length}</p></div><div className="text-5xl">❓</div></div></div>
+//               <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-green-100">Q&A Bank</p><p className="text-4xl font-bold">{qaQuestions.length}</p></div><div className="text-5xl">📝</div></div></div>
+//               <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
+//               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
+//               <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
+//               <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{quizResults.length}</p></div><div className="text-5xl">📊</div></div></div>
+//             </div>
+//             <div className="grid lg:grid-cols-2 gap-6">
+//               <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">⚡ Quick Actions</h3>
+//                 <div className="space-y-3">
+//                   <button onClick={() => { setActiveTab('questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-blue-50 text-blue-600 p-3 rounded-lg text-left hover:bg-blue-100 transition">➕ Add Quiz Question</button>
+//                   <button onClick={() => { setActiveTab('qa-questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-green-50 text-green-600 p-3 rounded-lg text-left hover:bg-green-100 transition">📝 Add Q&A Question</button>
+//                   <button onClick={() => { setActiveTab('notes'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-emerald-50 text-emerald-600 p-3 rounded-lg text-left hover:bg-emerald-100 transition">📚 Add Study Note</button>
+//                   <button onClick={() => { setActiveTab('current-affairs'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-orange-50 text-orange-600 p-3 rounded-lg text-left hover:bg-orange-100 transition">📰 Add Current Affairs</button>
+//                 </div>
+//               </div>
+//               <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">📊 Content Stats</h3>
+//                 <div className="space-y-3"><div className="flex justify-between"><span>Total Content Items</span><span className="font-bold">{questions.length + qaQuestions.length + notes.length + currentAffairs.length}</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min((questions.length + qaQuestions.length + notes.length + currentAffairs.length) / 2, 100)}%` }}></div></div>
+//                 <div className="flex justify-between"><span>Q&A Completion</span><span className="font-bold">{qaQuestions.length} / 50+</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(qaQuestions.length, 100)}%` }}></div></div></div>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* Quiz Questions Management - UPDATED with multiline display */}
+//         {activeTab === 'questions' && (
+//           <div>
+//             <div className="flex justify-between items-center mb-4">
+//               <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">➕ Add Question</button>
+//               <div className="flex gap-2">
+//                 <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">🔄 Refresh</button>
+//                 <p className="text-sm text-gray-500 py-2">Total: {questions.length} questions</p>
+//               </div>
+//             </div>
+//             {questions.length === 0 ? (
+//               <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">❓</div><p className="text-gray-500">No questions yet. Click "Add Question" to create one.</p></div>
+//             ) : (
+//               <div className="space-y-4">
+//                 {questions.map((q, idx) => (
+//                   <div key={q._id} className="bg-white rounded-lg shadow p-5 hover:shadow-md transition">
+//                     <div className="flex flex-col sm:flex-row justify-between gap-3">
+//                       <div className="flex-1">
+//                         <div className="flex flex-wrap gap-2 mb-2">
+//                           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">#{idx + 1}</span>
+//                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">{q.category}</span>
+//                           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">{q.difficulty}</span>
+//                         </div>
+//                         {/* UPDATED: Preserve line breaks in question display */}
+//                         <h3 className="font-semibold mb-2 whitespace-pre-line leading-relaxed">
+//                           {q.question}
+//                         </h3>
+//                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+//                           <div className="p-1 bg-gray-50 rounded whitespace-pre-line">A) {q.options?.[0]}</div>
+//                           <div className="p-1 bg-gray-50 rounded whitespace-pre-line">B) {q.options?.[1]}</div>
+//                           <div className="p-1 bg-gray-50 rounded whitespace-pre-line">C) {q.options?.[2]}</div>
+//                           <div className="p-1 bg-gray-50 rounded whitespace-pre-line">D) {q.options?.[3]}</div>
+//                         </div>
+//                         <p className="text-green-600 text-sm mt-2">✓ Correct Answer: {q.answer}</p>
+//                         {q.explanation && <div className="mt-3 p-3 bg-blue-50 rounded-lg"><p className="text-xs font-semibold text-blue-800 mb-1">📖 Explanation:</p><p className="text-sm text-blue-700 whitespace-pre-line">{q.explanation}</p></div>}
+//                       </div>
+//                       <div className="flex flex-row sm:flex-col gap-2">
+//                         <button onClick={() => { setEditingItem(q); setFormData(q); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">✏️ Edit</button>
+//                         <button onClick={() => { setExplanationQuestion(q); setExplanationText(q.explanation || ''); setShowExplanationModal(true); }} className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600">📖 Explanation</button>
+//                         <button onClick={() => handleDelete(q._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">🗑️ Delete</button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+//         )}
+
+//         {/* Q&A Bank Management */}
+//         {activeTab === 'qa-questions' && (
+//           <div>
+//             <div className="flex justify-between items-center mb-4">
+//               <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">➕ Add Q&A Question</button>
+//               <div className="flex gap-2">
+//                 <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">🔄 Refresh</button>
+//                 <p className="text-sm text-gray-500 py-2">Total: {qaQuestions.length} Q&A pairs</p>
+//               </div>
+//             </div>
+//             {qaQuestions.length === 0 ? (
+//               <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">📝</div><p className="text-gray-500">No Q&A questions yet. Click "Add Q&A Question" to create one.</p></div>
+//             ) : (
+//               <div className="space-y-4">
+//                 {qaQuestions.map((qa, idx) => (
+//                   <div key={qa._id} className="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
+//                     <div className="flex justify-between">
+//                       <div className="flex-1">
+//                         <div className="flex items-center gap-2 mb-2">
+//                           <span className="text-sm font-bold text-green-600">#{idx + 1}</span>
+//                           {qa.important && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">⭐ Important</span>}
+//                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">{qa.category}</span>
+//                         </div>
+//                         <p className="font-semibold text-gray-800 whitespace-pre-line">❓ {qa.question || qa.question_en}</p>
+//                         <details className="mt-2">
+//                           <summary className="cursor-pointer text-green-600 text-sm font-medium">📖 Show Answer</summary>
+//                           <div className="bg-green-50 rounded-lg p-3 mt-2"><p className="text-sm text-green-700 whitespace-pre-line">✓ {qa.answer || qa.answer_en}</p></div>
+//                         </details>
+//                       </div>
+//                       <div className="flex gap-2">
+//                         <button onClick={() => { setEditingItem(qa); setFormData(qa); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button>
+//                         <button onClick={() => handleDelete(qa._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+//         )}
+
+//         {/* Notes Management */}
+//         {activeTab === 'notes' && (
+//           <div>
+//             <div className="flex justify-between items-center mb-4">
+//               <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">➕ Add Note</button>
+//               <div className="flex gap-2">
+//                 <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Refresh</button>
+//                 <p className="text-sm text-gray-500 py-2">Total: {notes.length} notes</p>
+//               </div>
+//             </div>
+//             {notes.map(note => (
+//               <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{note.title}</h3><p className="text-sm text-gray-500">{note.category}</p><p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{note.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+//             ))}
+//           </div>
+//         )}
+
+//         {/* Current Affairs Management */}
+//         {activeTab === 'current-affairs' && (
+//           <div>
+//             <div className="flex justify-between items-center mb-4">
+//               <button onClick={() => { setShowModal(true); setEditingItem(null); setFormData({}); }} className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">➕ Add Current Affairs</button>
+//               <div className="flex gap-2">
+//                 <button onClick={refreshData} className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">🔄 Refresh</button>
+//                 <p className="text-sm text-gray-500 py-2">Total: {currentAffairs.length} items</p>
+//               </div>
+//             </div>
+//             {currentAffairs.map(ca => (
+//               <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{ca.title}</h3><p className="text-sm text-gray-500">{ca.date} | {ca.category}</p><p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{ca.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+//             ))}
+//           </div>
+//         )}
+
+//         {/* Users Management */}
+//         {activeTab === 'users' && (
+//           <div className="bg-white rounded-xl shadow overflow-hidden">
+//             <div className="overflow-x-auto">
+//               <table className="min-w-full divide-y divide-gray-200">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quizzes</th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Joined</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {users.map(user => (
+//                     <tr key={user._id} className="hover:bg-gray-50">
+//                       <td className="px-6 py-4">
+//                         <div className="flex items-center gap-3">
+//                           <img src={user.profileImage} className="w-10 h-10 rounded-full" alt={user.name} />
+//                           <div><p className="font-medium">{user.name}</p></div>
+//                         </div>
+//                       </td>
+//                       <td className="px-6 py-4">@{user.instagramId}</td>
+//                       <td className="px-6 py-4 font-semibold text-blue-600">{user.score || 0}</td>
+//                       <td className="px-6 py-4">{user.totalQuizzesTaken || 0}</td>
+//                       <td className="px-6 py-4 text-sm">{new Date(user.createdAt).toLocaleDateString()}</td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* Quiz Results */}
+//         {activeTab === 'results' && (
+//           <div className="bg-white rounded-xl shadow overflow-hidden">
+//             <div className="overflow-x-auto">
+//               <table className="min-w-full divide-y divide-gray-200">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
+//                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+//                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th>
+//                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Percentage</th>
+//                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {quizResults.map(result => (
+//                     <tr key={result._id} className="hover:bg-gray-50">
+//                       <td className="px-4 py-3">{result.userName}</td>
+//                       <td className="px-4 py-3">@{result.instagramId}</td>
+//                       <td className="px-4 py-3 font-bold text-blue-600">{result.score}/{result.totalQuestions}</td>
+//                       <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${result.percentage >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{result.percentage}%</span></td>
+//                       <td className="px-4 py-3 text-sm">{new Date(result.date || result.createdAt).toLocaleDateString()}</td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* Add/Edit Modal */}
+//       {showModal && (
+//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="p-6">
+//               <div className="flex justify-between items-center mb-4">
+//                 <h2 className="text-2xl font-bold">{editingItem ? 'Edit' : 'Add'} {activeTab === 'qa-questions' ? 'Q&A Question' : activeTab}</h2>
+//                 <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+//               </div>
+//               <form onSubmit={handleSubmit} className="space-y-4">
+//                 {getFormFields()}
+//                 <div className="flex gap-3 pt-4">
+//                   <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+//                   <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+//                 </div>
+//               </form>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Explanation Editor Modal */}
+//       {showExplanationModal && explanationQuestion && (
+//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-xl max-w-2xl w-full">
+//             <div className="p-6">
+//               <div className="flex justify-between items-center mb-4">
+//                 <h2 className="text-2xl font-bold">📖 Edit Explanation</h2>
+//                 <button onClick={() => { setShowExplanationModal(false); setExplanationQuestion(null); }} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+//               </div>
+//               <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+//                 <p className="text-sm font-semibold text-gray-700">Question:</p>
+//                 <p className="text-gray-800 mt-1 whitespace-pre-line">{explanationQuestion.question}</p>
+//                 <p className="text-sm text-green-600 mt-2">✓ Correct Answer: {explanationQuestion.answer}</p>
+//               </div>
+//               <div className="mb-4">
+//                 <label className="block text-sm font-medium mb-2">Explanation</label>
+//                 <textarea className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 resize-y" rows="6" value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder="Explain why this answer is correct..." />
+//               </div>
+//               <div className="flex gap-3 pt-4">
+//                 <button onClick={handleUpdateExplanation} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">💾 Save Explanation</button>
+//                 <button onClick={() => { setShowExplanationModal(false); setExplanationQuestion(null); }} className="flex-1 px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,7 +679,7 @@ export default function AdminPanel() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [admin, setAdmin] = useState(null);
-  
+
   // Data states
   const [questions, setQuestions] = useState([]);
   const [qaQuestions, setQaQuestions] = useState([]);
@@ -16,14 +687,20 @@ export default function AdminPanel() {
   const [currentAffairs, setCurrentAffairs] = useState([]);
   const [users, setUsers] = useState([]);
   const [quizResults, setQuizResults] = useState([]);
-  
+
+  // Search states
+  const [userSearch, setUserSearch] = useState('');
+  const [resultsSearch, setResultsSearch] = useState('');
+  const [resultsPage, setResultsPage] = useState(1);
+  const RESULTS_PER_PAGE = 50;
+
   // Form states
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [message, setMessage] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   // Explanation Editor states
   const [showExplanationModal, setShowExplanationModal] = useState(false);
   const [explanationQuestion, setExplanationQuestion] = useState(null);
@@ -39,7 +716,6 @@ export default function AdminPanel() {
     setAdmin(JSON.parse(adminData));
   }, [router]);
 
-  // Fetch data with cache busting
   const fetchData = useCallback(async () => {
     const timestamp = Date.now();
     try {
@@ -50,7 +726,7 @@ export default function AdminPanel() {
           fetch(`/api/admin/notes?t=${timestamp}`).catch(() => ({ json: () => [] })),
           fetch(`/api/admin/current-affairs?t=${timestamp}`).catch(() => ({ json: () => [] })),
           fetch(`/api/admin/users?t=${timestamp}`).catch(() => ({ json: () => [] })),
-          fetch(`/api/quiz-results?t=${timestamp}`).catch(() => ({ json: () => [] }))
+          fetch(`/api/quiz-results?t=${timestamp}`).catch(() => ({ json: () => [] })),
         ]);
         setQuestions(await qRes.json());
         setQaQuestions(await qaRes.json());
@@ -87,7 +763,7 @@ export default function AdminPanel() {
   }, [fetchData]);
 
   const refreshData = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
     showToast('🔄 Refreshing data...', 'info');
   };
 
@@ -100,12 +776,12 @@ export default function AdminPanel() {
     e.preventDefault();
     const method = editingItem ? 'PUT' : 'POST';
     let url = '';
-    
+
     if (activeTab === 'questions') url = editingItem ? `/api/questions?id=${editingItem._id}` : '/api/questions';
     else if (activeTab === 'qa-questions') url = editingItem ? `/api/admin/qa-questions?id=${editingItem._id}` : '/api/admin/qa-questions';
     else if (activeTab === 'notes') url = editingItem ? `/api/admin/notes?id=${editingItem._id}` : '/api/admin/notes';
     else if (activeTab === 'current-affairs') url = editingItem ? `/api/admin/current-affairs?id=${editingItem._id}` : '/api/admin/current-affairs';
-    
+
     try {
       const response = await fetch(url, {
         method,
@@ -133,7 +809,7 @@ export default function AdminPanel() {
       else if (activeTab === 'qa-questions') url = `/api/admin/qa-questions?id=${id}`;
       else if (activeTab === 'notes') url = `/api/admin/notes?id=${id}`;
       else if (activeTab === 'current-affairs') url = `/api/admin/current-affairs?id=${id}`;
-      
+
       try {
         const response = await fetch(url, { method: 'DELETE' });
         if (response.ok) {
@@ -150,17 +826,17 @@ export default function AdminPanel() {
 
   const handleUpdateExplanation = async () => {
     if (!explanationQuestion) return;
-    
+
     try {
       const response = await fetch('/api/admin/update-explanation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           questionId: explanationQuestion._id,
-          explanation: explanationText
-        })
+          explanation: explanationText,
+        }),
       });
-      
+
       if (response.ok) {
         showToast('📖 Explanation updated successfully!');
         setShowExplanationModal(false);
@@ -173,11 +849,27 @@ export default function AdminPanel() {
     }
   };
 
+  const handleSyncUsers = async () => {
+    if (!confirm('Sync users from quiz results? This may take a few seconds.')) return;
+    showToast('⏳ Syncing users...', 'info');
+    try {
+      const res = await fetch('/api/admin/sync', { method: 'POST' });
+      const result = await res.json();
+      if (result.success) {
+        showToast(`✅ Synced: ${result.usersCreated || 0} created, ${result.usersUpdated || 0} updated`);
+        await fetchData();
+      } else {
+        showToast(`⚠️ ${result.message || 'Sync failed'}`, 'error');
+      }
+    } catch (e) {
+      showToast(`❌ Sync error: ${e.message}`, 'error');
+    }
+  };
+
   const getFormFields = () => {
     if (activeTab === 'questions') {
       return (
         <>
-          {/* UPDATED: Question with multiline support */}
           <div>
             <label className="block text-sm font-medium mb-2">
               Question *
@@ -185,12 +877,12 @@ export default function AdminPanel() {
                 (Preserves line breaks - press Enter for new line)
               </span>
             </label>
-            <textarea 
-              required 
-              className="w-full p-3 border rounded-lg font-sans text-gray-800 leading-relaxed resize-y" 
-              rows="8" 
-              value={formData.question || ''} 
-              onChange={(e) => setFormData({ ...formData, question: e.target.value })} 
+            <textarea
+              required
+              className="w-full p-3 border rounded-lg font-sans text-gray-800 leading-relaxed resize-y"
+              rows="8"
+              value={formData.question || ''}
+              onChange={(e) => setFormData({ ...formData, question: e.target.value })}
               placeholder={`Example format:
 ಕೆಳಗಿನವುಗಳಲ್ಲಿ ದೇಶ ಮತ್ತು ಗಡಿರೇಖೆಗಳ ಸರಿಯಾದ ಹೊಂದಾಣಿಕೆಯಾಗುವ ಜೋಡಿಗಳಾವುವು?
 
@@ -199,69 +891,37 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
 
 ಕೆಳಗೆ ಕೊಟ್ಟಿರುವ ಸಂಕೇತಗಳನ್ನು ಬಳಸಿ ಸರಿಯಾದ ಉತ್ತರವನ್ನು ಆಯ್ಕೆಮಾಡಿ.`}
             />
-            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-              <span>💡</span> Press <kbd className="px-1.5 py-0.5 bg-gray-100 border rounded text-xs">Enter</kbd> for new line
-            </p>
           </div>
-          
-          {/* UPDATED: Options with better styling */}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-2">Option A *</label>
-              <textarea 
-                required 
-                className="w-full p-2 border rounded-lg resize-y" 
-                rows="2"
-                value={formData.options?.[0] || ''} 
-                onChange={(e) => setFormData({ ...formData, options: [e.target.value, formData.options?.[1] || '', formData.options?.[2] || '', formData.options?.[3] || ''] })} 
-                placeholder="Option A"
-              />
+              <textarea required className="w-full p-2 border rounded-lg resize-y" rows="2" value={formData.options?.[0] || ''} onChange={(e) => setFormData({ ...formData, options: [e.target.value, formData.options?.[1] || '', formData.options?.[2] || '', formData.options?.[3] || ''] })} placeholder="Option A" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Option B *</label>
-              <textarea 
-                required 
-                className="w-full p-2 border rounded-lg resize-y" 
-                rows="2"
-                value={formData.options?.[1] || ''} 
-                onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', e.target.value, formData.options?.[2] || '', formData.options?.[3] || ''] })} 
-                placeholder="Option B"
-              />
+              <textarea required className="w-full p-2 border rounded-lg resize-y" rows="2" value={formData.options?.[1] || ''} onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', e.target.value, formData.options?.[2] || '', formData.options?.[3] || ''] })} placeholder="Option B" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Option C *</label>
-              <textarea 
-                required 
-                className="w-full p-2 border rounded-lg resize-y" 
-                rows="2"
-                value={formData.options?.[2] || ''} 
-                onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', e.target.value, formData.options?.[3] || ''] })} 
-                placeholder="Option C"
-              />
+              <textarea required className="w-full p-2 border rounded-lg resize-y" rows="2" value={formData.options?.[2] || ''} onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', e.target.value, formData.options?.[3] || ''] })} placeholder="Option C" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Option D *</label>
-              <textarea 
-                required 
-                className="w-full p-2 border rounded-lg resize-y" 
-                rows="2"
-                value={formData.options?.[3] || ''} 
-                onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', formData.options?.[2] || '', e.target.value] })} 
-                placeholder="Option D"
-              />
+              <textarea required className="w-full p-2 border rounded-lg resize-y" rows="2" value={formData.options?.[3] || ''} onChange={(e) => setFormData({ ...formData, options: [formData.options?.[0] || '', formData.options?.[1] || '', formData.options?.[2] || '', e.target.value] })} placeholder="Option D" />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2">Correct Answer *</label>
             <input required className="w-full p-2 border rounded-lg" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Correct answer" />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2">📖 Explanation</label>
             <textarea className="w-full p-3 border rounded-lg bg-blue-50 resize-y" rows="4" value={formData.explanation || ''} onChange={(e) => setFormData({ ...formData, explanation: e.target.value })} placeholder="Explain why this answer is correct..." />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-2">Category</label>
@@ -289,22 +949,10 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
     } else if (activeTab === 'qa-questions') {
       return (
         <>
-          <div>
-            <label className="block text-sm font-medium mb-2">Question (Kannada) *</label>
-            <textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.question || ''} onChange={(e) => setFormData({ ...formData, question: e.target.value })} placeholder="Enter question in Kannada" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Question (English)</label>
-            <textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.question_en || ''} onChange={(e) => setFormData({ ...formData, question_en: e.target.value })} placeholder="Enter question in English" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Answer (Kannada) *</label>
-            <textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Enter answer in Kannada" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Answer (English)</label>
-            <textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.answer_en || ''} onChange={(e) => setFormData({ ...formData, answer_en: e.target.value })} placeholder="Enter answer in English" />
-          </div>
+          <div><label className="block text-sm font-medium mb-2">Question (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.question || ''} onChange={(e) => setFormData({ ...formData, question: e.target.value })} placeholder="Enter question in Kannada" /></div>
+          <div><label className="block text-sm font-medium mb-2">Question (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.question_en || ''} onChange={(e) => setFormData({ ...formData, question_en: e.target.value })} placeholder="Enter question in English" /></div>
+          <div><label className="block text-sm font-medium mb-2">Answer (Kannada) *</label><textarea required className="w-full p-3 border rounded-lg resize-y" rows="4" value={formData.answer || ''} onChange={(e) => setFormData({ ...formData, answer: e.target.value })} placeholder="Enter answer in Kannada" /></div>
+          <div><label className="block text-sm font-medium mb-2">Answer (English)</label><textarea className="w-full p-3 border rounded-lg resize-y" rows="3" value={formData.answer_en || ''} onChange={(e) => setFormData({ ...formData, answer_en: e.target.value })} placeholder="Enter answer in English" /></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-2">Category</label>
@@ -353,6 +1001,32 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
     return null;
   };
 
+  // ─── Filtered data ───
+  const filteredUsers = users.filter((u) => {
+    if (!userSearch) return true;
+    const t = userSearch.toLowerCase();
+    return (
+      (u.name || '').toLowerCase().includes(t) ||
+      (u.instagramId || '').toLowerCase().includes(t) ||
+      (u.email || '').toLowerCase().includes(t)
+    );
+  });
+
+  const safeResults = Array.isArray(quizResults) ? quizResults : [];
+  const filteredResults = safeResults.filter((r) => {
+    if (!resultsSearch) return true;
+    const t = resultsSearch.toLowerCase();
+    return (
+      (r.userName || '').toLowerCase().includes(t) ||
+      (r.instagramId || '').toLowerCase().includes(t)
+    );
+  });
+  const totalResultPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE) || 1;
+  const pagedResults = filteredResults.slice(
+    (resultsPage - 1) * RESULTS_PER_PAGE,
+    resultsPage * RESULTS_PER_PAGE
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -367,6 +1041,9 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
               <button onClick={refreshData} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm transition flex items-center gap-1">
                 🔄 Refresh
               </button>
+              <button onClick={handleSyncUsers} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm transition flex items-center gap-1">
+                ⚡ Sync Users
+              </button>
               <div className="text-right">
                 <p className="font-semibold">{admin?.name || 'Admin'}</p>
                 <p className="text-xs text-blue-200">Administrator</p>
@@ -377,14 +1054,14 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
         </div>
       </div>
 
-      {/* Toast Message */}
+      {/* Toast */}
       {message && (
         <div className={`fixed top-20 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${message.type === 'success' ? 'bg-green-500 text-white' : message.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
           {message.text}
         </div>
       )}
 
-      {/* Navigation Tabs */}
+      {/* Tabs */}
       <div className="bg-white shadow-md sticky top-0 z-40">
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap gap-1 py-2 overflow-x-auto">
@@ -394,12 +1071,11 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
             <button onClick={() => setActiveTab('notes')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
             <button onClick={() => setActiveTab('current-affairs')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
             <button onClick={() => setActiveTab('users')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
-            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({quizResults.length})</button>
+            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({safeResults.length})</button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         {/* Dashboard */}
         {activeTab === 'dashboard' && (
@@ -410,26 +1086,12 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
               <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
-              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{quizResults.length}</p></div><div className="text-5xl">📊</div></div></div>
-            </div>
-            <div className="grid lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">⚡ Quick Actions</h3>
-                <div className="space-y-3">
-                  <button onClick={() => { setActiveTab('questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-blue-50 text-blue-600 p-3 rounded-lg text-left hover:bg-blue-100 transition">➕ Add Quiz Question</button>
-                  <button onClick={() => { setActiveTab('qa-questions'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-green-50 text-green-600 p-3 rounded-lg text-left hover:bg-green-100 transition">📝 Add Q&A Question</button>
-                  <button onClick={() => { setActiveTab('notes'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-emerald-50 text-emerald-600 p-3 rounded-lg text-left hover:bg-emerald-100 transition">📚 Add Study Note</button>
-                  <button onClick={() => { setActiveTab('current-affairs'); setShowModal(true); setEditingItem(null); setFormData({}); }} className="w-full bg-orange-50 text-orange-600 p-3 rounded-lg text-left hover:bg-orange-100 transition">📰 Add Current Affairs</button>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-6"><h3 className="text-lg font-bold mb-4">📊 Content Stats</h3>
-                <div className="space-y-3"><div className="flex justify-between"><span>Total Content Items</span><span className="font-bold">{questions.length + qaQuestions.length + notes.length + currentAffairs.length}</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min((questions.length + qaQuestions.length + notes.length + currentAffairs.length) / 2, 100)}%` }}></div></div>
-                <div className="flex justify-between"><span>Q&A Completion</span><span className="font-bold">{qaQuestions.length} / 50+</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(qaQuestions.length, 100)}%` }}></div></div></div>
-              </div>
+              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{safeResults.length}</p></div><div className="text-5xl">📊</div></div></div>
             </div>
           </div>
         )}
 
-        {/* Quiz Questions Management - UPDATED with multiline display */}
+        {/* Questions */}
         {activeTab === 'questions' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -440,7 +1102,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
               </div>
             </div>
             {questions.length === 0 ? (
-              <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">❓</div><p className="text-gray-500">No questions yet. Click "Add Question" to create one.</p></div>
+              <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">❓</div><p className="text-gray-500">No questions yet.</p></div>
             ) : (
               <div className="space-y-4">
                 {questions.map((q, idx) => (
@@ -452,10 +1114,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">{q.category}</span>
                           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">{q.difficulty}</span>
                         </div>
-                        {/* UPDATED: Preserve line breaks in question display */}
-                        <h3 className="font-semibold mb-2 whitespace-pre-line leading-relaxed">
-                          {q.question}
-                        </h3>
+                        <h3 className="font-semibold mb-2 whitespace-pre-line leading-relaxed">{q.question}</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                           <div className="p-1 bg-gray-50 rounded whitespace-pre-line">A) {q.options?.[0]}</div>
                           <div className="p-1 bg-gray-50 rounded whitespace-pre-line">B) {q.options?.[1]}</div>
@@ -478,7 +1137,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
           </div>
         )}
 
-        {/* Q&A Bank Management */}
+        {/* Q&A Bank */}
         {activeTab === 'qa-questions' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -489,7 +1148,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
               </div>
             </div>
             {qaQuestions.length === 0 ? (
-              <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">📝</div><p className="text-gray-500">No Q&A questions yet. Click "Add Q&A Question" to create one.</p></div>
+              <div className="bg-white rounded-xl shadow p-12 text-center"><div className="text-6xl mb-4">📝</div><p className="text-gray-500">No Q&A questions yet.</p></div>
             ) : (
               <div className="space-y-4">
                 {qaQuestions.map((qa, idx) => (
@@ -519,7 +1178,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
           </div>
         )}
 
-        {/* Notes Management */}
+        {/* Notes */}
         {activeTab === 'notes' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -529,13 +1188,25 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
                 <p className="text-sm text-gray-500 py-2">Total: {notes.length} notes</p>
               </div>
             </div>
-            {notes.map(note => (
-              <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{note.title}</h3><p className="text-sm text-gray-500">{note.category}</p><p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{note.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+            {notes.map((note) => (
+              <div key={note._id} className="bg-white rounded-lg shadow p-5 mb-4">
+                <div className="flex justify-between">
+                  <div>
+                    <h3 className="font-semibold">{note.title}</h3>
+                    <p className="text-sm text-gray-500">{note.category}</p>
+                    <p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{note.content?.substring(0, 150)}...</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditingItem(note); setFormData(note); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button>
+                    <button onClick={() => handleDelete(note._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Current Affairs Management */}
+        {/* Current Affairs */}
         {activeTab === 'current-affairs' && (
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -545,92 +1216,267 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
                 <p className="text-sm text-gray-500 py-2">Total: {currentAffairs.length} items</p>
               </div>
             </div>
-            {currentAffairs.map(ca => (
-              <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4"><div className="flex justify-between"><div><h3 className="font-semibold">{ca.title}</h3><p className="text-sm text-gray-500">{ca.date} | {ca.category}</p><p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{ca.content?.substring(0, 150)}...</p></div><div className="flex gap-2"><button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button><button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button></div></div></div>
+            {currentAffairs.map((ca) => (
+              <div key={ca._id} className="bg-white rounded-lg shadow p-5 mb-4">
+                <div className="flex justify-between">
+                  <div>
+                    <h3 className="font-semibold">{ca.title}</h3>
+                    <p className="text-sm text-gray-500">{ca.date} | {ca.category}</p>
+                    <p className="text-gray-600 mt-2 line-clamp-2 whitespace-pre-line">{ca.content?.substring(0, 150)}...</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditingItem(ca); setFormData(ca); setShowModal(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">Edit</button>
+                    <button onClick={() => handleDelete(ca._id)} className="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Users Management */}
+        {/* Users */}
         {activeTab === 'users' && (
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quizzes</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(user => (
-                    <tr key={user._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img src={user.profileImage} className="w-10 h-10 rounded-full" alt={user.name} />
-                          <div><p className="font-medium">{user.name}</p></div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">@{user.instagramId}</td>
-                      <td className="px-6 py-4 font-semibold text-blue-600">{user.score || 0}</td>
-                      <td className="px-6 py-4">{user.totalQuizzesTaken || 0}</td>
-                      <td className="px-6 py-4 text-sm">{new Date(user.createdAt).toLocaleDateString()}</td>
+          <div>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-xl shadow p-4">
+                <p className="text-xs text-gray-500">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow p-4">
+                <p className="text-xs text-gray-500">Total Quizzes</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {users.reduce((s, u) => s + (u.totalQuizzesTaken || 0), 0)}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow p-4">
+                <p className="text-xs text-gray-500">Total Score</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {users.reduce((s, u) => s + (u.score || 0), 0)}
+                </p>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4 flex gap-2">
+              <input
+                type="text"
+                placeholder="Search by name, Instagram, or email..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="flex-1 px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              />
+              <button onClick={refreshData} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">🔄</button>
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-xl shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Email</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Score</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Quizzes</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Last Quiz</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Joined</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredUsers.slice(0, 500).map((user, idx) => (
+                      <tr key={user._id || idx} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-500">{idx + 1}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            {user.profileImage ? (
+                              <img src={user.profileImage} className="w-9 h-9 rounded-full object-cover" alt={user.name} />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                {(user.name || '?').charAt(0)}
+                              </div>
+                            )}
+                            <p className="font-medium text-gray-900">{user.name || 'Anonymous'}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700 font-mono">@{user.instagramId || '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{user.email || '—'}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-blue-600 text-right">{user.score || 0}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700 text-right">{user.totalQuizzesTaken || 0}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {user.lastQuizDate ? new Date(user.lastQuizDate).toLocaleDateString() : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-10 text-center text-gray-500">No users found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {filteredUsers.length > 500 && (
+                <p className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
+                  Showing first 500 of {filteredUsers.length} users
+                </p>
+              )}
             </div>
           </div>
         )}
 
-        {/* Quiz Results */}
+        {/* Results — FIXED: shows only 50 rows per page */}
         {activeTab === 'results' && (
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Score</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Percentage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quizResults.map(result => (
-                    <tr key={result._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">{result.userName}</td>
-                      <td className="px-4 py-3">@{result.instagramId}</td>
-                      <td className="px-4 py-3 font-bold text-blue-600">{result.score}/{result.totalQuestions}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs ${result.percentage >= 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{result.percentage}%</span></td>
-                      <td className="px-4 py-3 text-sm">{new Date(result.date || result.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-xl shadow p-4">
+                <p className="text-xs text-gray-500">Total Attempts</p>
+                <p className="text-2xl font-bold text-gray-900">{safeResults.length}</p>
+              </div>
+              <div className="bg-white rounded-xl shadow p-4">
+                <p className="text-xs text-gray-500">Avg Score</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {safeResults.length > 0
+                    ? Math.round(safeResults.reduce((s, r) => s + (r.percentage || 0), 0) / safeResults.length)
+                    : 0}%
+                </p>
+              </div>
+              <div className="bg-white rounded-xl shadow p-4">
+                <p className="text-xs text-gray-500">Best Score</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {safeResults.length > 0 ? Math.max(...safeResults.map((r) => r.percentage || 0)) : 0}%
+                </p>
+              </div>
             </div>
+
+            {/* Search */}
+            <div className="mb-4 flex gap-2">
+              <input
+                type="text"
+                placeholder="Search by name or Instagram..."
+                value={resultsSearch}
+                onChange={(e) => { setResultsSearch(e.target.value); setResultsPage(1); }}
+                className="flex-1 px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              />
+              <button onClick={refreshData} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">🔄</button>
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-xl shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Score</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Correct</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Wrong</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">%</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {pagedResults.length > 0 ? (
+                      pagedResults.map((result, idx) => (
+                        <tr key={result._id || idx} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            {(resultsPage - 1) * RESULTS_PER_PAGE + idx + 1}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                            {result.userName || result.name || 'Anonymous'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700 font-mono">
+                            @{result.instagramId || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-bold text-blue-600 text-right">
+                            {result.score || 0}/{result.totalQuestions || 0}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-green-600 text-right">
+                            {result.correctCount ?? result.score ?? 0}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-red-600 text-right">
+                            {result.wrongCount ?? ((result.totalQuestions || 0) - (result.score || 0))}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              (result.percentage || 0) >= 70 ? 'bg-green-100 text-green-700'
+                              : (result.percentage || 0) >= 50 ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                            }`}>
+                              {result.percentage || 0}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{result.timeFormatted || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            {new Date(result.date || result.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={9} className="px-4 py-10 text-center text-gray-500">No results found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {totalResultPages > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  Page {resultsPage} of {totalResultPages} — showing{' '}
+                  {(resultsPage - 1) * RESULTS_PER_PAGE + 1}–
+                  {Math.min(resultsPage * RESULTS_PER_PAGE, filteredResults.length)} of {filteredResults.length}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setResultsPage(Math.max(1, resultsPage - 1))}
+                    disabled={resultsPage === 1}
+                    className="px-3 py-1 rounded-lg border bg-white text-sm disabled:opacity-50"
+                  >
+                    ← Prev
+                  </button>
+                  <button
+                    onClick={() => setResultsPage(Math.min(totalResultPages, resultsPage + 1))}
+                    disabled={resultsPage === totalResultPages}
+                    className="px-3 py-1 rounded-lg border bg-white text-sm disabled:opacity-50"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">{editingItem ? 'Edit' : 'Add'} {activeTab === 'qa-questions' ? 'Q&A Question' : activeTab}</h2>
+                <h2 className="text-2xl font-bold">
+                  {editingItem ? 'Edit' : 'Add'} {activeTab === 'qa-questions' ? 'Q&A Question' : activeTab}
+                </h2>
                 <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {getFormFields()}
                 <div className="flex gap-3 pt-4">
                   <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
-                  <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+                  <button type="button" onClick={() => { setShowModal(false); setEditingItem(null); }} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
                 </div>
               </form>
             </div>
@@ -638,7 +1484,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
         </div>
       )}
 
-      {/* Explanation Editor Modal */}
+      {/* Explanation Modal */}
       {showExplanationModal && explanationQuestion && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full">
@@ -667,3 +1513,7 @@ b) ಭಾರತ-ಅಫ್ಘಾನಿಸ್ತಾನ : 39ನೇ ಸಮಾಂತ�
     </div>
   );
 }
+
+
+
+
