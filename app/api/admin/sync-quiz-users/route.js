@@ -31,6 +31,15 @@ export async function POST() {
       const userName = result.userName || result.name || result.user || 'Anonymous User';
       const userInstagram = result.instagramId || result.instagram || userId;
       const userScore = result.score || result.totalScore || result.points || 0;
+      const userDate = result.date || result.createdAt || new Date();
+      const userTotalQuizzes = result.totalQuizzesTaken || 1;
+      const userLastQuizDate = result.lastQuizDate || result.date || result.createdAt || new Date();
+      const userCreatedAt = result.createdAt || new Date();
+      const usertimestamp = result.timestamp || result.createdAt || new Date();
+      
+
+
+
       
       if (!userId && !userInstagram) continue;
       
