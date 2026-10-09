@@ -48,7 +48,7 @@ export default function AdminPanel() {
           fetch(`/api/admin/qa-questions?t=${timestamp}`).catch(() => ({ json: () => [] })),
           fetch(`/api/admin/notes?t=${timestamp}`).catch(() => ({ json: () => [] })),
           fetch(`/api/admin/current-affairs?t=${timestamp}`).catch(() => ({ json: () => [] })),
-          fetch(`/api/admin/users?t=${timestamp}`).catch(() => ({ json: () => [] })),
+          fetch(`/api/admin/users?limit=500&t=${timestamp}`).catch(() => ({ json: () => [] })),
           fetch(`/api/quiz-results?limit=100&t=${timestamp}`).catch(() => ({ json: () => [] })),
         ]);
         setQuestions(await qRes.json());
@@ -73,6 +73,7 @@ export default function AdminPanel() {
         const res = await fetch(`/api/admin/users?limit=500&t=${timestamp}`);
         setUsers(await res.json());
       } else if (activeTab === 'results') {
+        // ✅ Fetch all-time top 100 (latest 100 from API)
         const res = await fetch(`/api/quiz-results?limit=100&t=${timestamp}`);
         setQuizResults(await res.json());
       }
@@ -238,9 +239,29 @@ export default function AdminPanel() {
     return null;
   };
 
-  // ✅ Results — all-time, sorted by score, top 100
+  // ─────────────────────────────────────────────
+  // ✅ TODAY'S + ALL-TIME DATA
+  // ─────────────────────────────────────────────
   const safeResults = Array.isArray(quizResults) ? quizResults : [];
-  const displayResults = [...safeResults]
+  const today = new Date();
+  const todayDateStr = today.toDateString();
+
+  // Today's results
+  const todaysResults = safeResults.filter((r) => {
+    const d = new Date(r.date || r.createdAt);
+    return d.toDateString() === todayDateStr;
+  });
+
+  // Today's TOP sorted by score
+  const todaysTop = [...todaysResults].sort((a, b) => {
+    if ((b.percentage || 0) !== (a.percentage || 0)) {
+      return (b.percentage || 0) - (a.percentage || 0);
+    }
+    return (a.score || 0) - (b.score || 0);
+  });
+
+  // All-time TOP 100 sorted by score
+  const allTimeTop = [...safeResults]
     .sort((a, b) => {
       if ((b.percentage || 0) !== (a.percentage || 0)) {
         return (b.percentage || 0) - (a.percentage || 0);
@@ -288,14 +309,14 @@ export default function AdminPanel() {
             <button onClick={() => setActiveTab('notes')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
             <button onClick={() => setActiveTab('current-affairs')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
             <button onClick={() => setActiveTab('users')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
-            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({safeResults.length})</button>
+            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({todaysResults.length}+{allTimeTop.length})</button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
-        {/* Dashboard — no Today's Winners */}
+        {/* Dashboard */}
         {activeTab === 'dashboard' && (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -304,7 +325,7 @@ export default function AdminPanel() {
               <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
-              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{safeResults.length}</p></div><div className="text-5xl">📊</div></div></div>
+              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Today's Attempts</p><p className="text-4xl font-bold">{todaysResults.length}</p></div><div className="text-5xl">📊</div></div></div>
             </div>
           </div>
         )}
@@ -480,125 +501,178 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* ✅ Results — All-time top 100 */}
+        {/* ✅ RESULTS — Today's Top + All-Time Top 100 */}
         {activeTab === 'results' && (
-          <div>
-            {/* Info banner */}
-            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🏆</span>
-                <div>
-                  <p className="text-sm font-semibold text-blue-900">All-Time Top 100 Results</p>
-                  <p className="text-xs text-blue-700">Ranked by score (highest first)</p>
+          <div className="space-y-8">
+
+            {/* ─────────── TODAY'S TOP SCORERS ─────────── */}
+            <div>
+              <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🏆</span>
+                  <div>
+                    <p className="text-sm font-semibold text-yellow-900">Today's Top Scorers</p>
+                    <p className="text-xs text-yellow-700">
+                      {today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      {' · '}
+                      {todaysResults.length} {todaysResults.length === 1 ? 'attempt' : 'attempts'}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <button onClick={refreshData} className="px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium">
-                🔄 Refresh
-              </button>
-            </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-xl shadow p-4">
-                <p className="text-xs text-gray-500">Total Shown</p>
-                <p className="text-2xl font-bold text-gray-900">{displayResults.length}</p>
-              </div>
-              <div className="bg-white rounded-xl shadow p-4">
-                <p className="text-xs text-gray-500">Avg Score</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {displayResults.length > 0
-                    ? Math.round(displayResults.reduce((s, r) => s + (r.percentage || 0), 0) / displayResults.length)
-                    : 0}%
-                </p>
-              </div>
-              <div className="bg-white rounded-xl shadow p-4">
-                <p className="text-xs text-gray-500">Best Score</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {displayResults.length > 0
-                    ? Math.max(...displayResults.map(r => r.percentage || 0))
-                    : 0}%
-                </p>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Rank</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Email</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Score</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">%</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Time Taken</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {displayResults.length > 0 ? (
-                      displayResults.map((result, idx) => {
-                        const rank = idx + 1;
-                        const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
-                        const rankStyle =
-                          rank === 1 ? 'bg-yellow-100 text-yellow-700 font-bold' :
-                          rank === 2 ? 'bg-gray-100 text-gray-700 font-bold' :
-                          rank === 3 ? 'bg-orange-100 text-orange-700 font-bold' :
-                          'bg-gray-50 text-gray-600';
-
-                        return (
-                          <tr key={result._id || idx} className="hover:bg-gray-50">
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm ${rankStyle}`}>
-                                {rank <= 3 ? rankIcon[rank] : rank}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                              {result.userName || 'Anonymous'}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[200px]">
-                              {result.userEmail || '—'}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700 font-mono">
-                              @{result.instagramId || '—'}
-                            </td>
-                            <td className="px-4 py-3 text-sm font-bold text-blue-600 text-right">
-                              {result.score || 0}/{result.totalQuestions || 0}
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                (result.percentage || 0) >= 70 ? 'bg-green-100 text-green-700'
-                                : (result.percentage || 0) >= 50 ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-red-100 text-red-700'
-                              }`}>
-                                {result.percentage || 0}%
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600 font-mono">
-                              {result.timeFormatted || '—'}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-500">
-                              {new Date(result.date || result.createdAt).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
+              <div className="bg-white rounded-xl shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
                       <tr>
-                        <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
-                          No results found.
-                        </td>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Rank</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Score</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">%</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Time Taken</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {todaysTop.length > 0 ? (
+                        todaysTop.map((result, idx) => {
+                          const rank = idx + 1;
+                          const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
+                          const rankStyle =
+                            rank === 1 ? 'bg-yellow-100 text-yellow-700 font-bold' :
+                            rank === 2 ? 'bg-gray-100 text-gray-700 font-bold' :
+                            rank === 3 ? 'bg-orange-100 text-orange-700 font-bold' :
+                            'bg-gray-50 text-gray-600';
+
+                          return (
+                            <tr key={result._id || idx} className="hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm ${rankStyle}`}>
+                                  {rank <= 3 ? rankIcon[rank] : rank}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{result.userName || 'Anonymous'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[200px]">{result.userEmail || '—'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700 font-mono">@{result.instagramId || '—'}</td>
+                              <td className="px-4 py-3 text-sm font-bold text-blue-600 text-right">{result.score || 0}/{result.totalQuestions || 0}</td>
+                              <td className="px-4 py-3 text-right">
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  (result.percentage || 0) >= 70 ? 'bg-green-100 text-green-700'
+                                  : (result.percentage || 0) >= 50 ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {result.percentage || 0}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600 font-mono">{result.timeFormatted || '—'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">
+                                {new Date(result.date || result.createdAt).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
+                            No quiz attempts today yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
+                  Today's top scorers — sorted by highest score
+                </p>
               </div>
-              <p className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
-                Showing top {displayResults.length} all-time
-              </p>
             </div>
+
+            {/* ─────────── ALL-TIME TOP 100 ─────────── */}
+            <div>
+              <div className="mb-4 bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📊</span>
+                  <div>
+                    <p className="text-sm font-semibold text-indigo-900">All-Time Top 100 Scores</p>
+                    <p className="text-xs text-indigo-700">
+                      Ranked by highest percentage across all attempts
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Rank</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">User</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Instagram</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Score</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">%</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Time Taken</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {allTimeTop.length > 0 ? (
+                        allTimeTop.map((result, idx) => {
+                          const rank = idx + 1;
+                          const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
+                          const rankStyle =
+                            rank === 1 ? 'bg-yellow-100 text-yellow-700 font-bold' :
+                            rank === 2 ? 'bg-gray-100 text-gray-700 font-bold' :
+                            rank === 3 ? 'bg-orange-100 text-orange-700 font-bold' :
+                            'bg-gray-50 text-gray-600';
+
+                          return (
+                            <tr key={result._id || idx} className="hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm ${rankStyle}`}>
+                                  {rank <= 3 ? rankIcon[rank] : rank}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{result.userName || 'Anonymous'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[200px]">{result.userEmail || '—'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700 font-mono">@{result.instagramId || '—'}</td>
+                              <td className="px-4 py-3 text-sm font-bold text-blue-600 text-right">{result.score || 0}/{result.totalQuestions || 0}</td>
+                              <td className="px-4 py-3 text-right">
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  (result.percentage || 0) >= 70 ? 'bg-green-100 text-green-700'
+                                  : (result.percentage || 0) >= 50 ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {result.percentage || 0}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600 font-mono">{result.timeFormatted || '—'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">
+                                {new Date(result.date || result.createdAt).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
+                            No results found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
+                  Top {allTimeTop.length} all-time scores
+                </p>
+              </div>
+            </div>
+
           </div>
         )}
       </div>
