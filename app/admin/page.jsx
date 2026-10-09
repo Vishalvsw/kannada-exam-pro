@@ -17,9 +17,6 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [quizResults, setQuizResults] = useState([]);
 
-  // ✅ NEW: Filter for Results tab
-  const [resultsFilter, setResultsFilter] = useState('today'); // 'today' | 'all'
-
   // Form states
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -76,7 +73,8 @@ export default function AdminPanel() {
         const res = await fetch(`/api/admin/users?limit=500&t=${timestamp}`);
         setUsers(await res.json());
       } else if (activeTab === 'results') {
-        const res = await fetch(`/api/quiz-results?limit=200&t=${timestamp}`);
+        // ✅ Only fetch 100 latest results
+        const res = await fetch(`/api/quiz-results?limit=100&t=${timestamp}`);
         setQuizResults(await res.json());
       }
     } catch (error) {
@@ -241,7 +239,7 @@ export default function AdminPanel() {
     return null;
   };
 
-  // ✅ TODAY'S RESULTS (filtered)
+  // ✅ TODAY'S RESULTS ONLY
   const safeResults = Array.isArray(quizResults) ? quizResults : [];
   const today = new Date();
   const todayDateStr = today.toDateString();
@@ -251,7 +249,7 @@ export default function AdminPanel() {
     return d.toDateString() === todayDateStr;
   });
 
-  // Sort today's results by score desc, then time asc
+  // Sort by score desc, then time asc
   const sortedTodaysResults = [...todaysResults].sort((a, b) => {
     if ((b.percentage || 0) !== (a.percentage || 0)) {
       return (b.percentage || 0) - (a.percentage || 0);
@@ -259,17 +257,8 @@ export default function AdminPanel() {
     return (a.score || 0) - (b.score || 0);
   });
 
-  // Top 100 for the results tab based on filter
-  const displayResults = resultsFilter === 'today'
-    ? sortedTodaysResults.slice(0, 100)
-    : [...safeResults]
-        .sort((a, b) => {
-          if ((b.percentage || 0) !== (a.percentage || 0)) {
-            return (b.percentage || 0) - (a.percentage || 0);
-          }
-          return (a.score || 0) - (b.score || 0);
-        })
-        .slice(0, 100);
+  // ✅ Only today's top 100
+  const displayResults = sortedTodaysResults.slice(0, 100);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -310,7 +299,7 @@ export default function AdminPanel() {
             <button onClick={() => setActiveTab('notes')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
             <button onClick={() => setActiveTab('current-affairs')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
             <button onClick={() => setActiveTab('users')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
-            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({safeResults.length})</button>
+            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({todaysResults.length})</button>
           </div>
         </div>
       </div>
@@ -320,7 +309,7 @@ export default function AdminPanel() {
         {/* Dashboard */}
         {activeTab === 'dashboard' && (
           <div>
-            {/* ✅ TODAY'S WINNERS */}
+            {/* Today's Winners */}
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div>
@@ -382,7 +371,7 @@ export default function AdminPanel() {
               <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
-              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{safeResults.length}</p></div><div className="text-5xl">📊</div></div></div>
+              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Today's Attempts</p><p className="text-4xl font-bold">{todaysResults.length}</p></div><div className="text-5xl">📊</div></div></div>
             </div>
           </div>
         )}
@@ -558,58 +547,44 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* ✅ RESULTS with TODAY filter + rank + email */}
+        {/* ✅ RESULTS — Today only, top 100 */}
         {activeTab === 'results' && (
           <div>
-            {/* Filter toggle */}
-            <div className="mb-4 flex items-center gap-3 flex-wrap">
-              <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-                <button
-                  onClick={() => setResultsFilter('today')}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-                    resultsFilter === 'today' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  📅 Today only ({todaysResults.length})
-                </button>
-                <button
-                  onClick={() => setResultsFilter('all')}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-                    resultsFilter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  📊 All time ({safeResults.length})
-                </button>
+            {/* Info banner */}
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📅</span>
+                <div>
+                  <p className="text-sm font-semibold text-blue-900">Today's Results — Top 100</p>
+                  <p className="text-xs text-blue-700">
+                    {today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
               </div>
-              <button onClick={refreshData} className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">🔄 Refresh</button>
+              <button onClick={refreshData} className="px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium">
+                🔄 Refresh
+              </button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-white rounded-xl shadow p-4">
-                <p className="text-xs text-gray-500">
-                  {resultsFilter === 'today' ? "Today's Attempts" : 'Total Attempts'}
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {resultsFilter === 'today' ? todaysResults.length : safeResults.length}
-                </p>
+                <p className="text-xs text-gray-500">Today's Attempts</p>
+                <p className="text-2xl font-bold text-gray-900">{todaysResults.length}</p>
               </div>
               <div className="bg-white rounded-xl shadow p-4">
                 <p className="text-xs text-gray-500">Avg Score</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {(resultsFilter === 'today' ? todaysResults : safeResults).length > 0
-                    ? Math.round(
-                        (resultsFilter === 'today' ? todaysResults : safeResults).reduce((s, r) => s + (r.percentage || 0), 0) /
-                          (resultsFilter === 'today' ? todaysResults : safeResults).length
-                      )
+                  {todaysResults.length > 0
+                    ? Math.round(todaysResults.reduce((s, r) => s + (r.percentage || 0), 0) / todaysResults.length)
                     : 0}%
                 </p>
               </div>
               <div className="bg-white rounded-xl shadow p-4">
                 <p className="text-xs text-gray-500">Best Score</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {(resultsFilter === 'today' ? todaysResults : safeResults).length > 0
-                    ? Math.max(...(resultsFilter === 'today' ? todaysResults : safeResults).map(r => r.percentage || 0))
+                  {todaysResults.length > 0
+                    ? Math.max(...todaysResults.map(r => r.percentage || 0))
                     : 0}%
                 </p>
               </div>
@@ -682,7 +657,7 @@ export default function AdminPanel() {
                     ) : (
                       <tr>
                         <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
-                          {resultsFilter === 'today' ? "No quiz attempts today yet." : "No results found."}
+                          No quiz attempts today yet.
                         </td>
                       </tr>
                     )}
@@ -690,7 +665,7 @@ export default function AdminPanel() {
                 </table>
               </div>
               <p className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
-                Showing top {displayResults.length} {resultsFilter === 'today' ? "of today's attempts" : 'results'}
+                Showing top {displayResults.length} of today's attempts
               </p>
             </div>
           </div>
