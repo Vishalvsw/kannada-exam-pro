@@ -73,7 +73,6 @@ export default function AdminPanel() {
         const res = await fetch(`/api/admin/users?limit=500&t=${timestamp}`);
         setUsers(await res.json());
       } else if (activeTab === 'results') {
-        // ✅ Only fetch 100 latest results
         const res = await fetch(`/api/quiz-results?limit=100&t=${timestamp}`);
         setQuizResults(await res.json());
       }
@@ -239,26 +238,16 @@ export default function AdminPanel() {
     return null;
   };
 
-  // ✅ TODAY'S RESULTS ONLY
+  // ✅ Results — all-time, sorted by score, top 100
   const safeResults = Array.isArray(quizResults) ? quizResults : [];
-  const today = new Date();
-  const todayDateStr = today.toDateString();
-
-  const todaysResults = safeResults.filter((r) => {
-    const d = new Date(r.date || r.createdAt);
-    return d.toDateString() === todayDateStr;
-  });
-
-  // Sort by score desc, then time asc
-  const sortedTodaysResults = [...todaysResults].sort((a, b) => {
-    if ((b.percentage || 0) !== (a.percentage || 0)) {
-      return (b.percentage || 0) - (a.percentage || 0);
-    }
-    return (a.score || 0) - (b.score || 0);
-  });
-
-  // ✅ Only today's top 100
-  const displayResults = sortedTodaysResults.slice(0, 100);
+  const displayResults = [...safeResults]
+    .sort((a, b) => {
+      if ((b.percentage || 0) !== (a.percentage || 0)) {
+        return (b.percentage || 0) - (a.percentage || 0);
+      }
+      return (a.score || 0) - (b.score || 0);
+    })
+    .slice(0, 100);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -299,79 +288,23 @@ export default function AdminPanel() {
             <button onClick={() => setActiveTab('notes')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'notes' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📚 Study Notes ({notes.length})</button>
             <button onClick={() => setActiveTab('current-affairs')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'current-affairs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📰 Current Affairs ({currentAffairs.length})</button>
             <button onClick={() => setActiveTab('users')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>👥 Users ({users.length})</button>
-            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({todaysResults.length})</button>
+            <button onClick={() => setActiveTab('results')} className={`px-5 py-2 rounded-lg font-medium capitalize whitespace-nowrap transition ${activeTab === 'results' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>📋 Results ({safeResults.length})</button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
-        {/* Dashboard */}
+        {/* Dashboard — no Today's Winners */}
         {activeTab === 'dashboard' && (
           <div>
-            {/* Today's Winners */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">🏆 Today's Winners</h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                  </p>
-                </div>
-                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">
-                  {todaysResults.length} {todaysResults.length === 1 ? 'attempt' : 'attempts'} today
-                </span>
-              </div>
-
-              {todaysResults.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <div className="text-4xl mb-2">📭</div>
-                  <p className="text-sm">No quiz attempts today yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                  {sortedTodaysResults.slice(0, 20).map((r, idx) => {
-                    const rank = idx + 1;
-                    const rankIcon = { 1: '👑', 2: '🥈', 3: '🥉' };
-                    const rankColor =
-                      rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-                      rank === 2 ? 'bg-gray-100 text-gray-700' :
-                      rank === 3 ? 'bg-orange-100 text-orange-700' :
-                      'bg-blue-50 text-blue-600';
-
-                    return (
-                      <div key={r._id || idx} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${rankColor}`}>
-                            {rank <= 3 ? rankIcon[rank] : rank}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 text-sm truncate">{r.userName || 'Anonymous'}</p>
-                            <p className="text-xs text-gray-500 font-mono truncate">@{r.instagramId || '—'}</p>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-3">
-                          <p className="text-base font-bold text-blue-600">{r.score}/{r.totalQuestions}</p>
-                          <p className="text-xs text-gray-500">{r.percentage}% · {r.timeFormatted || '—'}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {todaysResults.length > 20 && (
-                    <p className="text-center text-xs text-gray-400 pt-2">Showing top 20 of {todaysResults.length} today</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-blue-100">Quiz Questions</p><p className="text-4xl font-bold">{questions.length}</p></div><div className="text-5xl">❓</div></div></div>
               <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-green-100">Q&A Bank</p><p className="text-4xl font-bold">{qaQuestions.length}</p></div><div className="text-5xl">📝</div></div></div>
               <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-emerald-100">Study Notes</p><p className="text-4xl font-bold">{notes.length}</p></div><div className="text-5xl">📚</div></div></div>
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-orange-100">Current Affairs</p><p className="text-4xl font-bold">{currentAffairs.length}</p></div><div className="text-5xl">📰</div></div></div>
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-purple-100">Total Users</p><p className="text-4xl font-bold">{users.length}</p></div><div className="text-5xl">👥</div></div></div>
-              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Today's Attempts</p><p className="text-4xl font-bold">{todaysResults.length}</p></div><div className="text-5xl">📊</div></div></div>
+              <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white"><div className="flex justify-between"><div><p className="text-pink-100">Quiz Attempts</p><p className="text-4xl font-bold">{safeResults.length}</p></div><div className="text-5xl">📊</div></div></div>
             </div>
           </div>
         )}
@@ -547,18 +480,16 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* ✅ RESULTS — Today only, top 100 */}
+        {/* ✅ Results — All-time top 100 */}
         {activeTab === 'results' && (
           <div>
             {/* Info banner */}
             <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-lg">📅</span>
+                <span className="text-lg">🏆</span>
                 <div>
-                  <p className="text-sm font-semibold text-blue-900">Today's Results — Top 100</p>
-                  <p className="text-xs text-blue-700">
-                    {today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                  </p>
+                  <p className="text-sm font-semibold text-blue-900">All-Time Top 100 Results</p>
+                  <p className="text-xs text-blue-700">Ranked by score (highest first)</p>
                 </div>
               </div>
               <button onClick={refreshData} className="px-3 py-1.5 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium">
@@ -569,22 +500,22 @@ export default function AdminPanel() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-white rounded-xl shadow p-4">
-                <p className="text-xs text-gray-500">Today's Attempts</p>
-                <p className="text-2xl font-bold text-gray-900">{todaysResults.length}</p>
+                <p className="text-xs text-gray-500">Total Shown</p>
+                <p className="text-2xl font-bold text-gray-900">{displayResults.length}</p>
               </div>
               <div className="bg-white rounded-xl shadow p-4">
                 <p className="text-xs text-gray-500">Avg Score</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {todaysResults.length > 0
-                    ? Math.round(todaysResults.reduce((s, r) => s + (r.percentage || 0), 0) / todaysResults.length)
+                  {displayResults.length > 0
+                    ? Math.round(displayResults.reduce((s, r) => s + (r.percentage || 0), 0) / displayResults.length)
                     : 0}%
                 </p>
               </div>
               <div className="bg-white rounded-xl shadow p-4">
                 <p className="text-xs text-gray-500">Best Score</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {todaysResults.length > 0
-                    ? Math.max(...todaysResults.map(r => r.percentage || 0))
+                  {displayResults.length > 0
+                    ? Math.max(...displayResults.map(r => r.percentage || 0))
                     : 0}%
                 </p>
               </div>
@@ -657,7 +588,7 @@ export default function AdminPanel() {
                     ) : (
                       <tr>
                         <td colSpan={8} className="px-4 py-10 text-center text-gray-500">
-                          No quiz attempts today yet.
+                          No results found.
                         </td>
                       </tr>
                     )}
@@ -665,7 +596,7 @@ export default function AdminPanel() {
                 </table>
               </div>
               <p className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
-                Showing top {displayResults.length} of today's attempts
+                Showing top {displayResults.length} all-time
               </p>
             </div>
           </div>
